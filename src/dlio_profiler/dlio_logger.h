@@ -46,9 +46,9 @@ public:
         } else {
           int pid = getpid();
           filename = std::string(dlio_profiler_log_dir) + "/" + "trace_ll_" + std::to_string(pid) + ".pfw" ;
-          DLIO_PROFILER_LOGINFO("Writing trace to %s", filename.c_str());
         }
       }
+      DLIO_PROFILER_LOGINFO("Writing trace to %s", filename.c_str());
       writer = std::make_shared<dlio_profiler::ChromeWriter>(fp);
       writer->initialize(filename.data(), throw_error);
     }
@@ -68,8 +68,8 @@ public:
 
     inline void stop(){
       auto end_time = std::chrono::high_resolution_clock::now();
-      elapsed_time = std::chrono::duration<double>(end_time - start_time).count();
-      auto ts = std::chrono::duration<double>(start_time - library_start).count();
+      elapsed_time = std::chrono::duration<double, std::micro>(end_time - start_time).count();
+      auto ts = std::chrono::duration<double, std::micro>(start_time - library_start).count();
       DLIO_PROFILER_LOGINFO("event logged {name:%s, cat:%s, ts:%f, dur:%f}",
                             this->event_name.c_str(), this->category.c_str(), ts, elapsed_time);
       writer->log(this->event_name, this->category, ts, elapsed_time, metadata);

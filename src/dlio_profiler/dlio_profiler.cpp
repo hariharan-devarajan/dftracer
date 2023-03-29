@@ -43,13 +43,16 @@ void dlio_profiler_init(void) {
           getchar();
         }
       }
-      DLIO_PROFILER_LOGINFO("constructor\n", "");
+      DLIO_PROFILER_LOGINFO("constructor", "");
       char *dlio_profiler_log_level = getenv("DLIO_PROFILER_LOG_LEVEL");
       if (dlio_profiler_log_level == nullptr) {
         DLIO_PROFILER_LOGGER->level = cpplogger::LoggerType::LOG_ERROR;
         DLIO_PROFILER_LOGPRINT("Enabling ERROR loggin", "");
       } else {
-        if (strcmp(dlio_profiler_log_level, "INFO") == 0) {
+        if (strcmp(dlio_profiler_log_level, "ERROR") == 0) {
+          DLIO_PROFILER_LOGGER->level = cpplogger::LoggerType::LOG_ERROR;
+          DLIO_PROFILER_LOGPRINT("Enabling ERROR loggin", "");
+        } else if (strcmp(dlio_profiler_log_level, "INFO") == 0) {
           DLIO_PROFILER_LOGGER->level = cpplogger::LoggerType::LOG_INFO;
           DLIO_PROFILER_LOGPRINT("Enabling INFO loggin", "");
         } else if (strcmp(dlio_profiler_log_level, "DEBUG") == 0) {
@@ -70,6 +73,7 @@ void dlio_profiler_init(void) {
       if (dlio_profiler_dir != nullptr) {
         auto paths = split(dlio_profiler_dir, ':');
         for (const auto &path:paths) {
+          DLIO_PROFILER_LOGINFO("Profiler will trace %s\n", path.c_str());
           posix_instance->trace(path);
           stdio_instance->trace(path);
         }
@@ -77,6 +81,8 @@ void dlio_profiler_init(void) {
     }
     set_init(true);
   }
+  size_t thread_hash = std::hash<std::thread::id>{}(std::this_thread::get_id());
+  DLIO_PROFILER_LOGINFO("Running DLIO Profiler on thread %ld", thread_hash);
 }
 void dlio_profiler_fini(void) {
   if (is_init()) {

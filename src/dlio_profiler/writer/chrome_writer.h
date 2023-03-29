@@ -8,7 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <thread>
-
+#include <mutex>
 namespace dlio_profiler {
     class ChromeWriter: public BaseWriter {
     private:
@@ -17,6 +17,7 @@ namespace dlio_profiler {
                                  std::unordered_map<char *, std::any> &metadata);
         size_t tid;
         bool is_first_write;
+        std::mutex file_mtx;
     public:
         ChromeWriter(FILE* fp=NULL):BaseWriter(), is_first_write(true){
           this->fp = fp;
