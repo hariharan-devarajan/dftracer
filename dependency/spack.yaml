@@ -1,0 +1,7 @@
+spack:
+  specs:
+  - cmake
+  - gotcha@1.0.3
+  concretizer:
+    unify: true
+  view: true

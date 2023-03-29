@@ -1,0 +1,90 @@
+//
+// Created by haridev on 3/28/23.
+//
+
+#include <dlio_profiler/dlio_profiler.h>
+#include <cstring>
+#include <iostream>
+#include <fstream>
+#include<algorithm>
+#include <dlio_profiler/dlio_logger.h>
+namespace dlio_profiler {
+    bool init = false;
+}
+
+bool is_init() {return dlio_profiler::init;}
+void set_init(bool _init) { dlio_profiler::init = _init;}
+std::vector<std::string> split(std::string str, char delimiter) {
+  std::vector<std::string> res;
+  if (str.find(delimiter) == std::string::npos) {
+    res.push_back(str);
+  } else {
+    size_t first;
+    size_t last = 0;
+    while ((first = str.find_first_not_of(delimiter, last)) != std::string::npos) {
+      last = str.find(delimiter, first);
+      res.push_back(str.substr(first, last - first));
+    }
+  }
+  return res;
+}
+void dlio_profiler_init(void) {
+  if (!is_init()) {
+    char *dlio_profiler_enable = getenv("DLIO_PROFILER_ENABLE");
+    if (dlio_profiler_enable == nullptr || strcmp(dlio_profiler_enable, "1") == 0) {
+      char *dlio_profiler_debug = getenv("DLIO_PROFILER_DEBUG");
+      if (dlio_profiler_debug != nullptr) {
+        if (strcmp(dlio_profiler_debug, "1") == 0) {
+          std::string sp;
+          std::ifstream("/proc/self/cmdline") >> sp;
+          std::replace(sp.begin(), sp.end() - 1, '\000', ' ');
+          fprintf(stderr, "Connect to pid %d %s\n", getpid(), sp.c_str());
+          fflush(stderr);
+          getchar();
+        }
+      }
+      DLIO_PROFILER_LOGINFO("constructor\n", "");
+      char *dlio_profiler_log_level = getenv("DLIO_PROFILER_LOG_LEVEL");
+      if (dlio_profiler_log_level == nullptr) {
+        DLIO_PROFILER_LOGGER->level = cpplogger::LoggerType::LOG_ERROR;
+        DLIO_PROFILER_LOGPRINT("Enabling ERROR loggin", "");
+      } else {
+        if (strcmp(dlio_profiler_log_level, "INFO") == 0) {
+          DLIO_PROFILER_LOGGER->level = cpplogger::LoggerType::LOG_INFO;
+          DLIO_PROFILER_LOGPRINT("Enabling INFO loggin", "");
+        } else if (strcmp(dlio_profiler_log_level, "DEBUG") == 0) {
+          DLIO_PROFILER_LOGPRINT("Enabling DEBUG loggin", "");
+          DLIO_PROFILER_LOGGER->level = cpplogger::LoggerType::LOG_WARN;
+        }
+      }
+      char *dlio_profiler_priority_str = getenv("DLIO_PROFILER_GOTCHA_PRIORITY");
+      int dlio_profiler_priority = 1;
+      if (dlio_profiler_priority_str != nullptr) {
+        dlio_profiler_priority = atoi(dlio_profiler_priority_str);
+      }
+      brahma_gotcha_wrap("dlio_profiler", dlio_profiler_priority);
+      DLIO_LOGGER_INIT();
+      auto posix_instance = brahma::POSIXDLIOProfiler::get_instance();
+      auto stdio_instance = brahma::STDIODLIOProfiler::get_instance();
+      char *dlio_profiler_dir = getenv("DLIO_PROFILER_DIR");
+      if (dlio_profiler_dir != nullptr) {
+        auto paths = split(dlio_profiler_dir, ':');
+        for (const auto &path:paths) {
+          posix_instance->trace(path);
+          stdio_instance->trace(path);
+        }
+      }
+    }
+    set_init(true);
+  }
+}
+void dlio_profiler_fini(void) {
+  if (is_init()) {
+    char* dlio_profiler_init = getenv("DLIO_PROFILER_INIT");
+    if (dlio_profiler_init == nullptr || strcmp(dlio_profiler_init , "1") == 0) {
+      free_bindings();
+      DLIO_LOGGER_FINI();
+    }
+    set_init(false);
+  }
+}

@@ -1,0 +1,6 @@
+[submodule "external/brahma"]
+	path = external/brahma
+	url = git@github.com:hariharan-devarajan/brahma.git
+[submodule "external/cpp-logger"]
+	path = external/cpp-logger
+	url = git@github.com:hariharan-devarajan/cpp-logger.git
