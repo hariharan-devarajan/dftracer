@@ -21,7 +21,7 @@ namespace dlio_profiler {
     public:
         ChromeWriter(FILE* fp=NULL):BaseWriter(), is_first_write(true){
           this->fp = fp;
-          this->tid = std::hash<std::thread::id>{}(std::this_thread::get_id()) % 256;
+          this->tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
         }
         void initialize(char *filename, bool throw_error) override;
 
