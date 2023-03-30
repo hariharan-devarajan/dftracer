@@ -89,7 +89,6 @@ void dlio_profiler_fini(void) {
     char* dlio_profiler_init = getenv("DLIO_PROFILER_INIT");
     if (dlio_profiler_init == nullptr || strcmp(dlio_profiler_init , "1") == 0) {
       free_bindings();
-      DLIO_LOGGER_FINI();
     }
     set_init(false);
   }
