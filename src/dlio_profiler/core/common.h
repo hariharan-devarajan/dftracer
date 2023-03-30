@@ -4,6 +4,8 @@
 
 #ifndef DLIO_PROFILER_COMMON_H
 #define DLIO_PROFILER_COMMON_H
+#include <vector>
+#include <string>
 inline std::vector<std::string> split(std::string str, char delimiter) {
   std::vector<std::string> res;
   if (str.find(delimiter) == std::string::npos) {
@@ -18,4 +20,5 @@ inline std::vector<std::string> split(std::string str, char delimiter) {
   }
   return res;
 }
+typedef double TimeResolution;
 #endif //DLIO_PROFILER_COMMON_H

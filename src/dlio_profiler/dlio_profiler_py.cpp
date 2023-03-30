@@ -21,10 +21,10 @@ namespace dlio_profiler {
         stdio_instance->trace(path);
       }
     }
-    double get_time() {
+    TimeResolution get_time() {
       return dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->get_time();
     }
-    void log_event(std::string &name, std::string &cat, double start_time, double duration,
+    void log_event(std::string &name, std::string &cat, TimeResolution start_time, TimeResolution duration,
                       std::unordered_map<std::string, int> &int_args,
                       std::unordered_map<std::string, std::string> &string_args,
                       std::unordered_map<std::string, float> &float_args) {

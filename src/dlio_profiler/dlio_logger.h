@@ -13,11 +13,12 @@
 #include <dlio_profiler/writer/chrome_writer.h>
 #include <unistd.h>
 #include <dlio_profiler/macro.h>
+#include <dlio_profiler/core/common.h>
 
 typedef std::chrono::high_resolution_clock chrono;
 class DLIOLogger {
 private:
-    double library_start;
+    TimeResolution library_start;
     bool throw_error;
     std::shared_ptr<dlio_profiler::BaseWriter> writer;
     bool is_init;
@@ -52,8 +53,8 @@ public:
         update_log_file(log_file);
       }
     }
-    inline double get_current_time(){
-      return std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    inline TimeResolution get_current_time(){
+      return std::chrono::duration<TimeResolution>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     }
     inline void update_log_file(std::string log_file) {
       writer = std::make_shared<dlio_profiler::ChromeWriter>(nullptr);
@@ -62,13 +63,13 @@ public:
       library_start = get_current_time();
       DLIO_PROFILER_LOGPRINT("Writing trace to %s with time %f", log_file.c_str(), library_start);
     }
-    inline double get_time() {
+    inline TimeResolution get_time() {
       auto t =  get_current_time() - library_start;
       DLIO_PROFILER_LOGINFO("Getting time %f", t);
       return t;
     }
     inline void log(std::string event_name, std::string category,
-                    double start_time, double duration,
+                    TimeResolution start_time, TimeResolution duration,
                     std::unordered_map<std::string, std::any> &metadata) {
       writer->log(event_name, category, start_time, duration, metadata);
     }
@@ -84,13 +85,13 @@ public:
   dlio_profiler::Singleton<DLIOLogger>::get_instance()->finalize()
 #define DLIO_LOGGER_START(entity)                               \
   bool trace = is_traced(entity);                               \
-  double start_time = 0;                                        \
+  TimeResolution start_time = 0;                                        \
   auto metadata = std::unordered_map<std::string, std::any>();  \
   if (trace) start_time = this->logger->get_time();
 #define DLIO_LOGGER_UPDATE(value) if (trace) metadata.insert_or_assign(#value, value);
 #define DLIO_LOGGER_END()                                 \
   if (trace) {                                                          \
-    double end_time = this->logger->get_time();                         \
+    TimeResolution end_time = this->logger->get_time();                         \
     this->logger->log(__FUNCTION__, CATEGORY, start_time, end_time - start_time, metadata);  \
   }
 

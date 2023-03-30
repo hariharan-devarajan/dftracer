@@ -13,7 +13,7 @@ namespace dlio_profiler {
     class ChromeWriter: public BaseWriter {
     private:
         FILE* fp;
-        std::string convert_json(std::string &event_name, std::string &category, double &start_time, double &duration,
+        std::string convert_json(std::string &event_name, std::string &category, TimeResolution start_time, TimeResolution duration,
                                  std::unordered_map<std::string, std::any> &metadata);
         bool is_first_write;
         std::mutex file_mtx;
@@ -23,7 +23,7 @@ namespace dlio_profiler {
         }
         void initialize(char *filename, bool throw_error) override;
 
-        void log(std::string &event_name, std::string &category, double &start_time, double &duration,
+        void log(std::string &event_name, std::string &category, TimeResolution &start_time, TimeResolution &duration,
                  std::unordered_map<std::string , std::any> &metadata) override;
 
         void finalize() override;

@@ -7,6 +7,7 @@
 
 #include <unordered_map>
 #include <any>
+#include <dlio_profiler/core/common.h>
 
 namespace dlio_profiler {
     class BaseWriter {
@@ -19,7 +20,7 @@ namespace dlio_profiler {
         virtual void initialize(char *filename, bool throw_error) = 0;
 
         virtual void log(std::string &event_name, std::string &category,
-                         double &start_time, double &duration,
+                         TimeResolution &start_time, TimeResolution &duration,
                          std::unordered_map<std::string, std::any> &metadata) = 0;
 
         virtual void finalize() = 0;

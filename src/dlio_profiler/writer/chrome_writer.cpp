@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <thread>
 #include <sstream>
+#include <cmath>
 
 #define ERROR(cond, format, ...) \
   DLIO_PROFILER_LOGERROR(format, __VA_ARGS__); \
@@ -19,7 +20,7 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
 }
 
 void
-dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category, double &start_time, double &duration,
+dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category, TimeResolution &start_time, TimeResolution &duration,
                                  std::unordered_map<std::string, std::any> &metadata) {
   if (is_first_write) {
     if (this->fp == NULL) {
@@ -63,16 +64,18 @@ void dlio_profiler::ChromeWriter::finalize() {
 
 
 std::string
-dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &category, double &start_time,
-                                          double &duration, std::unordered_map<std::string, std::any> &metadata) {
+dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &category, TimeResolution start_time,
+                                          TimeResolution duration, std::unordered_map<std::string, std::any> &metadata) {
   std::stringstream all_stream;
   auto tid = std::hash<std::thread::id>{}(std::this_thread::get_id()) % 100000;
+  auto start_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(start_time);
+  auto duration_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(duration);
   all_stream  << R"({"name":")" << event_name << "\","
               << R"("cat":")" << category << "\","
               << "\"pid\":" << getpid() << ","
               << "\"tid\":" << tid << ","
-              << "\"ts\":" << start_time * 1000.0 << ","
-              << "\"dur\":" << duration * 1000.0 << ","
+              << "\"ts\":" <<  std::chrono::duration_cast<std::chrono::microseconds>(start_sec).count() << ","
+              << "\"dur\":" << std::chrono::duration_cast<std::chrono::microseconds>(duration_sec).count() << ","
               << R"("ph":"X",)"
               << R"("args":{)";
   for(auto item : metadata) {
