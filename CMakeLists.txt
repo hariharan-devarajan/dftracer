@@ -15,6 +15,8 @@ set(DLIO_PROFILER_PACKAGE_STRING "${DLIO_PROFILER_PACKAGE_NAME} ${DLIO_PROFILER_
 set(DLIO_PROFILER_PACKAGE_TARNAME "${DLIO_PROFILER_PACKAGE}")
 cmake_minimum_required(VERSION 3.0)
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/dependency/.spack-env/view ${CMAKE_BINARY_DIR}/lib/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/dependency/.spack-env/view/lib/cmake ${CMAKE_BINARY_DIR}/lib/cmake)
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependency/.spack-env/view/lib ${CMAKE_BINARY_DIR}/lib)
 
 set(CMAKE_CXX_STANDARD 17)
 set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cmake)
@@ -33,7 +35,7 @@ add_subdirectory(external/brahma)
 
 
 
-set(DEPENDENCY_LIB )
+set(DEPENDENCY_LIB stdc++fs)
 
 find_package(cpp-logger REQUIRED)
 if (${CPP_LOGGER_FOUND})

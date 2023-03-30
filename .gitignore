@@ -39,3 +39,6 @@ log
 dlio_profiler_py.egg-info
 dependency/.spack-env
 dependency/spack.lock
+/build-dlio/
+/build_dlio/
+/cmake_example.egg-info/

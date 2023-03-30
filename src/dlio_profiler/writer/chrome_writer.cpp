@@ -8,6 +8,7 @@
 #include <cassert>
 #include <unistd.h>
 #include <thread>
+#include <sstream>
 
 #define ERROR(cond, format, ...) \
   DLIO_PROFILER_LOGERROR(format, __VA_ARGS__); \
@@ -64,10 +65,22 @@ void dlio_profiler::ChromeWriter::finalize() {
 std::string
 dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &category, double &start_time,
                                           double &duration, std::unordered_map<std::string, std::any> &metadata) {
-  return "{\"name\":\"" + event_name +"\"," +
-         "\"cat\": \"" + category +"\"," +
-         "\"pid\":" + std::to_string(getpid()) + "," +
-         "\"tid\":"+ std::to_string(tid)+","
-         "\"ts\":"+std::to_string(start_time)+","
-         "\"dur\":"+std::to_string(duration)+",\"ph\":\"X\",\"args\":{}}\n";
+  std::stringstream all_stream;
+  auto tid = std::hash<std::thread::id>{}(std::this_thread::get_id()) % 100000;
+  all_stream  << R"({"name":")" << event_name << "\","
+              << R"("cat":")" << category << "\","
+              << "\"pid\":" << getpid() << ","
+              << "\"tid\":" << tid << ","
+              << "\"ts\":" << start_time * 1000.0 << ","
+              << "\"dur\":" << duration * 1000.0 << ","
+              << R"("ph":"X",)"
+              << R"("args":{)";
+  for(auto item : metadata) {
+    if (item.second.type() == typeid(int)) {
+      all_stream << "\"" << item.first << "\":" << std::any_cast<int>(item.second) << ",";
+    }
+  }
+  all_stream << "}}\n";
+  DLIO_PROFILER_LOGINFO("event logged %s", all_stream.str().c_str());
+  return all_stream.str();
 }

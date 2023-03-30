@@ -8,27 +8,19 @@
 #include <fstream>
 #include<algorithm>
 #include <dlio_profiler/dlio_logger.h>
+#include <dlio_profiler/core/common.h>
 namespace dlio_profiler {
     bool init = false;
 }
 
 bool is_init() {return dlio_profiler::init;}
 void set_init(bool _init) { dlio_profiler::init = _init;}
-std::vector<std::string> split(std::string str, char delimiter) {
-  std::vector<std::string> res;
-  if (str.find(delimiter) == std::string::npos) {
-    res.push_back(str);
-  } else {
-    size_t first;
-    size_t last = 0;
-    while ((first = str.find_first_not_of(delimiter, last)) != std::string::npos) {
-      last = str.find(delimiter, first);
-      res.push_back(str.substr(first, last - first));
-    }
-  }
-  return res;
-}
 void dlio_profiler_init(void) {
+  bool init_log = false;
+  char *ld_preload = getenv("LD_PRELOAD");
+  if (ld_preload != nullptr && std::string(ld_preload).find("libdlio_profiler.so") != std::string::npos) {
+    init_log = true;
+  }
   if (!is_init()) {
     char *dlio_profiler_enable = getenv("DLIO_PROFILER_ENABLE");
     if (dlio_profiler_enable == nullptr || strcmp(dlio_profiler_enable, "1") == 0) {
@@ -66,7 +58,7 @@ void dlio_profiler_init(void) {
         dlio_profiler_priority = atoi(dlio_profiler_priority_str);
       }
       brahma_gotcha_wrap("dlio_profiler", dlio_profiler_priority);
-      DLIO_LOGGER_INIT();
+      dlio_profiler::Singleton<DLIOLogger>::get_instance(init_log);
       auto posix_instance = brahma::POSIXDLIOProfiler::get_instance();
       auto stdio_instance = brahma::STDIODLIOProfiler::get_instance();
       char *dlio_profiler_dir = getenv("DLIO_PROFILER_DIR");
@@ -83,11 +75,12 @@ void dlio_profiler_init(void) {
   }
   size_t thread_hash = std::hash<std::thread::id>{}(std::this_thread::get_id());
   DLIO_PROFILER_LOGINFO("Running DLIO Profiler on thread %ld", thread_hash);
+
 }
 void dlio_profiler_fini(void) {
   if (is_init()) {
-    char* dlio_profiler_init = getenv("DLIO_PROFILER_INIT");
-    if (dlio_profiler_init == nullptr || strcmp(dlio_profiler_init , "1") == 0) {
+    char *dlio_profiler_init = getenv("DLIO_PROFILER_INIT");
+    if (dlio_profiler_init == nullptr || strcmp(dlio_profiler_init, "1") == 0) {
       free_bindings();
     }
     set_init(false);

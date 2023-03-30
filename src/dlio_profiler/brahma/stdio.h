@@ -9,6 +9,8 @@
 #include <dlio_profiler/macro.h>
 #include <vector>
 #include <dlio_profiler/dlio_logger.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace brahma {
 class STDIODLIOProfiler : public STDIO {
@@ -32,12 +34,14 @@ class STDIODLIOProfiler : public STDIO {
     return is_traced(get_filename(fileno(fh)));
   }
   inline bool is_traced(std::string filename) {
+    auto abs_file = fs::absolute(filename).string();
     for(const auto file : track_filename) {
-      if (filename.rfind(file, 0) == 0) {
+      if (abs_file.rfind(file, 0) == 0) {
         DLIO_PROFILER_LOGINFO("Profiler Intercepted STDIO tracing %s", filename.c_str());
         return true;
       }
     }
+    DLIO_PROFILER_LOGINFO("Profiler Intercepted STDIO not tracing %s", filename.c_str());
     return false;
   }
   inline void trace(FILE* fh) {
@@ -53,7 +57,8 @@ class STDIODLIOProfiler : public STDIO {
   }
 
   inline void trace(std::string filename) {
-    track_filename.push_back(filename);
+    auto abs_file = fs::absolute(filename).string();
+    track_filename.push_back(abs_file);
   }
 
   ~STDIODLIOProfiler() = default;

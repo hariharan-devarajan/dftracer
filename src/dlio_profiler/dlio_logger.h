@@ -17,79 +17,81 @@
 typedef std::chrono::high_resolution_clock chrono;
 class DLIOLogger {
 private:
-    std::unordered_map<std::string, std::any> metadata;
-    chrono::time_point library_start;
-    chrono::time_point start_time;
-    double elapsed_time;
-    std::string event_name;
-    std::string category;
+    double library_start;
+    bool throw_error;
     std::shared_ptr<dlio_profiler::BaseWriter> writer;
+    bool is_init;
 public:
-    DLIOLogger():metadata(){
-      library_start = std::chrono::high_resolution_clock::now();
-      char* dlio_profiler_log_dir = getenv("DLIO_PROFILER_LOG_DIR");
-      char* dlio_profiler_error = getenv("DLIO_PROFILER_ERROR");
-      bool throw_error = false;
-      if (dlio_profiler_error != nullptr && strcmp(dlio_profiler_log_dir, "1") == 0) {
+    DLIOLogger(bool init_log = false):is_init(false) {
+      char *dlio_profiler_error = getenv("DLIO_PROFILER_ERROR");
+      if (dlio_profiler_error != nullptr && strcmp(dlio_profiler_error, "1") == 0) {
         throw_error = true;
       }
-      FILE* fp = NULL;
-      std::string filename;
-      if (dlio_profiler_log_dir == nullptr) {
-        fp = stderr;
-        filename = "STDERR";
-      } else {
-        if (strcmp(dlio_profiler_log_dir, "STDERR") == 0) {
-          fp = stderr;
-          filename = "STDERR";
-        } else if (strcmp(dlio_profiler_log_dir, "STDOUT") == 0) {
-          fp = stdout;
-          filename = "STDOUT";
-        } else {
-          int pid = getpid();
-          filename = std::string(dlio_profiler_log_dir) + "/" + "trace_ll_" + std::to_string(pid) + ".pfw" ;
+      if (init_log) {
+        this->is_init=true;
+        FILE *fp = NULL;
+        std::string log_file;
+        if (log_file.empty()) {
+          char *dlio_profiler_log_dir = getenv("DLIO_PROFILER_LOG_DIR");
+          if (dlio_profiler_log_dir == nullptr) {
+            fp = stderr;
+            log_file = "STDERR";
+          } else {
+            if (strcmp(dlio_profiler_log_dir, "STDERR") == 0) {
+              fp = stderr;
+              log_file = "STDERR";
+            } else if (strcmp(dlio_profiler_log_dir, "STDOUT") == 0) {
+              fp = stdout;
+              log_file = "STDOUT";
+            } else {
+              int pid = getpid();
+              log_file = std::string(dlio_profiler_log_dir) + "/" + "trace_ll_" + std::to_string(pid) + ".pfw";
+            }
+          }
         }
+        update_log_file(log_file);
       }
-      DLIO_PROFILER_LOGINFO("Writing trace to %s", filename.c_str());
-      writer = std::make_shared<dlio_profiler::ChromeWriter>(fp);
-      writer->initialize(filename.data(), throw_error);
     }
-    inline void start(std::string _event_name, std::string _category) {
-      start_time = std::chrono::high_resolution_clock::now();
-      this->event_name = _event_name;
-      this->category = _category;
+    inline double get_current_time(){
+      return std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     }
-    template <typename T>
-    inline void update_metadata(std::string key, const T value){
-      metadata.insert_or_assign(key, value);
+    inline void update_log_file(std::string log_file) {
+      writer = std::make_shared<dlio_profiler::ChromeWriter>(nullptr);
+      writer->initialize(log_file.data(), this->throw_error);
+      this->is_init=true;
+      library_start = get_current_time();
+      DLIO_PROFILER_LOGPRINT("Writing trace to %s with time %f", log_file.c_str(), library_start);
     }
-
-    inline std::unordered_map<std::string, std::any> get_metadata() {
-      return metadata;
+    inline double get_time() {
+      auto t =  get_current_time() - library_start;
+      DLIO_PROFILER_LOGINFO("Getting time %f", t);
+      return t;
     }
-
-    inline void stop(){
-      auto end_time = std::chrono::high_resolution_clock::now();
-      elapsed_time = std::chrono::duration<double, std::micro>(end_time - start_time).count();
-      auto ts = std::chrono::duration<double, std::micro>(start_time - library_start).count();
-      DLIO_PROFILER_LOGINFO("event logged {name:%s, cat:%s, ts:%f, dur:%f}",
-                            this->event_name.c_str(), this->category.c_str(), ts, elapsed_time);
-      writer->log(this->event_name, this->category, ts, elapsed_time, metadata);
-
+    inline void log(std::string event_name, std::string category,
+                    double start_time, double duration,
+                    std::unordered_map<std::string, std::any> &metadata) {
+      writer->log(event_name, category, start_time, duration, metadata);
     }
     inline void finalize() {
-      writer->finalize();
+      if (this->is_init) {
+        writer->finalize();
+      }
     }
 };
 #define DLIO_LOGGER_INIT() \
   dlio_profiler::Singleton<DLIOLogger>::get_instance()
 #define DLIO_LOGGER_FINI() \
-  dlio_profiler::Singleton<DLIOLogger>::get_instance()->finalize();
-#define DLIO_LOGGER_START(name, category, entity) \
-  bool trace = is_traced(entity);             \
-  if (trace) this->logger->start(name, category);
-#define DLIO_LOGGER_UPDATE(key, value) \
-  this->logger->update_metadata(key, value);
-#define DLIO_LOGGER_END(entity) \
-  if (trace) this->logger->stop();
+  dlio_profiler::Singleton<DLIOLogger>::get_instance()->finalize()
+#define DLIO_LOGGER_START(entity)                               \
+  bool trace = is_traced(entity);                               \
+  double start_time = 0;                                        \
+  auto metadata = std::unordered_map<std::string, std::any>();  \
+  if (trace) start_time = this->logger->get_time();
+#define DLIO_LOGGER_UPDATE(value) if (trace) metadata.insert_or_assign(#value, value);
+#define DLIO_LOGGER_END()                                 \
+  if (trace) {                                                          \
+    double end_time = this->logger->get_time();                         \
+    this->logger->log(__FUNCTION__, CATEGORY, start_time, end_time - start_time, metadata);  \
+  }
+
 #endif //DLIO_PROFILER_GENERIC_LOGGER_H
