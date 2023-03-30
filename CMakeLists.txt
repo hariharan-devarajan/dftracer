@@ -1,4 +1,5 @@
-project(dlio_profiler)# VERSION 1.0.0 DESCRIPTION "I/O interceptor library in CPP using Gotcha")
+cmake_minimum_required(VERSION 3.4...3.18)
+project(dlio_profiler)
 #------------------------------------------------------------------------------
 # Version information
 #------------------------------------------------------------------------------
@@ -19,9 +20,21 @@ set(CMAKE_CXX_STANDARD 17)
 set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${DLIO_PROFILER_CMAKE_DIR})
 
+#------------------------------------------------------------------------------
+# Build options
+#------------------------------------------------------------------------------
+option(BUILD_PYTHON_BINDINGS "Build python bindings." ON)
+
+if (BUILD_PYTHON_BINDINGS)
+    add_subdirectory(external/pybind11)
+endif()
 add_subdirectory(external/cpp-logger)
 add_subdirectory(external/brahma)
+
+
+
 set(DEPENDENCY_LIB )
+
 find_package(cpp-logger REQUIRED)
 if (${CPP_LOGGER_FOUND})
     include_directories(${CPP_LOGGER_INCLUDE_DIRS})
@@ -66,6 +79,11 @@ set(DLIO_PROFILER_PRIVATE_INCLUDE
 add_library(${PROJECT_NAME} SHARED)
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCY_LIB})
 message(STATUS ${CMAKE_PREFIX_PATH})
+if (BUILD_PYTHON_BINDINGS)
+    pybind11_add_module(${PROJECT_NAME}_py ${DLIO_PROFILER_SRC} ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler_py.cpp)
+    target_compile_definitions(${PROJECT_NAME}_py PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
+    target_link_libraries(${PROJECT_NAME}_py PRIVATE ${DEPENDENCY_LIB})
+endif()
 target_sources(${PROJECT_NAME}
         PRIVATE
         ${DLIO_PROFILER_SRC}
@@ -196,6 +214,9 @@ install(
 )
 
 install(TARGETS ${PROJECT_NAME}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(TARGETS ${PROJECT_NAME}_py
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 #-----------------------------------------------------------------------------

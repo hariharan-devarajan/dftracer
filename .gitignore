@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+
+venv
+build
+log
+.idea
+dlio_profiler_py.egg-info
+dependency/.spack-env
+dependency/spack.lock

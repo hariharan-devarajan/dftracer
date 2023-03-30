@@ -19,7 +19,7 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
 
 void
 dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category, double &start_time, double &duration,
-                                 std::unordered_map<char *, std::any> &metadata) {
+                                 std::unordered_map<std::string, std::any> &metadata) {
   if (is_first_write) {
     if (this->fp == NULL) {
       file_mtx.lock();
@@ -63,7 +63,7 @@ void dlio_profiler::ChromeWriter::finalize() {
 
 std::string
 dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &category, double &start_time,
-                                          double &duration, std::unordered_map<char *, std::any> &metadata) {
+                                          double &duration, std::unordered_map<std::string, std::any> &metadata) {
   return "{\"name\":\"" + event_name +"\"," +
          "\"cat\": \"" + category +"\"," +
          "\"pid\":" + std::to_string(getpid()) + "," +

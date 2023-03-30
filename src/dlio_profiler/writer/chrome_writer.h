@@ -14,7 +14,7 @@ namespace dlio_profiler {
     private:
         FILE* fp;
         std::string convert_json(std::string &event_name, std::string &category, double &start_time, double &duration,
-                                 std::unordered_map<char *, std::any> &metadata);
+                                 std::unordered_map<std::string, std::any> &metadata);
         size_t tid;
         bool is_first_write;
         std::mutex file_mtx;
@@ -26,7 +26,7 @@ namespace dlio_profiler {
         void initialize(char *filename, bool throw_error) override;
 
         void log(std::string &event_name, std::string &category, double &start_time, double &duration,
-                 std::unordered_map<char *, std::any> &metadata) override;
+                 std::unordered_map<std::string , std::any> &metadata) override;
 
         void finalize() override;
     };

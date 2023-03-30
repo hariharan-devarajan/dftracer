@@ -20,7 +20,7 @@ namespace dlio_profiler {
 
         virtual void log(std::string &event_name, std::string &category,
                          double &start_time, double &duration,
-                         std::unordered_map<char *, std::any> &metadata) = 0;
+                         std::unordered_map<std::string, std::any> &metadata) = 0;
 
         virtual void finalize() = 0;
 

@@ -11,11 +11,13 @@
 #include <dlio_profiler/core/singleton.h>
 #include <dlio_profiler/writer/base_writer.h>
 #include <dlio_profiler/writer/chrome_writer.h>
+#include <unistd.h>
+#include <dlio_profiler/macro.h>
 
 typedef std::chrono::high_resolution_clock chrono;
 class DLIOLogger {
 private:
-    std::unordered_map<char*, std::any> metadata;
+    std::unordered_map<std::string, std::any> metadata;
     chrono::time_point library_start;
     chrono::time_point start_time;
     double elapsed_time;
@@ -58,11 +60,11 @@ public:
       this->category = _category;
     }
     template <typename T>
-    inline void update_metadata(const char* key, const T value){
+    inline void update_metadata(std::string key, const T value){
       metadata.insert_or_assign(key, value);
     }
 
-    inline std::unordered_map<char*, std::any> get_metadata() {
+    inline std::unordered_map<std::string, std::any> get_metadata() {
       return metadata;
     }
 
