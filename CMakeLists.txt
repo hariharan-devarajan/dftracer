@@ -36,7 +36,10 @@ add_subdirectory(external/brahma)
 
 
 set(DEPENDENCY_LIB stdc++fs)
-
+if (BUILD_PYTHON_BINDINGS)
+    execute_process (COMMAND python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
+    message("-- " "[Python] ${PYTHON_SITE_PACKAGES} found for installing python binding")
+endif()
 find_package(cpp-logger REQUIRED)
 if (${CPP_LOGGER_FOUND})
     include_directories(${CPP_LOGGER_INCLUDE_DIRS})
@@ -220,6 +223,10 @@ install(TARGETS ${PROJECT_NAME}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(TARGETS ${PROJECT_NAME}_py
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(TARGETS ${PROJECT_NAME}_py
+        LIBRARY DESTINATION ${PYTHON_SITE_PACKAGES}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 #-----------------------------------------------------------------------------
 # Configure the ${PROJECT_NAME}-config-version .cmake file for the install directory
