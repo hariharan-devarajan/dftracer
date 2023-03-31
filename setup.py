@@ -105,6 +105,11 @@ class CMakeBuild(build_ext):
         cmake_args += [f"-Dcpp-logger_DIR={extdir}/lib/cmake/cpp-logger"]
         cmake_args += [f"-Dbrahma_DIR={extdir}/lib/cmake/brahma"]
         cmake_args += [f"-DCMAKE_PREFIX_PATH={extdir}:{sourcedir}/dependency/.spack-env/view"]
+        cmake_args += [f"-DCMAKE_PREFIX_PATH={extdir}:{sourcedir}/dependency/.spack-env/view"]
+        if "VIRTUAL_ENV" in os.environ:
+            virtual_env = os.environ['VIRTUAL_ENV']
+            cmake_args += [f"-DCMAKE_INSTALL_PREFIX={virtual_env}"]
+
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.
         if "CMAKE_BUILD_PARALLEL_LEVEL" not in os.environ:
@@ -123,6 +128,12 @@ class CMakeBuild(build_ext):
         )
         subprocess.run(
             ["cmake", "--build", ".", *build_args], cwd=build_temp, check=True
+        )
+        subprocess.run(
+            ["cmake", "--build", ".", *build_args], cwd=build_temp, check=True
+        )
+        subprocess.run(
+            ["cmake", "--install", "."], cwd=build_temp, check=True
         )
 
 
