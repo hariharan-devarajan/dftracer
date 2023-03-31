@@ -26,7 +26,6 @@ mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=../venv ../
 make install -j
-cp ../venv/lib/dlio_profiler_py.cpython-38-x86_64-linux-gnu.so ../venv/lib/python*/site-packages/
 ```
 
 Usage
