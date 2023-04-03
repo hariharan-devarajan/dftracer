@@ -9,7 +9,7 @@
 #include <fstream>
 namespace py = pybind11;
 namespace dlio_profiler {
-    void initialize(std::string &log_file, std::string &data_dirs) {
+    void initialize(std::string &log_file, std::string &data_dirs, int process_id) {
       DLIO_PROFILER_LOGPRINT("log_file %s data_dirs %s\n", log_file.c_str(), data_dirs.c_str());
       dlio_profiler::Singleton<DLIOLogger>::get_instance()->update_log_file(log_file);
       auto posix_instance = brahma::POSIXDLIOProfiler::get_instance();
@@ -40,7 +40,10 @@ namespace dlio_profiler {
 } // dlio_profiler
 PYBIND11_MODULE(dlio_profiler_py, m) {
   m.doc() = "Python module for dlio_logger"; // optional module docstring
-  m.def("initialize", &dlio_profiler::initialize, "initialize dlio profiler", py::arg("log_file"), py::arg("data_dirs"));
+  m.def("initialize", &dlio_profiler::initialize, "initialize dlio profiler",
+        py::arg("log_file"),
+        py::arg("data_dirs"),
+        py::arg("process_id") = -1);
   m.def("get_time", &dlio_profiler::get_time, "get time from profiler");
   m.def("log_event", &dlio_profiler::log_event, "log event with args",
           py::arg("name"), py::arg("cat"), py::arg("start_time"), py::arg("duration"),

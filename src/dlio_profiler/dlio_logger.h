@@ -22,6 +22,7 @@ private:
     bool throw_error;
     std::shared_ptr<dlio_profiler::BaseWriter> writer;
     bool is_init;
+    int process_id;
 public:
     DLIOLogger(bool init_log = false):is_init(false) {
       char *dlio_profiler_error = getenv("DLIO_PROFILER_ERROR");
@@ -56,7 +57,8 @@ public:
     inline TimeResolution get_current_time(){
       return std::chrono::duration<TimeResolution>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     }
-    inline void update_log_file(std::string log_file) {
+    inline void update_log_file(std::string log_file, int process_id = -1) {
+      this->process_id = process_id;
       writer = std::make_shared<dlio_profiler::ChromeWriter>(nullptr);
       writer->initialize(log_file.data(), this->throw_error);
       this->is_init=true;
@@ -71,7 +73,7 @@ public:
     inline void log(std::string event_name, std::string category,
                     TimeResolution start_time, TimeResolution duration,
                     std::unordered_map<std::string, std::any> &metadata) {
-      writer->log(event_name, category, start_time, duration, metadata);
+      writer->log(event_name, category, start_time, duration, metadata, process_id);
     }
     inline void finalize() {
       if (this->is_init) {

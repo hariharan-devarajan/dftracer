@@ -21,7 +21,7 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
 
 void
 dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category, TimeResolution &start_time, TimeResolution &duration,
-                                 std::unordered_map<std::string, std::any> &metadata) {
+                                 std::unordered_map<std::string, std::any> &metadata, int process_id) {
   if (is_first_write) {
     if (this->fp == NULL) {
       file_mtx.lock();
@@ -43,7 +43,7 @@ dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category,
   }
   if (fp != nullptr) {
     file_mtx.lock();
-    std::string json = convert_json(event_name, category, start_time, duration, metadata);
+    std::string json = convert_json(event_name, category, start_time, duration, metadata, process_id);
     auto written_elements = fwrite(json.c_str(), json.size(), sizeof(char), fp);
     fflush(fp);
     file_mtx.unlock();
@@ -65,14 +65,22 @@ void dlio_profiler::ChromeWriter::finalize() {
 
 std::string
 dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &category, TimeResolution start_time,
-                                          TimeResolution duration, std::unordered_map<std::string, std::any> &metadata) {
+                                          TimeResolution duration, std::unordered_map<std::string, std::any> &metadata,
+                                          int process_id) {
   std::stringstream all_stream;
-  auto tid = std::hash<std::thread::id>{}(std::this_thread::get_id()) % 100000;
+  int tid, pid;
+  if (process_id == -1) {
+    tid = std::hash<std::thread::id>{}(std::this_thread::get_id()) % 100000;
+    pid = getpid();
+  } else {
+    pid = process_id;
+    tid = getpid();
+  }
   auto start_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(start_time);
   auto duration_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(duration);
   all_stream  << R"({"name":")" << event_name << "\","
               << R"("cat":")" << category << "\","
-              << "\"pid\":" << getpid() << ","
+              << "\"pid\":" << pid << ","
               << "\"tid\":" << tid << ","
               << "\"ts\":" <<  std::chrono::duration_cast<std::chrono::microseconds>(start_sec).count() << ","
               << "\"dur\":" << std::chrono::duration_cast<std::chrono::microseconds>(duration_sec).count() << ","
