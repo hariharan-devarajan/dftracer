@@ -1,9 +1,11 @@
 [submodule "external/brahma"]
 	path = external/brahma
 	url = git@github.com:hariharan-devarajan/brahma.git
+	branch = dev
 [submodule "external/cpp-logger"]
 	path = external/cpp-logger
 	url = git@github.com:hariharan-devarajan/cpp-logger.git
+	branch = dev
 [submodule "external/pybind11"]
 	path = external/pybind11
 	url = git@github.com:pybind/pybind11.git
