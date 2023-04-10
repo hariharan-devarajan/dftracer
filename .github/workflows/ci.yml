@@ -1,9 +1,8 @@
 name: DLIO Profiler Build and Test
 
 on:
-  pull_request:
-    branches: [ main, dev ]
   push:
+    branches: [dev ]
 
 jobs:
   build-and-test:
@@ -13,11 +12,8 @@ jobs:
         os: [ ubuntu-20.04 ]
         compiler: [ gcc ]
         gcc: [8]
-
     name: ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.gcc }}
-
     runs-on: ${{ matrix.os }}
-
     env:
       CC: gcc-${{ matrix.gcc }}
       CXX: g++-${{ matrix.gcc }}
