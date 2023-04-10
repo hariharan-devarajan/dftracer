@@ -6,17 +6,6 @@ on:
   push:
 
 jobs:
-  checkpatch:
-    runs-on: [ ubuntu-latest ]
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 2
-      - name: Checkout submodules
-        run: git submodule update --init --recursive
-
   build-and-test:
     strategy:
       fail-fast: false
@@ -34,16 +23,12 @@ jobs:
       CXX: g++-${{ matrix.gcc }}
 
     steps:
-      - name: Push checkout
-        if: github.event_name == 'push'
-        uses: actions/checkout@v2
-
-      - name: PR checkout
-        if: github.event_name == 'pull_request'
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
+      - name: Checkout repository
+          uses: actions/checkout@v2
+          with:
+            fetch-depth: 2
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
       - name: Set up GCC
         uses: egor-tensin/setup-gcc@v1
         with:
