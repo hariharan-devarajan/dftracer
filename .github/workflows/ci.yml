@@ -10,12 +10,12 @@ jobs:
     runs-on: [ ubuntu-latest ]
 
     steps:
-    - name: Checkout repository
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
         with:
           fetch-depth: 2
-    - name: Checkout submodules
-      run: git submodule update --init --recursive
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
 
   build-and-test:
     strategy:
