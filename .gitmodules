@@ -13,4 +13,4 @@
 [submodule "external/GOTCHA"]
 	path = external/GOTCHA
 	url = https://github.com/LLNL/GOTCHA.git
-	branch = 1.0.3
+	branch = br-1.0.3
