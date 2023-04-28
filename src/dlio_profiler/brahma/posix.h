@@ -38,8 +38,7 @@ class POSIXDLIOProfiler : public POSIX {
   }
 
   inline bool is_traced(std::string filename) {
-    std::ifstream test(filename);
-    if (test) {
+    try {
       auto abs_file = fs::absolute(filename).string();
       for (const auto file : track_filename) {
         if (abs_file.rfind(file, 0) == 0) {
@@ -47,6 +46,7 @@ class POSIXDLIOProfiler : public POSIX {
           return true;
         }
       }
+    } catch (std::filesystem::filesystem_error& e) {
     }
     DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing %s", filename.c_str());
     return false;
