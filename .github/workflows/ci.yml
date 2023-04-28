@@ -92,7 +92,6 @@ jobs:
       - name: Configure and Build
         run: |
           source $GITHUB_WORKSPACE/.spack/share/spack/setup-env.sh
-          spack load gotcha
           mkdir build
           cd build
           cmake ../
