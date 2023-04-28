@@ -105,8 +105,8 @@ class CMakeBuild(build_ext):
         cmake_args += [f"-Dcpp-logger_DIR={extdir}/cmake/cpp-logger"]
         cmake_args += [f"-Dbrahma_DIR={extdir}/cmake/brahma"]
         cmake_args += [f"-Dgotcha_DIR={extdir}/cmake/gotcha"]
-        cmake_args += [f"-DCMAKE_PREFIX_PATH={extdir}"]
-        cmake_args += [f"-DCMAKE_PREFIX_PATH={extdir}"]
+        cmake_args += [f"-DCMAKE_PREFIX_PATH={extdir}:"]
+        cmake_args += [f"-DCXX_FLAGS=-L{extdir}"]
         if "VIRTUAL_ENV" in os.environ:
             virtual_env = os.environ['VIRTUAL_ENV']
             cmake_args += [f"-DCMAKE_INSTALL_PREFIX={virtual_env}"]
