@@ -14,13 +14,14 @@ set(DLIO_PROFILER_PACKAGE_VERSION_MINOR "${DLIO_PROFILER_VERSION_PATCH}")
 set(DLIO_PROFILER_PACKAGE_STRING "${DLIO_PROFILER_PACKAGE_NAME} ${DLIO_PROFILER_PACKAGE_VERSION}")
 set(DLIO_PROFILER_PACKAGE_TARNAME "${DLIO_PROFILER_PACKAGE}")
 cmake_minimum_required(VERSION 3.0)
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/dependency/.spack-env/view ${CMAKE_BINARY_DIR}/lib/cmake)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/dependency/.spack-env/view/lib/cmake ${CMAKE_BINARY_DIR}/lib/cmake)
-link_directories(${CMAKE_CURRENT_SOURCE_DIR}/dependency/.spack-env/view/lib ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_BINARY_DIR})
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_BINARY_DIR}/lib/cmake)
+link_directories(${CMAKE_BINARY_DIR}/lib)
 
 set(CMAKE_CXX_STANDARD 17)
 set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${DLIO_PROFILER_CMAKE_DIR})
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_BINARY_DIR})
 
 #------------------------------------------------------------------------------
 # Build options
@@ -31,16 +32,25 @@ if (BUILD_PYTHON_BINDINGS)
     add_subdirectory(external/pybind11)
 endif()
 add_subdirectory(external/cpp-logger)
+find_package(cpp-logger REQUIRED)
+add_subdirectory(external/GOTCHA)
+# Code needed for using gotcha as a submodule
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/GOTCHA/cmake/gotcha_testing.cmake
+        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/gotcha/gotcha-config.cmake @ONLY
+)
+export(EXPORT gotcha-targets
+        FILE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/gotcha/gotchaTargets.cmake")
+include_directories(external/GOTCHA/include)
 add_subdirectory(external/brahma)
-
-
+add_dependencies(brahma gotcha)
 
 set(DEPENDENCY_LIB stdc++fs)
 if (BUILD_PYTHON_BINDINGS)
     execute_process (COMMAND python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
     message("-- " "[Python] ${PYTHON_SITE_PACKAGES} found for installing python binding")
 endif()
-find_package(cpp-logger REQUIRED)
+
 if (${CPP_LOGGER_FOUND})
     include_directories(${CPP_LOGGER_INCLUDE_DIRS})
     set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${CPP_LOGGER_LIBRARIES})
@@ -176,7 +186,7 @@ endif ()
 # by other projects.
 #-----------------------------------------------------------------------------
 if (NOT DLIO_PROFILER_EXPORTED_TARGETS)
-    set(DLIO_PROFILER_EXPORTED_TARGETS "cpp-logger-targets")
+    set(DLIO_PROFILER_EXPORTED_TARGETS "dlio-profiler-targets")
 endif ()
 
 set(DLIO_PROFILER_LIBTYPE SHARED)
@@ -211,6 +221,7 @@ configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/CMake/${PROJECT_NAME}-config.cmake.build.in
         ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}-config.cmake @ONLY
 )
+
 install(
         FILES
         ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}-config.cmake
@@ -244,6 +255,12 @@ install(
 )
 
 install(
+        FILES
+        ${CMAKE_BINARY_DIR}/external/GOTCHA/gotcha-config.cmake
+        DESTINATION
+        ${DLIO_PROFILER_INSTALL_LIB_DIR}/cmake/gotcha
+)
+install(
         TARGETS
         ${PROJECT_NAME}
         EXPORT
@@ -254,6 +271,7 @@ install(
 )
 export(EXPORT ${DLIO_PROFILER_EXPORTED_TARGETS}
         FILE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}Targets.cmake")
+
 install(EXPORT
         ${DLIO_PROFILER_EXPORTED_TARGETS}
         DESTINATION
@@ -261,7 +279,6 @@ install(EXPORT
         FILE
         ${DLIO_PROFILER_EXPORTED_TARGETS}.cmake
         )
-
 option(DLIO_PROFILER_BUILD_TEST "Build the unit tests" ON)
 if (DLIO_PROFILER_BUILD_TEST)
     enable_testing()

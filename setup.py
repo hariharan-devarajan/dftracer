@@ -102,10 +102,11 @@ class CMakeBuild(build_ext):
             archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
             if archs:
                 cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]
-        cmake_args += [f"-Dcpp-logger_DIR={extdir}/lib/cmake/cpp-logger"]
-        cmake_args += [f"-Dbrahma_DIR={extdir}/lib/cmake/brahma"]
-        cmake_args += [f"-DCMAKE_PREFIX_PATH={extdir}:{sourcedir}/dependency/.spack-env/view"]
-        cmake_args += [f"-DCMAKE_PREFIX_PATH={extdir}:{sourcedir}/dependency/.spack-env/view"]
+        cmake_args += [f"-Dcpp-logger_DIR={extdir}/cmake/cpp-logger"]
+        cmake_args += [f"-Dbrahma_DIR={extdir}/cmake/brahma"]
+        cmake_args += [f"-Dgotcha_DIR={extdir}/cmake/gotcha"]
+        cmake_args += [f"-DCMAKE_PREFIX_PATH={extdir}"]
+        cmake_args += [f"-DCMAKE_PREFIX_PATH={extdir}"]
         if "VIRTUAL_ENV" in os.environ:
             virtual_env = os.environ['VIRTUAL_ENV']
             cmake_args += [f"-DCMAKE_INSTALL_PREFIX={virtual_env}"]
