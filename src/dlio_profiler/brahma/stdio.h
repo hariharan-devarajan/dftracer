@@ -10,6 +10,7 @@
 #include <vector>
 #include <dlio_profiler/dlio_logger.h>
 #include <filesystem>
+#include <fstream>
 namespace fs = std::filesystem;
 
 namespace brahma {

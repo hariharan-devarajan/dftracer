@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <sys/param.h>
 #include <filesystem>
+#include <fstream>
 namespace fs = std::filesystem;
 
 namespace brahma {
