@@ -34,11 +34,14 @@ class STDIODLIOProfiler : public STDIO {
     return is_traced(get_filename(fileno(fh)));
   }
   inline bool is_traced(std::string filename) {
-    auto abs_file = fs::absolute(filename).string();
-    for(const auto file : track_filename) {
-      if (abs_file.rfind(file, 0) == 0) {
-        DLIO_PROFILER_LOGINFO("Profiler Intercepted STDIO tracing %s", filename.c_str());
-        return true;
+    std::ifstream test(filename);
+    if (test) {
+      auto abs_file = fs::absolute(filename).string();
+      for (const auto file : track_filename) {
+        if (abs_file.rfind(file, 0) == 0) {
+          DLIO_PROFILER_LOGINFO("Profiler Intercepted STDIO tracing %s", filename.c_str());
+          return true;
+        }
       }
     }
     DLIO_PROFILER_LOGINFO("Profiler Intercepted STDIO not tracing %s", filename.c_str());
