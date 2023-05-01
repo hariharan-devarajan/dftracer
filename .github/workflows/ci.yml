@@ -92,7 +92,10 @@ jobs:
       - name: Configure and Build
         run: |
           source $GITHUB_WORKSPACE/.spack/share/spack/setup-env.sh
+          pushd external/GOTCHA
+          git apply ../gotcha_glibc_workaround.patch
+          popd 
           mkdir build
-          cd build
+          pushd build
           cmake ../
           make -j
