@@ -1,6 +1,7 @@
 
 set(TEST_BASIC_SRC test.cpp)
 add_executable(test_basic ${TEST_BASIC_SRC})
+target_link_libraries(test_basic hwloc)
 add_dependencies(test_basic ${PROJECT_NAME})
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/data)
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/log)

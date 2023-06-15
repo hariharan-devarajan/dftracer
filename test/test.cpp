@@ -2,16 +2,17 @@
 // Created by hariharan on 8/8/22.
 //
 
-#include <fcntl.h>
-#include <cassert>
-#include <unistd.h>
 
+#include <hwloc.h>
+#include <string>
 int main(int argc, char* argv[]) {
-  if (argc != 2) assert(argc != 2);
-  char* filename = argv[1];
-  int fd = open(filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-  assert(fd != -1);
-  int status = close(fd);
-  assert(status == 0);
+  hwloc_topology_t topology;
+  hwloc_topology_init(&topology);  // initialization
+  hwloc_topology_load(topology);   // actual detection
+  hwloc_cpuset_t set = hwloc_bitmap_alloc();
+  hwloc_get_cpubind(topology, set, HWLOC_CPUBIND_PROCESS);
+  for (unsigned id = hwloc_bitmap_first(set);  id != -1;  id = hwloc_bitmap_next(set, id)) {
+    printf("%d", id);
+  }
   return 0;
 }

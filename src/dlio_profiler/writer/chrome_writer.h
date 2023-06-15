@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <thread>
 #include <mutex>
+#include <hwloc.h>
+
 namespace dlio_profiler {
     class ChromeWriter: public BaseWriter {
     private:
@@ -17,6 +19,24 @@ namespace dlio_profiler {
                                  std::unordered_map<std::string, std::any> &metadata, int process_id);
         bool is_first_write;
         std::mutex file_mtx;
+        std::vector<int> core_affinity() {
+          auto cores = std::vector<int>();
+          hwloc_topology_t topology;
+          hwloc_topology_init(&topology);  // initialization
+          hwloc_topology_load(topology);   // actual detection
+          hwloc_cpuset_t set = hwloc_bitmap_alloc();
+          hwloc_get_cpubind(topology, set, HWLOC_CPUBIND_PROCESS);
+          for (unsigned id = hwloc_bitmap_first(set);  id != -1;  id = hwloc_bitmap_next(set, id)) {
+            cores.push_back((int)id);
+          }
+          return cores;
+        }
+        std::string hostname() {
+          const int SIZE=256;
+          char hostname[SIZE];
+          gethostname(hostname, SIZE);
+          return std::string(hostname);
+        }
     public:
         ChromeWriter(FILE* fp=NULL):BaseWriter(), is_first_write(true){
           this->fp = fp;
