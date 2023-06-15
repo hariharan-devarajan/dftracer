@@ -25,7 +25,7 @@ namespace dlio_profiler {
           hwloc_topology_init(&topology);  // initialization
           hwloc_topology_load(topology);   // actual detection
           hwloc_cpuset_t set = hwloc_bitmap_alloc();
-          hwloc_get_cpubind(topology, set, HWLOC_CPUBIND_PROCESS);
+          hwloc_get_cpubind(topology, set, HWLOC_CPUBIND_THREAD);
           for (unsigned id = hwloc_bitmap_first(set);  id != -1;  id = hwloc_bitmap_next(set, id)) {
             cores.push_back((int)id);
           }
