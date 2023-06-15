@@ -8,10 +8,13 @@
 #define CATEGORY "POSIX"
 
 std::shared_ptr<brahma::POSIXDLIOProfiler> brahma::POSIXDLIOProfiler::instance = nullptr;
-int brahma::POSIXDLIOProfiler::open(const char *pathname, int flags, mode_t mode) {
+int brahma::POSIXDLIOProfiler::open(const char *pathname, int flags, ...) {
   BRAHMA_MAP_OR_FAIL(open);
   DLIO_LOGGER_START(pathname);
-  int ret = __real_open(pathname, flags, mode);
+  va_list args;
+  va_start(args, flags);
+  int ret = __real_open(pathname, flags, args);
+  va_end(args);
   DLIO_LOGGER_UPDATE(ret);
   DLIO_LOGGER_END();
   if (trace) this->trace(ret);
@@ -56,10 +59,13 @@ int brahma::POSIXDLIOProfiler::creat64(const char *path, mode_t mode) {
   return ret;
 }
 
-int brahma::POSIXDLIOProfiler::open64(const char *path, int flags, mode_t mode) {
+int brahma::POSIXDLIOProfiler::open64(const char *path, int flags, ...) {
   BRAHMA_MAP_OR_FAIL(open64);
   DLIO_LOGGER_START(path);
-  int ret = __real_open64(path, flags, mode);
+  va_list args;
+  va_start(args, flags);
+  int ret = __real_open64(path, flags, args);
+  va_end(args);
   DLIO_LOGGER_END();
   if (trace) this->trace(path);
   return ret;
@@ -121,10 +127,13 @@ int brahma::POSIXDLIOProfiler::fdatasync(int fd) {
   return ret;
 }
 
-int brahma::POSIXDLIOProfiler::openat(int dirfd, const char *pathname, int flags, mode_t mode) {
+int brahma::POSIXDLIOProfiler::openat(int dirfd, const char *pathname, int flags, ...) {
   BRAHMA_MAP_OR_FAIL(openat);
   DLIO_LOGGER_START(dirfd);
-  int ret = __real_openat(dirfd, pathname, flags, mode);
+  va_list args;
+  va_start(args, flags);
+  int ret = __real_openat(dirfd, pathname, flags, args);
+  va_end(args);
   DLIO_LOGGER_END();
   return ret;
 }

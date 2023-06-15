@@ -48,7 +48,7 @@ class POSIXDLIOProfiler : public POSIX {
       }
     } catch (std::filesystem::filesystem_error& e) {
     }
-    DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing %s", filename.c_str());
+    //DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing %s", filename.c_str());
     return false;
   }
   inline void trace(int fd) {
@@ -74,9 +74,9 @@ class POSIXDLIOProfiler : public POSIX {
     }
     return instance;
   }
-  int open(const char *pathname, int flags, mode_t mode) override;
+  int open(const char *pathname, int flags, ...) override;
   int creat64(const char *path, mode_t mode) override;
-  int open64(const char *path, int flags, mode_t mode) override;
+  int open64(const char *path, int flags, ...) override;
   int close(int fd) override;
   ssize_t write(int fd, const void *buf, size_t count) override;
   ssize_t read(int fd, void *buf, size_t count) override;
@@ -89,7 +89,7 @@ class POSIXDLIOProfiler : public POSIX {
   int fsync(int fd) override;
   int fdatasync(int fd) override;
 
-  int openat(int dirfd, const char *pathname, int flags, mode_t mode) override;
+  int openat(int dirfd, const char *pathname, int flags, ...) override;
 
   void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset) override;
 
