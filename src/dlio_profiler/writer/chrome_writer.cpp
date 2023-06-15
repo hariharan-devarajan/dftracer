@@ -86,7 +86,7 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
               << "\"dur\":" << std::chrono::duration_cast<std::chrono::microseconds>(duration_sec).count() << ","
               << R"("ph":"X",)"
               << R"("args":{)";
-  all_stream << "\"hostname\":" << hostname() << ",";
+  all_stream << "\"hostname\":\"" << hostname() << "\",";
   all_stream << "\"core_affinity\": [";
   for(auto item : core_affinity()) {
       all_stream << item << ",";
