@@ -63,7 +63,7 @@ public:
       writer->initialize(log_file.data(), this->throw_error);
       this->is_init=true;
       library_start = get_current_time();
-      DLIO_PROFILER_LOGPRINT("Writing trace to %s with time %f", log_file.c_str(), library_start);
+      DLIO_PROFILER_LOGINFO("Writing trace to %s with time %f", log_file.c_str(), library_start);
     }
     inline TimeResolution get_time() {
       auto t =  get_current_time() - library_start;

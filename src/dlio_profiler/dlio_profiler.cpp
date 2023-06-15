@@ -39,16 +39,16 @@ void dlio_profiler_init(void) {
       char *dlio_profiler_log_level = getenv("DLIO_PROFILER_LOG_LEVEL");
       if (dlio_profiler_log_level == nullptr) {
         DLIO_PROFILER_LOGGER->level = cpplogger::LoggerType::LOG_ERROR;
-        DLIO_PROFILER_LOGPRINT("Enabling ERROR loggin", "");
+        DLIO_PROFILER_LOGINFO("Enabling ERROR loggin", "");
       } else {
         if (strcmp(dlio_profiler_log_level, "ERROR") == 0) {
           DLIO_PROFILER_LOGGER->level = cpplogger::LoggerType::LOG_ERROR;
-          DLIO_PROFILER_LOGPRINT("Enabling ERROR loggin", "");
+          DLIO_PROFILER_LOGINFO("Enabling ERROR loggin", "");
         } else if (strcmp(dlio_profiler_log_level, "INFO") == 0) {
           DLIO_PROFILER_LOGGER->level = cpplogger::LoggerType::LOG_INFO;
-          DLIO_PROFILER_LOGPRINT("Enabling INFO loggin", "");
+          DLIO_PROFILER_LOGINFO("Enabling INFO loggin", "");
         } else if (strcmp(dlio_profiler_log_level, "DEBUG") == 0) {
-          DLIO_PROFILER_LOGPRINT("Enabling DEBUG loggin", "");
+          DLIO_PROFILER_LOGINFO("Enabling DEBUG loggin", "");
           DLIO_PROFILER_LOGGER->level = cpplogger::LoggerType::LOG_WARN;
         }
       }
