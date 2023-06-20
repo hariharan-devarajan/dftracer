@@ -13,8 +13,9 @@ int brahma::POSIXDLIOProfiler::open(const char *pathname, int flags, ...) {
   DLIO_LOGGER_START(pathname);
   va_list args;
   va_start(args, flags);
-  int ret = __real_open(pathname, flags, args);
+  int mode = va_arg(args, int);
   va_end(args);
+  int ret = __real_open(pathname, flags, mode);
   DLIO_LOGGER_UPDATE(ret);
   DLIO_LOGGER_END();
   if (trace) this->trace(ret);
@@ -64,8 +65,9 @@ int brahma::POSIXDLIOProfiler::open64(const char *path, int flags, ...) {
   DLIO_LOGGER_START(path);
   va_list args;
   va_start(args, flags);
-  int ret = __real_open64(path, flags, args);
+  int mode = va_arg(args, int);
   va_end(args);
+  int ret = __real_open64(path, flags, mode);
   DLIO_LOGGER_END();
   if (trace) this->trace(path);
   return ret;
@@ -132,8 +134,9 @@ int brahma::POSIXDLIOProfiler::openat(int dirfd, const char *pathname, int flags
   DLIO_LOGGER_START(dirfd);
   va_list args;
   va_start(args, flags);
-  int ret = __real_openat(dirfd, pathname, flags, args);
+  int mode = va_arg(args, int);
   va_end(args);
+  int ret = __real_openat(dirfd, pathname, flags, mode);
   DLIO_LOGGER_END();
   return ret;
 }
