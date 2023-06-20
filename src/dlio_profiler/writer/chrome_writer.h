@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <thread>
 #include <mutex>
-#include <hwloc.h>
+#include <unistd.h>
 
 namespace dlio_profiler {
     class ChromeWriter: public BaseWriter {
@@ -21,14 +21,6 @@ namespace dlio_profiler {
         std::mutex file_mtx;
         std::vector<int> core_affinity() {
           auto cores = std::vector<int>();
-          hwloc_topology_t topology;
-          hwloc_topology_init(&topology);  // initialization
-          hwloc_topology_load(topology);   // actual detection
-          hwloc_cpuset_t set = hwloc_bitmap_alloc();
-          hwloc_get_cpubind(topology, set, HWLOC_CPUBIND_THREAD);
-          for (unsigned id = hwloc_bitmap_first(set);  id != -1;  id = hwloc_bitmap_next(set, id)) {
-            cores.push_back((int)id);
-          }
           return cores;
         }
         std::string hostname() {

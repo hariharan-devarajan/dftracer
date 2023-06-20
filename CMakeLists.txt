@@ -45,7 +45,7 @@ include_directories(external/GOTCHA/include)
 add_subdirectory(external/brahma)
 add_dependencies(brahma gotcha)
 
-set(DEPENDENCY_LIB stdc++fs -lhwloc)
+set(DEPENDENCY_LIB stdc++fs)
 if (BUILD_PYTHON_BINDINGS)
     execute_process (COMMAND python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
     message("-- " "[Python] ${PYTHON_SITE_PACKAGES} found for installing python binding")
