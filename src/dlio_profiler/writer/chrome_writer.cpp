@@ -60,6 +60,7 @@ void dlio_profiler::ChromeWriter::finalize() {
       ERROR(status != -1, "unable to close log file %d", filename.c_str());
     }
   }
+  hwloc_topology_destroy(topology);
 }
 
 
