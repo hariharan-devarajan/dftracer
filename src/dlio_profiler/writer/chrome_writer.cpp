@@ -42,11 +42,11 @@ dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category,
     is_first_write = false;
   }
   if (fp != nullptr) {
-    //file_mtx.lock();
     std::string json = convert_json(event_name, category, start_time, duration, metadata, process_id);
+    file_mtx.lock();
     auto written_elements = fwrite(json.c_str(), json.size(), sizeof(char), fp);
     fflush(fp);
-    //file_mtx.unlock();
+    file_mtx.unlock();
     if (written_elements != 1) {
       ERROR(written_elements != 1, "unable to write to log file %s", filename.c_str());
     }
