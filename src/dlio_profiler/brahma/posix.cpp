@@ -11,11 +11,16 @@ std::shared_ptr<brahma::POSIXDLIOProfiler> brahma::POSIXDLIOProfiler::instance =
 int brahma::POSIXDLIOProfiler::open(const char *pathname, int flags, ...) {
   BRAHMA_MAP_OR_FAIL(open);
   DLIO_LOGGER_START(pathname);
-  va_list args;
-  va_start(args, flags);
-  int mode = va_arg(args, int);
-  va_end(args);
-  int ret = __real_open(pathname, flags, mode);
+  int ret = -1;
+  if (flags & O_CREAT) {
+    va_list args;
+    va_start(args, flags);
+    int mode = va_arg(args, int);
+    va_end(args);
+    ret = __real_open(pathname, flags, mode);
+  } else {
+    ret = __real_open(pathname, flags);
+  }
   DLIO_LOGGER_UPDATE(ret);
   DLIO_LOGGER_END();
   if (trace) this->trace(ret);
@@ -63,11 +68,16 @@ int brahma::POSIXDLIOProfiler::creat64(const char *path, mode_t mode) {
 int brahma::POSIXDLIOProfiler::open64(const char *path, int flags, ...) {
   BRAHMA_MAP_OR_FAIL(open64);
   DLIO_LOGGER_START(path);
-  va_list args;
-  va_start(args, flags);
-  int mode = va_arg(args, int);
-  va_end(args);
-  int ret = __real_open64(path, flags, mode);
+  int ret = -1;
+  if (flags & O_CREAT) {
+    va_list args;
+    va_start(args, flags);
+    int mode = va_arg(args, int);
+    va_end(args);
+    ret = __real_open64(path, flags, mode);
+  }else {
+    ret = __real_open64(path, flags);
+  }
   DLIO_LOGGER_END();
   if (trace) this->trace(path);
   return ret;
@@ -132,11 +142,16 @@ int brahma::POSIXDLIOProfiler::fdatasync(int fd) {
 int brahma::POSIXDLIOProfiler::openat(int dirfd, const char *pathname, int flags, ...) {
   BRAHMA_MAP_OR_FAIL(openat);
   DLIO_LOGGER_START(dirfd);
-  va_list args;
-  va_start(args, flags);
-  int mode = va_arg(args, int);
-  va_end(args);
-  int ret = __real_openat(dirfd, pathname, flags, mode);
+  int ret = -1;
+  if (flags & O_CREAT) {
+    va_list args;
+    va_start(args, flags);
+    int mode = va_arg(args, int);
+    va_end(args);
+    ret = __real_openat(dirfd, pathname, flags, mode);
+  } else {
+    ret = __real_openat(dirfd, pathname, flags);
+  }
   DLIO_LOGGER_END();
   return ret;
 }
