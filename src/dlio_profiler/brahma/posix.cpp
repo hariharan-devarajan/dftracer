@@ -78,6 +78,7 @@ int brahma::POSIXDLIOProfiler::open64(const char *path, int flags, ...) {
   }else {
     ret = __real_open64(path, flags);
   }
+  DLIO_LOGGER_UPDATE(ret);
   DLIO_LOGGER_END();
   if (trace) this->trace(path);
   return ret;

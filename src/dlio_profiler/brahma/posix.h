@@ -46,9 +46,9 @@ class POSIXDLIOProfiler : public POSIX {
           return true;
         }
       }
+      DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing %s", abs_file.c_str());
     } catch (std::filesystem::filesystem_error& e) {
     }
-    //DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing %s", filename.c_str());
     return false;
   }
   inline void trace(int fd) {
