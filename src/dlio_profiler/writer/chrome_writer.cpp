@@ -105,6 +105,7 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
       all_stream << "\"" << item.first << "\":" << std::any_cast<int>(item.second);
       if (i < meta_size - 1) all_stream << ",";
     }
+    i++;
   }
   all_stream << "}}\n";
   DLIO_PROFILER_LOGINFO("event logged %s", all_stream.str().c_str());
