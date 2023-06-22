@@ -12,13 +12,19 @@ namespace dlio_profiler {
     void initialize(std::string &log_file, std::string &data_dirs, int process_id) {
       if (process_id == 0) DLIO_PROFILER_LOGPRINT("log_file %s data_dirs %s and process %d\n", log_file.c_str(), data_dirs.c_str(), process_id);
       dlio_profiler::Singleton<DLIOLogger>::get_instance()->update_log_file(log_file, process_id);
+      char *dlio_profiler_priority_str = getenv("DLIO_PROFILER_GOTCHA_PRIORITY");
+      int dlio_profiler_priority = 1;
+      if (dlio_profiler_priority_str != nullptr) {
+        dlio_profiler_priority = atoi(dlio_profiler_priority_str);
+      }
+      brahma_gotcha_wrap("dlio_profiler", dlio_profiler_priority);
       auto posix_instance = brahma::POSIXDLIOProfiler::get_instance();
       auto stdio_instance = brahma::STDIODLIOProfiler::get_instance();
       auto paths = split(data_dirs, ':');
       for (const auto &path:paths) {
         DLIO_PROFILER_LOGINFO("Profiler will trace %s\n", path.c_str());
-        posix_instance->trace(path);
-        stdio_instance->trace(path);
+        posix_instance->trace(path.c_str());
+        stdio_instance->trace(path.c_str());
       }
     }
     TimeResolution get_time() {

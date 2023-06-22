@@ -57,8 +57,9 @@ void dlio_profiler_init(void) {
       if (dlio_profiler_priority_str != nullptr) {
         dlio_profiler_priority = atoi(dlio_profiler_priority_str);
       }
-      brahma_gotcha_wrap("dlio_profiler", dlio_profiler_priority);
+      /*
       dlio_profiler::Singleton<DLIOLogger>::get_instance(init_log);
+      brahma_gotcha_wrap("dlio_profiler", dlio_profiler_priority);
       auto posix_instance = brahma::POSIXDLIOProfiler::get_instance();
       auto stdio_instance = brahma::STDIODLIOProfiler::get_instance();
       char *dlio_profiler_dir = getenv("DLIO_PROFILER_DIR");
@@ -70,6 +71,7 @@ void dlio_profiler_init(void) {
           stdio_instance->trace(path);
         }
       }
+       */
     }
     set_init(true);
   }

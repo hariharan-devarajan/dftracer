@@ -23,33 +23,31 @@ class POSIXDLIOProfiler : public POSIX {
   std::vector<std::string> track_filename;
   std::shared_ptr<DLIOLogger> logger;
   inline std::string get_filename(int fd) {
-    const int kMaxSize = 16*1024;
-    char proclnk[kMaxSize];
-    char filename[kMaxSize];
-    snprintf(proclnk, kMaxSize, "/proc/self/fd/%d", fd);
-    size_t r = readlink(proclnk, filename, kMaxSize);
+    char proclnk[PATH_MAX];
+    char filename[PATH_MAX];
+    snprintf(proclnk, PATH_MAX, "/proc/self/fd/%d", fd);
+    size_t r = readlink(proclnk, filename, PATH_MAX);
     filename[r] = '\0';
     return filename;
   }
   inline bool is_traced(int fd) {
     auto iter = tracked_fd.find(fd);
     if (iter != tracked_fd.end()) return true;
-    return is_traced(get_filename(fd));
+    return is_traced(get_filename(fd).c_str());
   }
 
-  inline bool is_traced(std::string filename) {
-    try {
-      auto abs_file = fs::absolute(filename).string();
-      for (const auto file : track_filename) {
-        if (abs_file.rfind(file, 0) == 0) {
-          DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX tracing %s", filename.c_str());
-          return true;
-        }
+  inline bool is_traced(const char* filename) {
+    bool found = false;
+    char resolved_path[PATH_MAX];
+    realpath(filename, resolved_path);
+    for (const auto file : track_filename) {
+      if (strstr(resolved_path, file.c_str()) != NULL) {
+        DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX tracing %s %s", resolved_path, filename);
+        found = true;
       }
-      DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing %s", abs_file.c_str());
-    } catch (std::filesystem::filesystem_error& e) {
     }
-    return false;
+    DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing %s %s", resolved_path, filename);
+    return found;
   }
   inline void trace(int fd) {
     tracked_fd.insert(fd);
@@ -62,9 +60,10 @@ class POSIXDLIOProfiler : public POSIX {
     DLIO_PROFILER_LOGINFO("POSIX class intercepted", "");
     logger = DLIO_LOGGER_INIT();
   }
-  inline void trace(std::string filename) {
-    auto abs_file = fs::absolute(filename).string();
-    track_filename.push_back(abs_file);
+  inline void trace(const char* filename) {
+    char resolved_path[PATH_MAX];
+    realpath(filename, resolved_path);
+    track_filename.push_back(resolved_path);
   }
   ~POSIXDLIOProfiler() override = default;
   static std::shared_ptr<POSIXDLIOProfiler> get_instance() {
