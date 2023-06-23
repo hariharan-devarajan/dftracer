@@ -114,6 +114,9 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
     }else if (item.second.type() == typeid(size_t)){
       all_stream << "\"" << item.first << "\":\"" << std::any_cast<size_t>(item.second) << "\"";
       if (i < meta_size - 1) all_stream << ",";
+    }else if (item.second.type() == typeid(long)){
+      all_stream << "\"" << item.first << "\":\"" << std::any_cast<long>(item.second) << "\"";
+      if (i < meta_size - 1) all_stream << ",";
     }else if (item.second.type() == typeid(ssize_t)){
       all_stream << "\"" << item.first << "\":\"" << std::any_cast<ssize_t>(item.second) << "\"";
       if (i < meta_size - 1) all_stream << ",";
