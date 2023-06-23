@@ -44,7 +44,8 @@ export(EXPORT gotcha-targets
 include_directories(external/GOTCHA/include)
 add_subdirectory(external/brahma)
 add_dependencies(brahma gotcha)
-
+link_directories(${CMAKE_BINARY_DIR}/lib)
+link_directories(${CMAKE_BINARY_DIR})
 set(DEPENDENCY_LIB stdc++fs -lhwloc)
 if (BUILD_PYTHON_BINDINGS)
     execute_process (COMMAND python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -93,7 +94,6 @@ set(DLIO_PROFILER_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/constants.h)
 add_library(${PROJECT_NAME} SHARED)
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCY_LIB})
-
 add_dependencies(${PROJECT_NAME} cpp-logger)
 add_dependencies(${PROJECT_NAME} brahma)
 add_dependencies(${PROJECT_NAME} gotcha)

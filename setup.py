@@ -45,11 +45,11 @@ class CMakeBuild(build_ext):
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         # EXAMPLE_VERSION_INFO shows you how to pass a value into the C++ code
         # from Python.
-        cmake_args = [
-            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
-            f"-DPYTHON_EXECUTABLE={sys.executable}",
-            f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
-        ]
+        cmake_args = []
+        #    f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}/lib",
+        #    f"-DPYTHON_EXECUTABLE={sys.executable}",
+        #    f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
+        #]
         build_args = []
         # Adding CMake arguments set as environment variable
         # (needed e.g. to build for ARM OSx on conda-forge)
@@ -59,7 +59,7 @@ class CMakeBuild(build_ext):
         # In this example, we pass in the version to C++. You might not need to.
         cmake_args += [f"-DEXAMPLE_VERSION_INFO={self.distribution.get_version()}"]
 
-        if self.compiler.compiler_type != "msvc":
+        '''if self.compiler.compiler_type != "msvc":
             # Using Ninja-build since it a) is available as a wheel and b)
             # multithreads automatically. MSVC would require all variables be
             # exported for Ninja to pick it up, which is a little tricky to do.
@@ -93,7 +93,7 @@ class CMakeBuild(build_ext):
             # Multi-config generators have a different way to specify configs
             if not single_config:
                 cmake_args += [
-                    f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{cfg.upper()}={extdir}"
+                    f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{cfg.upper()}={extdir}/lib"
                 ]
                 build_args += ["--config", cfg]
 
@@ -105,8 +105,8 @@ class CMakeBuild(build_ext):
         cmake_args += [f"-Dcpp-logger_DIR={extdir}/cmake/cpp-logger"]
         cmake_args += [f"-Dbrahma_DIR={extdir}/cmake/brahma"]
         cmake_args += [f"-Dgotcha_DIR={extdir}/cmake/gotcha"]
-        cmake_args += [f"-DCMAKE_PREFIX_PATH={extdir}:"]
-        cmake_args += [f"-DCXX_FLAGS=-L{extdir}"]
+        cmake_args += [f"-DCMAKE_PREFIX_PATH={extdir}"]
+        cmake_args += [f"-DLDFLAGS=-L{extdir}"]'''
         if "VIRTUAL_ENV" in os.environ:
             virtual_env = os.environ['VIRTUAL_ENV']
             cmake_args += [f"-DCMAKE_INSTALL_PREFIX={virtual_env}"]
