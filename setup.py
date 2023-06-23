@@ -110,6 +110,9 @@ class CMakeBuild(build_ext):
         if "VIRTUAL_ENV" in os.environ:
             virtual_env = os.environ['VIRTUAL_ENV']
             cmake_args += [f"-DCMAKE_INSTALL_PREFIX={virtual_env}"]
+        if "CONDA_DEFAULT_ENV" in os.environ:
+            virtual_env = os.environ['CONDA_DEFAULT_ENV']
+            cmake_args += [f"-DCMAKE_INSTALL_PREFIX={virtual_env}"]
 
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.
@@ -131,22 +134,48 @@ class CMakeBuild(build_ext):
             ["cmake", "--build", ".", *build_args], cwd=build_temp, check=True
         )
         subprocess.run(
-            ["cmake", "--build", ".", *build_args], cwd=build_temp, check=True
-        )
-        subprocess.run(
             ["cmake", "--install", "."], cwd=build_temp, check=True
         )
 
-
+import pathlib
+here = pathlib.Path(__file__).parent.resolve()
+long_description = (here / "README.md").read_text(encoding="utf-8")
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="dlio_profiler_py",
     version="0.0.1",
-    author="Dean Moldovan",
-    author_email="dean0x7d@gmail.com",
-    description="A test project using pybind11 and CMake",
-    long_description="",
+    description="I/O profiler for deep learning python apps. Specifically for dlio_benchmark.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/hariharan-devarajan/dlio-profiler",
+    author="Hariharan Devarajan (Hari)",
+    email="mani.hariharan@gmail.com",
+    classifiers=[  # Optional
+        # How mature is this project? Common values are
+        #   3 - Alpha
+        #   4 - Beta
+        #   5 - Production/Stable
+        "Development Status :: 3 - Alpha",
+        # Indicate who your project is intended for
+        "Intended Audience :: HPC",
+        "Topic :: Software Development :: Build Tools",
+        # Pick your license as you wish
+        "License :: OSI Approved :: MIT License",
+        # Specify the Python versions you support here. In particular, ensure
+        # that you indicate you support Python 3. These classifiers are *not*
+        # checked by 'pip install'. See instead 'python_requires' below.
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3 :: Only",
+    ],
+    keywords="profiler, deep learning, I/O, benchmark, NPZ, pytorch benchmark, tensorflow benchmark",
+    project_urls={  # Optional
+        "Bug Reports": "https://github.com/hariharan-devarajan/dlio-profiler/issues",
+        "Source": "https://github.com/hariharan-devarajan/dlio-profiler",
+    },
     ext_modules=[CMakeExtension("dlio_profiler_py")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
