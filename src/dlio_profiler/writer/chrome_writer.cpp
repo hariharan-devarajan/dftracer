@@ -89,15 +89,42 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
               << R"("args":{)";
   all_stream << "\"hostname\":\"" << hostname() << "\",";
   all_stream << "\"core_affinity\": [";
-  for(auto item : core_affinity()) {
-      all_stream << item << ",";
+  auto cores = core_affinity();
+  auto cores_size = cores.size();
+  for(int i = 0; i < cores_size; ++i) {
+      all_stream << cores[i];
+      if (i < cores_size - 1) all_stream << ",";
   }
 
-  all_stream << "],";
+  all_stream << "]";
+  auto meta_size = metadata.size();
+  if (meta_size > 0) all_stream << ",";
+  int i = 0;
   for(auto item : metadata) {
+    DLIO_PROFILER_LOGINFO("event metadata type %d", all_stream.str().c_str());
     if (item.second.type() == typeid(int)) {
-      all_stream << "\"" << item.first << "\":" << std::any_cast<int>(item.second) << ",";
+      all_stream << "\"" << item.first << "\":" << std::any_cast<int>(item.second);
+      if (i < meta_size - 1) all_stream << ",";
+    } else if (item.second.type() == typeid(const char *)) {
+      all_stream << "\"" << item.first << "\":\"" << std::any_cast<const char *>(item.second) << "\"";
+      if (i < meta_size - 1) all_stream << ",";
+    } else if (item.second.type() == typeid(std::string)){
+      all_stream << "\"" << item.first << "\":\"" << std::any_cast<std::string>(item.second) << "\"";
+      if (i < meta_size - 1) all_stream << ",";
+    }else if (item.second.type() == typeid(size_t)){
+      all_stream << "\"" << item.first << "\":\"" << std::any_cast<size_t>(item.second) << "\"";
+      if (i < meta_size - 1) all_stream << ",";
+    }else if (item.second.type() == typeid(ssize_t)){
+      all_stream << "\"" << item.first << "\":\"" << std::any_cast<ssize_t>(item.second) << "\"";
+      if (i < meta_size - 1) all_stream << ",";
+    }else if (item.second.type() == typeid(off_t)){
+      all_stream << "\"" << item.first << "\":\"" << std::any_cast<off_t>(item.second) << "\"";
+      if (i < meta_size - 1) all_stream << ",";
+    }else if (item.second.type() == typeid(off64_t)){
+      all_stream << "\"" << item.first << "\":\"" << std::any_cast<off64_t>(item.second) << "\"";
+      if (i < meta_size - 1) all_stream << ",";
     }
+    i++;
   }
   all_stream << "}}\n";
   DLIO_PROFILER_LOGINFO("event logged %s", all_stream.str().c_str());
