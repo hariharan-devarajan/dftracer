@@ -144,7 +144,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="dlio_profiler_py",
-    version="0.0.1",
+    version="0.1",
     description="I/O profiler for deep learning python apps. Specifically for dlio_benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
