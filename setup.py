@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from setuptools import Extension, setup
+from setuptools import Extension, setup, find_namespace_packages
 from setuptools.command.build_ext import build_ext
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
@@ -176,6 +176,8 @@ setup(
         "Bug Reports": "https://github.com/hariharan-devarajan/dlio-profiler/issues",
         "Source": "https://github.com/hariharan-devarajan/dlio-profiler",
     },
+    packages=find_namespace_packages(where="."),
+    package_dir={"dlio_profiler": "dlio_profiler"},
     ext_modules=[CMakeExtension("dlio_profiler_py")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
