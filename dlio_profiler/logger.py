@@ -33,7 +33,7 @@ class dlio_logger:
         if os.path.isfile(log_file):
             os.remove(log_file)
         instance.logger = profiler
-        instance.logger.initialize(instance.log_file, f"{data_dir}", process_id=process_id)
+        instance.logger.initialize(f"{instance.logfile}", f"{data_dir}", process_id=process_id)
 
     def get_time(self):
         self.logger.get_time()
