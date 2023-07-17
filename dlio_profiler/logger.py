@@ -36,7 +36,7 @@ class dlio_logger:
         instance.logger.initialize(f"{instance.logfile}", f"{data_dir}", process_id=process_id)
 
     def get_time(self):
-        self.logger.get_time()
+        return self.logger.get_time()
 
     def log_event(self, name, cat, start_time, duration, int_args=None):
         if int_args is None:
