@@ -6,6 +6,8 @@
 #define DLIO_PROFILER_COMMON_H
 #include <vector>
 #include <string>
+#include <cstring>
+const std::string ignore_filenames[4] = {".pfw", "/pipe", "/socket","/proc/self"};
 inline std::vector<std::string> split(std::string str, char delimiter) {
   std::vector<std::string> res;
   if (str.find(delimiter) == std::string::npos) {
@@ -19,6 +21,14 @@ inline std::vector<std::string> split(std::string str, char delimiter) {
     }
   }
   return res;
+}
+inline bool ignore_files(const char* filename) {
+  for(auto &file: ignore_filenames) {
+    if (strstr(filename, file.c_str()) != NULL) {
+      return true;
+    }
+  }
+  return false;
 }
 typedef double TimeResolution;
 #endif //DLIO_PROFILER_COMMON_H

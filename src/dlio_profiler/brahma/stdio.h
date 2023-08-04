@@ -19,6 +19,7 @@ class STDIODLIOProfiler : public STDIO {
   static std::shared_ptr<STDIODLIOProfiler> instance;
   std::unordered_set<FILE*> tracked_fh;
   std::vector<std::string> track_filename;
+  std::vector<std::string> ignore_filename;
   std::shared_ptr<DLIOLogger> logger;
   inline std::string get_filename(int fd) {
     char proclnk[PATH_MAX];
@@ -28,23 +29,39 @@ class STDIODLIOProfiler : public STDIO {
     filename[r] = '\0';
     return filename;
   }
-  inline bool is_traced(FILE* fh) {
+  inline std::pair<bool, std::string> is_traced(FILE* fh, const char* func) {
+    if (fh == NULL) return std::pair<bool, std::string>(false, "");
     auto iter = tracked_fh.find(fh);
-    if (iter != tracked_fh.end()) return true;
-    return is_traced(get_filename(fileno(fh)).c_str());
+    if (iter != tracked_fh.end()) return std::pair<bool, std::string>(true, "");
+    return is_traced(get_filename(fileno(fh)).c_str(), func);
   }
-  inline bool is_traced(const char* filename) {
+  inline std::pair<bool, std::string> is_traced(const char* filename, const char* func) {
     bool found = false;
+    bool ignore = false;
     char resolved_path[PATH_MAX];
     realpath(filename, resolved_path);
-    for (const auto file : track_filename) {
+    if (ignore_files(resolved_path)) {
+        DLIO_PROFILER_LOGINFO("Profiler ignoring logfile %s", resolved_path);
+        return std::pair<bool, std::string>(false, filename);
+    }
+    for (const auto file : ignore_filename) {
       if (strstr(resolved_path, file.c_str()) != NULL) {
-        DLIO_PROFILER_LOGINFO("Profiler Intercepted STDIO tracing %s %s", resolved_path, filename);
-        found = true;
+        DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing %s %s %s", resolved_path, filename, func);
+        ignore = true;
+        break;
       }
     }
-    DLIO_PROFILER_LOGINFO("Profiler Intercepted STDIO not tracing %s %s", resolved_path, filename);
-    return found;
+    if (!ignore) {
+      for (const auto file : track_filename) {
+        if (strstr(resolved_path, file.c_str()) != NULL) {
+          DLIO_PROFILER_LOGINFO("Profiler Intercepted STDIO tracing %s %s %s", resolved_path, filename, func);
+          found = true;
+          break;
+        }
+      }
+    }
+    DLIO_PROFILER_LOGINFO("Profiler Intercepted STDIO not tracing %s %s %s", resolved_path, filename, func);
+    return std::pair<bool, std::string>(found, filename);
   }
   inline void trace(FILE* fh) {
     tracked_fh.insert(fh);
@@ -62,6 +79,11 @@ class STDIODLIOProfiler : public STDIO {
     char resolved_path[PATH_MAX];
     realpath(filename, resolved_path);
     track_filename.push_back(resolved_path);
+  }
+  inline void untrace(const char* filename) {
+    char resolved_path[PATH_MAX];
+    realpath(filename, resolved_path);
+    ignore_filename.push_back(resolved_path);
   }
 
   ~STDIODLIOProfiler() = default;

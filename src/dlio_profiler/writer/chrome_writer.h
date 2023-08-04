@@ -19,7 +19,8 @@ namespace dlio_profiler {
         std::string convert_json(std::string &event_name, std::string &category, TimeResolution start_time, TimeResolution duration,
                                  std::unordered_map<std::string, std::any> &metadata, int process_id);
         bool is_first_write;
-        std::mutex file_mtx;
+        int process_id;
+        std::unordered_map<int, std::mutex> mtx_map;
         std::vector<unsigned> core_affinity() {
           auto cores = std::vector<unsigned>();
           hwloc_cpuset_t set = hwloc_bitmap_alloc();
@@ -37,7 +38,8 @@ namespace dlio_profiler {
           return std::string(hostname);
         }
     public:
-        ChromeWriter(FILE* fp=NULL):BaseWriter(), is_first_write(true){
+        ChromeWriter(FILE* fp=NULL):BaseWriter(), is_first_write(true), mtx_map(){
+          process_id = getpid();
           this->fp = fp;
           hwloc_topology_init(&topology);  // initialization
           hwloc_topology_load(topology);   // actual detection

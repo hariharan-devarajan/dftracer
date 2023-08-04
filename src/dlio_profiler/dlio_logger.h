@@ -29,30 +29,28 @@ public:
       if (dlio_profiler_error != nullptr && strcmp(dlio_profiler_error, "1") == 0) {
         throw_error = true;
       }
-      if (init_log) {
-        this->is_init=true;
-        FILE *fp = NULL;
-        std::string log_file;
-        if (log_file.empty()) {
-          char *dlio_profiler_log_dir = getenv("DLIO_PROFILER_LOG_DIR");
-          if (dlio_profiler_log_dir == nullptr) {
+      this->is_init=true;
+      FILE *fp = NULL;
+      std::string log_file;
+      if (log_file.empty()) {
+        char *dlio_profiler_log_dir = getenv("DLIO_PROFILER_LOG_DIR");
+        if (dlio_profiler_log_dir == nullptr) {
+          fp = stderr;
+          log_file = "STDERR";
+        } else {
+          if (strcmp(dlio_profiler_log_dir, "STDERR") == 0) {
             fp = stderr;
             log_file = "STDERR";
+          } else if (strcmp(dlio_profiler_log_dir, "STDOUT") == 0) {
+            fp = stdout;
+            log_file = "STDOUT";
           } else {
-            if (strcmp(dlio_profiler_log_dir, "STDERR") == 0) {
-              fp = stderr;
-              log_file = "STDERR";
-            } else if (strcmp(dlio_profiler_log_dir, "STDOUT") == 0) {
-              fp = stdout;
-              log_file = "STDOUT";
-            } else {
-              int pid = getpid();
-              log_file = std::string(dlio_profiler_log_dir) + "/" + "trace_ll_" + std::to_string(pid) + ".pfw";
-            }
+            int pid = getpid();
+            log_file = std::string(dlio_profiler_log_dir) + "/" + "trace_ll_" + std::to_string(pid) + ".pfw";
           }
         }
-        update_log_file(log_file);
       }
+      update_log_file(log_file);
     }
     inline TimeResolution get_current_time(){
       return std::chrono::duration<TimeResolution>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
@@ -85,12 +83,17 @@ public:
   dlio_profiler::Singleton<DLIOLogger>::get_instance()
 #define DLIO_LOGGER_FINI() \
   dlio_profiler::Singleton<DLIOLogger>::get_instance()->finalize()
-#define DLIO_LOGGER_START(entity)                               \
-  bool trace = is_traced(entity);                               \
-  TimeResolution start_time = 0;                                        \
-  auto metadata = std::unordered_map<std::string, std::any>();  \
-  if (trace) start_time = this->logger->get_time();
 #define DLIO_LOGGER_UPDATE(value) if (trace) metadata.insert_or_assign(#value, value);
+#define DLIO_LOGGER_START(entity)                               \
+  auto pair = is_traced(entity, __FUNCTION__);                  \
+  bool trace = pair.first;                                      \
+  TimeResolution start_time = 0;                                \
+  auto metadata = std::unordered_map<std::string, std::any>();  \
+  if (trace) {                                                  \
+    auto filename = pair.second;                                \
+    DLIO_LOGGER_UPDATE(filename);                               \
+    start_time = this->logger->get_time();                      \
+  }
 #define DLIO_LOGGER_END()                                 \
   if (trace) {                                                          \
     TimeResolution end_time = this->logger->get_time();                         \

@@ -24,17 +24,14 @@ dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category,
                                  std::unordered_map<std::string, std::any> &metadata, int process_id) {
   if (is_first_write) {
     if (this->fp == NULL) {
-      file_mtx.lock();
       fp = fopen(filename.c_str(), "w+");
-      file_mtx.unlock();
     }
     if (fp == nullptr) {
       ERROR(fp == nullptr,"unable to create log file %s", filename.c_str());
     } else {
       std::string data = "[\n";
-      file_mtx.lock();
       auto written_elements = fwrite(data.c_str(), data.size(), sizeof(char), fp);
-      file_mtx.unlock();
+      fflush(fp);
       if (written_elements != 1) {
         ERROR(written_elements != 1, "unable to initialize log file %s", filename.c_str());
       }
@@ -43,10 +40,8 @@ dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category,
   }
   if (fp != nullptr) {
     std::string json = convert_json(event_name, category, start_time, duration, metadata, process_id);
-    file_mtx.lock();
     auto written_elements = fwrite(json.c_str(), json.size(), sizeof(char), fp);
     fflush(fp);
-    file_mtx.unlock();
     if (written_elements != 1) {
       ERROR(written_elements != 1, "unable to write to log file %s", filename.c_str());
     }

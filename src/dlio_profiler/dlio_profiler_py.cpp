@@ -7,10 +7,33 @@
 #include <pybind11/stl.h>
 #include <iostream>
 #include <fstream>
+
+
+#include <stdio.h>
+#include <execinfo.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 namespace py = pybind11;
 namespace dlio_profiler {
+
+
+    void handler(int sig) {
+      void *array[10];
+      size_t size;
+
+      // get void*'s for all entries on the stack
+      size = backtrace(array, 10);
+
+      // print out all the frames to stderr
+      fprintf(stderr, "Error: signal %d:\n", sig);
+      backtrace_symbols_fd(array, size, STDERR_FILENO);
+      exit(1);
+    }
     void initialize(std::string &log_file, std::string &data_dirs, int process_id) {
-      if (process_id == 0) DLIO_PROFILER_LOGPRINT("log_file %s data_dirs %s and process %d\n", log_file.c_str(), data_dirs.c_str(), process_id);
+      signal(SIGSEGV, handler);
+      if (process_id <= 0) DLIO_PROFILER_LOGPRINT("log_file %s data_dirs %s and process %d\n", log_file.c_str(), data_dirs.c_str(), process_id);
       dlio_profiler::Singleton<DLIOLogger>::get_instance()->update_log_file(log_file, process_id);
       char *dlio_profiler_priority_str = getenv("DLIO_PROFILER_GOTCHA_PRIORITY");
       int dlio_profiler_priority = 1;
@@ -21,6 +44,8 @@ namespace dlio_profiler {
       auto posix_instance = brahma::POSIXDLIOProfiler::get_instance();
       auto stdio_instance = brahma::STDIODLIOProfiler::get_instance();
       auto paths = split(data_dirs, ':');
+      posix_instance->untrace(log_file.c_str());
+      stdio_instance->untrace(log_file.c_str());
       for (const auto &path:paths) {
         DLIO_PROFILER_LOGINFO("Profiler will trace %s\n", path.c_str());
         posix_instance->trace(path.c_str());
