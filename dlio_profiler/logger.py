@@ -39,6 +39,7 @@ class dlio_logger:
                 os.remove(log_file)
             instance.logger = profiler
             instance.logger.initialize(f"{instance.logfile}", f"{data_dir}", process_id=process_id)
+        return instance
 
     def get_time(self):
         if DLIO_PROFILER_ENABLED:
