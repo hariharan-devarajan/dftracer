@@ -1,4 +1,4 @@
-cpp-logger,git@github.com:hariharan-devarajan/cpp-logger.git,dev,1
-gotcha,git@github.com:LLNL/GOTCHA.git,develop,1
-brahma,git@github.com:hariharan-devarajan/brahma.git,dev,1
-py11bind,git@github.com:pybind/pybind11.git,stable,0
+cpp-logger,https://github.com/hariharan-devarajan/cpp-logger.git,dev,1
+gotcha,https://github.com/LLNL/GOTCHA.git,develop,1
+brahma,https://github.com/hariharan-devarajan/brahma.git,dev,1
+py11bind,https://github.com/pybind/pybind11.git,stable,0

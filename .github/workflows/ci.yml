@@ -29,4 +29,4 @@ jobs:
           sudo apt-get install python3 python3-pip
       - name: Configure and Build
         run: |
-          pip install .
+          sudo pip install .
