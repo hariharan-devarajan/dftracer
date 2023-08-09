@@ -20,7 +20,8 @@ link_directories(${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_MACOSX_RPATH 1)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_CXX_STANDARD 17)
-set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cmake)
+set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_BINARY_DIR}/external/GOTCHA ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cmake)
+message(STATUS "-- ${DLIO_PROFILER_CMAKE_DIR}")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${DLIO_PROFILER_CMAKE_DIR})
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_BINARY_DIR})
 
@@ -37,8 +38,12 @@ find_package(cpp-logger REQUIRED)
 add_subdirectory(external/GOTCHA)
 # Code needed for using gotcha as a submodule
 configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/external/GOTCHA/cmake/gotcha_testing.cmake
+	${CMAKE_BINARY_DIR}/external/GOTCHA/gotcha-config.cmake
         ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/gotcha/gotcha-config.cmake @ONLY
+)
+configure_file(
+	${CMAKE_BINARY_DIR}/external/GOTCHA/gotcha-config-version.cmake
+        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/gotcha/gotcha-config-version.cmake @ONLY
 )
 export(EXPORT gotcha-targets
         FILE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/gotcha/gotchaTargets.cmake")
@@ -49,8 +54,12 @@ link_directories(${CMAKE_BINARY_DIR}/lib)
 link_directories(${CMAKE_BINARY_DIR})
 set(DEPENDENCY_LIB stdc++fs -lhwloc)
 if (BUILD_PYTHON_BINDINGS)
+  if (USER_INSTALL) 
+    execute_process (COMMAND python3 -c "import site; print(site.USER_SITE)" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)    
+  else()	
     execute_process (COMMAND python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
-    message("-- " "[Python] ${PYTHON_SITE_PACKAGES} found for installing python binding")
+  endif()
+  message("-- " "[Python] ${PYTHON_SITE_PACKAGES} found for installing python binding")
 endif()
 
 if (${CPP_LOGGER_FOUND})

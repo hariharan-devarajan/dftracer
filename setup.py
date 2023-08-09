@@ -3,7 +3,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-
+print(sys.argv)
 from setuptools import Extension, setup, find_namespace_packages
 from setuptools.command.build_ext import build_ext
 
@@ -27,6 +27,7 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def build_extension(self, ext: CMakeExtension) -> None:
+        import site 
         # Must be in this form due to bug in .resolve() only fixed in Python 3.10+
         ext_fullpath = Path.cwd() / self.get_ext_fullpath(ext.name)
         extdir = ext_fullpath.parent.parent.resolve()
@@ -59,61 +60,15 @@ class CMakeBuild(build_ext):
         # In this example, we pass in the version to C++. You might not need to.
         cmake_args += [f"-DEXAMPLE_VERSION_INFO={self.distribution.get_version()}"]
 
-        '''if self.compiler.compiler_type != "msvc":
-            # Using Ninja-build since it a) is available as a wheel and b)
-            # multithreads automatically. MSVC would require all variables be
-            # exported for Ninja to pick it up, which is a little tricky to do.
-            # Users can override the generator with CMAKE_GENERATOR in CMake
-            # 3.15+.
-            if not cmake_generator or cmake_generator == "Ninja":
-                try:
-                    import ninja
-
-                    ninja_executable_path = Path(ninja.BIN_DIR) / "ninja"
-                    cmake_args += [
-                        "-GNinja",
-                        f"-DCMAKE_MAKE_PROGRAM:FILEPATH={ninja_executable_path}",
-                    ]
-                except ImportError:
-                    pass
-
-        else:
-            # Single config generators are handled "normally"
-            single_config = any(x in cmake_generator for x in {"NMake", "Ninja"})
-
-            # CMake allows an arch-in-generator style for backward compatibility
-            contains_arch = any(x in cmake_generator for x in {"ARM", "Win64"})
-
-            # Specify the arch if using MSVC generator, but only if it doesn't
-            # contain a backward-compatibility arch spec already in the
-            # generator name.
-            if not single_config and not contains_arch:
-                cmake_args += ["-A", PLAT_TO_CMAKE[self.plat_name]]
-
-            # Multi-config generators have a different way to specify configs
-            if not single_config:
-                cmake_args += [
-                    f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{cfg.upper()}={extdir}/lib"
-                ]
-                build_args += ["--config", cfg]
-
-        if sys.platform.startswith("darwin"):
-            # Cross-compile support for macOS - respect ARCHFLAGS if set
-            archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
-            if archs:
-                cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]
-        cmake_args += [f"-Dcpp-logger_DIR={extdir}/cmake/cpp-logger"]
-        cmake_args += [f"-Dbrahma_DIR={extdir}/cmake/brahma"]
-        cmake_args += [f"-Dgotcha_DIR={extdir}/cmake/gotcha"]
-        cmake_args += [f"-DCMAKE_PREFIX_PATH={extdir}"]
-        cmake_args += [f"-DLDFLAGS=-L{extdir}"]'''
         if "VIRTUAL_ENV" in os.environ:
             virtual_env = os.environ['VIRTUAL_ENV']
             cmake_args += [f"-DCMAKE_INSTALL_PREFIX={virtual_env}"]
-        if "CONDA_DEFAULT_ENV" in os.environ:
+        elif "CONDA_DEFAULT_ENV" in os.environ:
             virtual_env = os.environ['CONDA_DEFAULT_ENV']
             cmake_args += [f"-DCMAKE_INSTALL_PREFIX={virtual_env}"]
-
+        elif "DLIO_LOGGER_USER" in os.environ:
+            cmake_args += [f"-DCMAKE_INSTALL_PREFIX={site.USER_BASE}"] 
+            cmake_args += [f"-DUSER_INSTALL=ON"] 
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.
         if "CMAKE_BUILD_PARALLEL_LEVEL" not in os.environ:
