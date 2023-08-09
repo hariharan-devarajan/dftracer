@@ -3,6 +3,7 @@ project(dlio_profiler)
 #------------------------------------------------------------------------------
 # Version information
 #------------------------------------------------------------------------------
+
 set(DLIO_PROFILER_VERSION_MAJOR "0")
 set(DLIO_PROFILER_VERSION_MINOR "0")
 set(DLIO_PROFILER_VERSION_PATCH "1")
@@ -20,7 +21,7 @@ link_directories(${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_MACOSX_RPATH 1)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_CXX_STANDARD 17)
-set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_BINARY_DIR}/external/GOTCHA ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cmake)
+set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cmake)
 message(STATUS "-- ${DLIO_PROFILER_CMAKE_DIR}")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${DLIO_PROFILER_CMAKE_DIR})
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_BINARY_DIR})
@@ -31,13 +32,13 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_BINARY_DIR})
 option(BUILD_PYTHON_BINDINGS "Build python bindings." ON)
 
 if (BUILD_PYTHON_BINDINGS)
-    add_subdirectory(external/pybind11)
+    add_subdirectory(dependency/py11bind)
 endif()
-add_subdirectory(external/cpp-logger)
+#add_subdirectory(external/cpp-logger)
 find_package(cpp-logger REQUIRED)
-add_subdirectory(external/GOTCHA)
+#add_subdirectory(external/GOTCHA)
 # Code needed for using gotcha as a submodule
-configure_file(
+#[[configure_file(
 	${CMAKE_BINARY_DIR}/external/GOTCHA/gotcha-config.cmake
         ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/gotcha/gotcha-config.cmake @ONLY
 )
@@ -46,10 +47,10 @@ configure_file(
         ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/gotcha/gotcha-config-version.cmake @ONLY
 )
 export(EXPORT gotcha-targets
-        FILE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/gotcha/gotchaTargets.cmake")
-include_directories(external/GOTCHA/include)
-add_subdirectory(external/brahma)
-add_dependencies(brahma gotcha)
+        FILE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/gotcha/gotchaTargets.cmake")]]
+#include_directories(external/GOTCHA/include)
+#add_subdirectory(external/brahma)
+#add_dependencies(brahma gotcha)
 link_directories(${CMAKE_BINARY_DIR}/lib)
 link_directories(${CMAKE_BINARY_DIR})
 set(DEPENDENCY_LIB stdc++fs -lhwloc)
@@ -236,9 +237,13 @@ configure_file(
         ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}-config.cmake @ONLY
 )
 
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/CMake/${PROJECT_NAME}-config.cmake.install.in
+        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/install/${PROJECT_NAME}-config.cmake @ONLY
+)
 install(
         FILES
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}-config.cmake
+        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/install/${PROJECT_NAME}-config.cmake
         DESTINATION
         ${DLIO_PROFILER_INSTALL_LIB_DIR}/cmake/${PROJECT_NAME}
 )
@@ -268,12 +273,6 @@ install(
         ${DLIO_PROFILER_INSTALL_LIB_DIR}/cmake/${PROJECT_NAME}
 )
 
-install(
-        FILES
-        ${CMAKE_BINARY_DIR}/external/GOTCHA/gotcha-config.cmake
-        DESTINATION
-        ${DLIO_PROFILER_INSTALL_LIB_DIR}/cmake/gotcha
-)
 install(
         TARGETS
         ${PROJECT_NAME}

@@ -39,7 +39,8 @@ class STDIODLIOProfiler : public STDIO {
     bool found = false;
     bool ignore = false;
     char resolved_path[PATH_MAX];
-    realpath(filename, resolved_path);
+    char* data = realpath(filename, resolved_path);
+    (void) data;
     if (ignore_files(resolved_path)) {
         DLIO_PROFILER_LOGINFO("Profiler ignoring logfile %s", resolved_path);
         return std::pair<bool, std::string>(false, filename);
@@ -77,12 +78,14 @@ class STDIODLIOProfiler : public STDIO {
 
   inline void trace(const char* filename) {
     char resolved_path[PATH_MAX];
-    realpath(filename, resolved_path);
+    char* data = realpath(filename, resolved_path);
+    (void) data;
     track_filename.push_back(resolved_path);
   }
   inline void untrace(const char* filename) {
     char resolved_path[PATH_MAX];
-    realpath(filename, resolved_path);
+    char* data = realpath(filename, resolved_path);
+    (void) data;
     ignore_filename.push_back(resolved_path);
   }
 

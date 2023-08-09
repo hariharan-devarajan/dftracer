@@ -6,6 +6,7 @@ from pathlib import Path
 print(sys.argv)
 from setuptools import Extension, setup, find_namespace_packages
 from setuptools.command.build_ext import build_ext
+import site
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
 PLAT_TO_CMAKE = {
@@ -27,9 +28,29 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def build_extension(self, ext: CMakeExtension) -> None:
-        import site 
+        cmake_args = []
+        install_prefix = sys.prefix
+        if "VIRTUAL_ENV" in os.environ:
+            install_prefix = os.environ['VIRTUAL_ENV']
+        elif "CONDA_DEFAULT_ENV" in os.environ:
+            install_prefix = os.environ['CONDA_DEFAULT_ENV']
+        elif "DLIO_LOGGER_USER" in os.environ:
+            install_prefix=site.USER_BASE
+            cmake_args += [f"-DUSER_INSTALL=ON"]
+        cmake_args += [f"-DCMAKE_INSTALL_PREFIX={install_prefix}"]
+        project_dir = Path.cwd()
+        dependency_file = open(f"{project_dir}/dependency/cpp.requirements.txt", 'r')
+        dependencies = dependency_file.readlines()
+        for dependency in dependencies:
+            parts = dependency.split(",")
+            clone_dir = f"{project_dir}/dependency/{parts[0]}"
+            need_install = parts[3]
+            print(f"Installing {parts[0]} into {install_prefix}")
+            os.system(f"bash {project_dir}/dependency/install_dependency.sh {parts[1]} {clone_dir} {install_prefix} {parts[2]} {need_install}")
+        cmake_args += [f"-DCMAKE_PREFIX_PATH={install_prefix}"]
+        print(cmake_args)
         # Must be in this form due to bug in .resolve() only fixed in Python 3.10+
-        ext_fullpath = Path.cwd() / self.get_ext_fullpath(ext.name)
+        ext_fullpath = project_dir / self.get_ext_fullpath(ext.name)
         extdir = ext_fullpath.parent.parent.resolve()
         sourcedir = extdir.parent.resolve()
         print(f"{extdir}")
@@ -46,7 +67,7 @@ class CMakeBuild(build_ext):
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         # EXAMPLE_VERSION_INFO shows you how to pass a value into the C++ code
         # from Python.
-        cmake_args = []
+
         #    f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}/lib",
         #    f"-DPYTHON_EXECUTABLE={sys.executable}",
         #    f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
@@ -60,15 +81,7 @@ class CMakeBuild(build_ext):
         # In this example, we pass in the version to C++. You might not need to.
         cmake_args += [f"-DEXAMPLE_VERSION_INFO={self.distribution.get_version()}"]
 
-        if "VIRTUAL_ENV" in os.environ:
-            virtual_env = os.environ['VIRTUAL_ENV']
-            cmake_args += [f"-DCMAKE_INSTALL_PREFIX={virtual_env}"]
-        elif "CONDA_DEFAULT_ENV" in os.environ:
-            virtual_env = os.environ['CONDA_DEFAULT_ENV']
-            cmake_args += [f"-DCMAKE_INSTALL_PREFIX={virtual_env}"]
-        elif "DLIO_LOGGER_USER" in os.environ:
-            cmake_args += [f"-DCMAKE_INSTALL_PREFIX={site.USER_BASE}"] 
-            cmake_args += [f"-DUSER_INSTALL=ON"] 
+
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.
         if "CMAKE_BUILD_PARALLEL_LEVEL" not in os.environ:
