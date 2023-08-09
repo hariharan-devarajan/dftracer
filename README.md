@@ -17,7 +17,16 @@ create a virtual env for your python package where u will use dlio_profiler.
 ```
 python3 -m venv ./venv
 source venv/bin/activate
-pip install --upgrade pip
+pip install .
+```
+install in local user
+```
+export DLIO_LOGGER_USER=1
+pip install .
+```
+install directly from github
+```
+pip install git+https://github.com/hariharan-devarajan/dlio-profiler.git
 ```
 Build dlio profiler through cmake
 ```
