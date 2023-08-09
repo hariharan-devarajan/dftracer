@@ -9,90 +9,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04 ]
-        compiler: [ gcc ]
-        gcc: [8]
-    name: ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.gcc }}
+        os: [ ubuntu-20.04,  ubuntu-22.04]
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     env:
-      CC: gcc-${{ matrix.gcc }}
-      CXX: g++-${{ matrix.gcc }}
+      CC: gcc
+      CXX: g++
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
-      - name: Checkout submodules
-        run: git submodule update --init --recursive
-      - name: Set up GCC
-        uses: egor-tensin/setup-gcc@v1
-        with:
-          version: ${{ matrix.gcc }}
 
       - name: Install additional packages
         run: |
           sudo apt-get update
-          sudo apt-get install libtool-bin
-          sudo apt-get install openmpi-bin
-          sudo apt-get install libopenmpi-dev
-
-      - name: Install Spack
-        uses: kzscisoft/install-spack@v1
-
-      - name: Set up packages.yaml
-        run: |
-          test -f $GITHUB_WORKSPACE/.spack/etc/spack/packages.yaml || cat > $GITHUB_WORKSPACE/.spack/etc/spack/packages.yaml << 'EOF'
-          packages:
-            all:
-              target: [x86_64]
-              providers:
-                mpi: [openmpi]
-            autoconf:
-              buildable: False
-              externals:
-              - spec: "autoconf@2.69"
-                prefix: /usr
-            automake:
-              buildable: False
-              externals:
-              - spec: "automake@1.16.1"
-                prefix: /usr
-            cmake:
-              buildable: False
-              externals:
-              - spec: "cmake@3.22.1"
-                prefix: /usr
-            libtool:
-              buildable: False
-              externals:
-              - spec: "libtool@2.4.6"
-                prefix: /usr
-            m4:
-              buildable: False
-              externals:
-              - spec: "m4@1.4.18"
-                prefix: /usr
-            openmpi:
-              buildable: False
-              externals:
-              - spec: "openmpi@4.0.3"
-                prefix: /usr
-            pkg-config:
-              buildable: False
-              externals:
-              - spec: "pkg-config@0.29.1"
-                prefix: /usr
-          EOF
-          spack compiler find --scope=user
-          if [[ $CC == 'gcc-8' ]]; then
-            spack config add "packages:all:compiler:[gcc@8.4.0]"
-          fi
-
+          sudo apt-get install gcc g++ libtool-bin openmpi-bin libopenmpi-dev
+          sudo apt-get install python3 python3-pip
       - name: Configure and Build
         run: |
-          source $GITHUB_WORKSPACE/.spack/share/spack/setup-env.sh
-          mkdir build
-          pushd build
-          cmake ../
-          make -j
+          pip install .
