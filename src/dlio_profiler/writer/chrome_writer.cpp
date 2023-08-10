@@ -41,7 +41,9 @@ dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category,
 
 void dlio_profiler::ChromeWriter::finalize() {
   if (fp != nullptr) {
-    int status = fseek(fp, 0, SEEK_SET);
+    int status = fclose(fp);
+    fp = fopen(filename.c_str(), "r+");
+    status = fseek(fp, 0, SEEK_SET);
     if (status != 0) {
       ERROR(status != -1, "unable to seek to start log file %d", filename.c_str());
     }
