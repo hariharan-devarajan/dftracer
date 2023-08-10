@@ -80,9 +80,11 @@ void dlio_profiler_init(void) {
 
 }
 void dlio_profiler_fini(void) {
-  dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->finalize();
   if (is_init()) {
-    free_bindings();
+    char *dlio_profiler_init = getenv("DLIO_PROFILER_INIT");
+    if (dlio_profiler_init == nullptr || strcmp(dlio_profiler_init, "1") == 0) {
+      free_bindings();
+    }
     set_init(false);
   }
 }
