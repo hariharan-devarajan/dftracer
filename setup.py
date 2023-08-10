@@ -47,7 +47,10 @@ class CMakeBuild(build_ext):
             need_install = parts[3]
             print(f"Installing {parts[0]} into {install_prefix}")
             os.system(f"bash {project_dir}/dependency/install_dependency.sh {parts[1]} {clone_dir} {install_prefix} {parts[2]} {need_install}")
-        cmake_args += [f"-DCMAKE_PREFIX_PATH={install_prefix}"]
+        import pybind11 as py
+        py_cmake_dir = py.get_cmake_dir()
+        # py_cmake_dir = os.popen('python3 -c " import pybind11 as py; print(py.get_cmake_dir())"').read() #python("-c", "import pybind11 as py; print(py.get_cmake_dir())", output=str).strip()
+        cmake_args += [f"-DCMAKE_PREFIX_PATH={install_prefix}", f"-Dpybind11_DIR={py_cmake_dir}"]
         print(cmake_args)
         # Must be in this form due to bug in .resolve() only fixed in Python 3.10+
         ext_fullpath = project_dir / self.get_ext_fullpath(ext.name)
@@ -139,7 +142,8 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3 :: Only",
     ],
-    install_requires=["pybind11[global]"],
+    install_requires=["pybind11"],
+    requires=["pybind11"],
     keywords="profiler, deep learning, I/O, benchmark, NPZ, pytorch benchmark, tensorflow benchmark",
     project_urls={  # Optional
         "Bug Reports": "https://github.com/hariharan-devarajan/dlio-profiler/issues",
