@@ -22,21 +22,11 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
 void
 dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category, TimeResolution &start_time, TimeResolution &duration,
                                  std::unordered_map<std::string, std::any> &metadata, int process_id) {
-  if (is_first_write) {
-    if (this->fp == NULL) {
-      fp = fopen(filename.c_str(), "w+");
-    }
+  if (this->fp == nullptr) {
+    fp = fopen(filename.c_str(), "a+");
     if (fp == nullptr) {
       ERROR(fp == nullptr,"unable to create log file %s", filename.c_str());
-    } else {
-      std::string data = "[\n";
-      auto written_elements = fwrite(data.c_str(), data.size(), sizeof(char), fp);
-      fflush(fp);
-      if (written_elements != 1) {
-        ERROR(written_elements != 1, "unable to initialize log file %s", filename.c_str());
-      }
     }
-    is_first_write = false;
   }
   if (fp != nullptr) {
     std::string json = convert_json(event_name, category, start_time, duration, metadata, process_id);
@@ -46,11 +36,21 @@ dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category,
       ERROR(written_elements != 1, "unable to write to log file %s", filename.c_str());
     }
   }
+  is_first_write = false;
 }
 
 void dlio_profiler::ChromeWriter::finalize() {
   if (fp != nullptr) {
-    int status = fclose(fp);
+    int status = fseek(fp, 0, SEEK_SET);
+    if (status != 0) {
+      ERROR(status != -1, "unable to seek to start log file %d", filename.c_str());
+    }
+    std::string data = "[\n";
+    auto written_elements = fwrite(data.c_str(), data.size(), sizeof(char), fp);
+    if (written_elements != 1) {
+      ERROR(written_elements != 1, "unable to initialize log file %s", filename.c_str());
+    }
+    status = fclose(fp);
     if (status != 0) {
       ERROR(status != -1, "unable to close log file %d", filename.c_str());
     }
@@ -74,6 +74,7 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
   }
   auto start_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(start_time);
   auto duration_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(duration);
+  if (is_first_write) all_stream << "  ";
   all_stream  << R"({"name":")" << event_name << "\","
               << R"("cat":")" << category << "\","
               << "\"pid\":" << pid << ","

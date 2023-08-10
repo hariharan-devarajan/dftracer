@@ -38,7 +38,7 @@ namespace dlio_profiler {
           return std::string(hostname);
         }
     public:
-        ChromeWriter(FILE* fp=NULL):BaseWriter(), is_first_write(true), mtx_map(){
+        ChromeWriter(FILE* fp=nullptr):BaseWriter(), is_first_write(true), mtx_map(){
           process_id = getpid();
           this->fp = fp;
           hwloc_topology_init(&topology);  // initialization

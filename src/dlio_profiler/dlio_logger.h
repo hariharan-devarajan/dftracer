@@ -74,9 +74,7 @@ public:
       writer->log(event_name, category, start_time, duration, metadata, process_id);
     }
     inline void finalize() {
-      if (this->is_init) {
-        writer->finalize();
-      }
+      writer->finalize();
     }
 };
 #define DLIO_LOGGER_INIT() \
