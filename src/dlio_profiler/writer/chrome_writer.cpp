@@ -17,17 +17,17 @@
 void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
   this->throw_error = throw_error;
   this->filename = filename;
+  if (this->fp == nullptr) {
+    fp = fopen(filename, "a+");
+    if (fp == nullptr) {
+      ERROR(fp == nullptr,"unable to create log file %s", filename);
+    }
+  }
 }
 
 void
 dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category, TimeResolution &start_time, TimeResolution &duration,
                                  std::unordered_map<std::string, std::any> &metadata, int process_id) {
-  if (this->fp == nullptr) {
-    fp = fopen(filename.c_str(), "a+");
-    if (fp == nullptr) {
-      ERROR(fp == nullptr,"unable to create log file %s", filename.c_str());
-    }
-  }
   if (fp != nullptr) {
     std::string json = convert_json(event_name, category, start_time, duration, metadata, process_id);
     auto written_elements = fwrite(json.c_str(), json.size(), sizeof(char), fp);
@@ -45,13 +45,9 @@ void dlio_profiler::ChromeWriter::finalize() {
     if (status != 0) {
       ERROR(status != 0, "unable to close log file %d for a+", filename.c_str());
     }
-    fp = fopen(filename.c_str(), "r+");
+    fp = fopen(this->filename.c_str(), "r");
     if (fp == nullptr) {
-      ERROR(fp == nullptr,"unable to create log file %s for r+", filename.c_str());
-    }
-    status = fseek(fp, 0, SEEK_SET);
-    if (status != 0) {
-      ERROR(status != 0, "unable to seek to start log file %d", filename.c_str());
+      ERROR(fp == nullptr,"unable to create log file %s", this->filename.c_str());
     }
     std::string data = "[\n";
     auto written_elements = fwrite(data.c_str(), data.size(), sizeof(char), fp);
