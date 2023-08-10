@@ -41,18 +41,19 @@ dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category,
 
 void dlio_profiler::ChromeWriter::finalize() {
   if (fp != nullptr) {
+    DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s\n", filename .c_str());
     int status = fclose(fp);
     if (status != 0) {
       ERROR(status != 0, "unable to close log file %d for a+", filename.c_str());
     }
-    fp = fopen(this->filename.c_str(), "r");
+    fp = fopen(this->filename.c_str(), "r+");
     if (fp == nullptr) {
-      ERROR(fp == nullptr,"unable to create log file %s", this->filename.c_str());
+      ERROR(fp == nullptr,"unable to open log file %s with r+", this->filename.c_str());
     }
     std::string data = "[\n";
     auto written_elements = fwrite(data.c_str(), data.size(), sizeof(char), fp);
     if (written_elements != 1) {
-      ERROR(written_elements != 1, "unable to initialize log file %s for r+", filename.c_str());
+      ERROR(written_elements != 1, "unable to finalize log write %s for r+", filename.c_str());
     }
     status = fclose(fp);
     if (status != 0) {
