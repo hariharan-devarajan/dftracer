@@ -43,7 +43,7 @@ class CMakeBuild(build_ext):
         if "DLIO_PYTHON_SITE" in os.environ:
             dlio_site = os.environ['DLIO_PYTHON_SITE']
             cmake_args += [f"-DDLIO_PYTHON_SITE={dlio_site}"]
-        if "DLIO_BUILD_DEPENDENCIES" in os.environ:
+        if "DLIO_BUILD_DEPENDENCIES" in os.environ and os.environ['DLIO_BUILD_DEPENDENCIES'] == "1":
             project_dir = Path.cwd()
             dependency_file = open(f"{project_dir}/dependency/cpp.requirements.txt", 'r')
             dependencies = dependency_file.readlines()
