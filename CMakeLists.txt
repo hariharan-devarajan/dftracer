@@ -25,14 +25,16 @@ set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cm
 message(STATUS "-- ${DLIO_PROFILER_CMAKE_DIR}")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${DLIO_PROFILER_CMAKE_DIR})
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_BINARY_DIR})
-
 #------------------------------------------------------------------------------
 # Build options
 #------------------------------------------------------------------------------
 option(BUILD_PYTHON_BINDINGS "Build python bindings." ON)
 
 if (BUILD_PYTHON_BINDINGS)
-    add_subdirectory(dependency/py11bind)
+    execute_process (COMMAND pybind11-config "--cmakedir" OUTPUT_VARIABLE PYBIND11_CMAKE OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(pybind11_DIR ${PYBIND11_CMAKE})
+    find_package(pybind11 REQUIRED)
+    #add_subdirectory(dependency/py11bind)
 endif()
 #add_subdirectory(external/cpp-logger)
 find_package(cpp-logger REQUIRED)
