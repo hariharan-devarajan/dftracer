@@ -8,7 +8,12 @@ if DLIO_PROFILER_ENABLED:
 
 from pathlib import Path
 import inspect
+import sys,signal
+def capture_signal(signal_number, frame):
+    dlio_logger.get_instance().finalize()
+    sys.exit(1)
 
+signal.signal(signal.SIGABRT, capture_signal)
 
 class dlio_logger:
     __instance = None
