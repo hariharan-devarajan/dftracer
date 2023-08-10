@@ -37,17 +37,27 @@ class CMakeBuild(build_ext):
         if "DLIO_LOGGER_USER" in os.environ:
             install_prefix=site.USER_BASE
             cmake_args += [f"-DUSER_INSTALL=ON"]
+        if "DLIO_PROFILER_DIR" in os.environ:
+            install_prefix = os.environ['DLIO_PROFILER_DIR']
         cmake_args += [f"-DCMAKE_INSTALL_PREFIX={install_prefix}"]
+        if "DLIO_PYTHON_SITE" in os.environ:
+            dlio_site = os.environ['DLIO_PYTHON_SITE']
+            cmake_args += [f"-DDLIO_PYTHON_SITE={dlio_site}"]
         project_dir = Path.cwd()
-        dependency_file = open(f"{project_dir}/dependency/cpp.requirements.txt", 'r')
-        dependencies = dependency_file.readlines()
-        for dependency in dependencies:
-            parts = dependency.split(",")
-            clone_dir = f"{project_dir}/dependency/{parts[0]}"
-            need_install = parts[3]
-            print(f"Installing {parts[0]} into {install_prefix}")
-            os.system(f"bash {project_dir}/dependency/install_dependency.sh {parts[1]} {clone_dir} {install_prefix} {parts[2]} {need_install}")
-        cmake_args += [f"-DCMAKE_PREFIX_PATH={install_prefix}"]
+        if "DLIO_BUILD_DEPENDENCIES" not in os.environ or os.environ['DLIO_BUILD_DEPENDENCIES'] == "1":
+            dependency_file = open(f"{project_dir}/dependency/cpp.requirements.txt", 'r')
+            dependencies = dependency_file.readlines()
+            for dependency in dependencies:
+                parts = dependency.split(",")
+                clone_dir = f"{project_dir}/dependency/{parts[0]}"
+                need_install = parts[3]
+                print(f"Installing {parts[0]} into {install_prefix}")
+                os.system(f"bash {project_dir}/dependency/install_dependency.sh {parts[1]} {clone_dir} {install_prefix} {parts[2]} {need_install}")
+
+        import pybind11 as py
+        py_cmake_dir = py.get_cmake_dir()
+        # py_cmake_dir = os.popen('python3 -c " import pybind11 as py; print(py.get_cmake_dir())"').read() #python("-c", "import pybind11 as py; print(py.get_cmake_dir())", output=str).strip()
+        cmake_args += [f"-DCMAKE_PREFIX_PATH={install_prefix}", f"-Dpybind11_DIR={py_cmake_dir}"]
         print(cmake_args)
         # Must be in this form due to bug in .resolve() only fixed in Python 3.10+
         ext_fullpath = project_dir / self.get_ext_fullpath(ext.name)
@@ -118,7 +128,6 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/hariharan-devarajan/dlio-profiler",
     author="Hariharan Devarajan (Hari)",
-    email="mani.hariharan@gmail.com",
     classifiers=[  # Optional
         # How mature is this project? Common values are
         #   3 - Alpha
@@ -139,6 +148,8 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3 :: Only",
     ],
+    install_requires=["pybind11"],
+    requires=["pybind11"],
     keywords="profiler, deep learning, I/O, benchmark, NPZ, pytorch benchmark, tensorflow benchmark",
     project_urls={  # Optional
         "Bug Reports": "https://github.com/hariharan-devarajan/dlio-profiler/issues",
