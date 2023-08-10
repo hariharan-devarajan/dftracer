@@ -43,15 +43,17 @@ class CMakeBuild(build_ext):
         if "DLIO_PYTHON_SITE" in os.environ:
             dlio_site = os.environ['DLIO_PYTHON_SITE']
             cmake_args += [f"-DDLIO_PYTHON_SITE={dlio_site}"]
-        project_dir = Path.cwd()
-        dependency_file = open(f"{project_dir}/dependency/cpp.requirements.txt", 'r')
-        dependencies = dependency_file.readlines()
-        for dependency in dependencies:
-            parts = dependency.split(",")
-            clone_dir = f"{project_dir}/dependency/{parts[0]}"
-            need_install = parts[3]
-            print(f"Installing {parts[0]} into {install_prefix}")
-            os.system(f"bash {project_dir}/dependency/install_dependency.sh {parts[1]} {clone_dir} {install_prefix} {parts[2]} {need_install}")
+        if "DLIO_BUILD_DEPENDENCIES" in os.environ:
+            project_dir = Path.cwd()
+            dependency_file = open(f"{project_dir}/dependency/cpp.requirements.txt", 'r')
+            dependencies = dependency_file.readlines()
+            for dependency in dependencies:
+                parts = dependency.split(",")
+                clone_dir = f"{project_dir}/dependency/{parts[0]}"
+                need_install = parts[3]
+                print(f"Installing {parts[0]} into {install_prefix}")
+                os.system(f"bash {project_dir}/dependency/install_dependency.sh {parts[1]} {clone_dir} {install_prefix} {parts[2]} {need_install}")
+
         import pybind11 as py
         py_cmake_dir = py.get_cmake_dir()
         # py_cmake_dir = os.popen('python3 -c " import pybind11 as py; print(py.get_cmake_dir())"').read() #python("-c", "import pybind11 as py; print(py.get_cmake_dir())", output=str).strip()
