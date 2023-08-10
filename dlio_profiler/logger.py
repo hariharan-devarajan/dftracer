@@ -14,10 +14,6 @@ def capture_signal(signal_number, frame):
     sys.exit(1)
 
 signal.signal(signal.SIGABRT, capture_signal)
-signal.signal(signal.SIGKILL, capture_signal)
-signal.signal(signal.SIGINT, capture_signal)
-signal.signal(signal.SIGBREAK, capture_signal)
-signal.signal(signal.SIGFPE, capture_signal)
 
 class dlio_logger:
     __instance = None
