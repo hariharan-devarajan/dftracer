@@ -41,8 +41,8 @@ class CMakeBuild(build_ext):
             install_prefix = os.environ['DLIO_PROFILER_DIR']
         cmake_args += [f"-DCMAKE_INSTALL_PREFIX={install_prefix}"]
         if "DLIO_PYTHON_SITE" in os.environ:
-            site = os.environ['DLIO_PYTHON_SITE']
-            cmake_args += [f"-DDLIO_PYTHON_SITE={site}"]
+            dlio_site = os.environ['DLIO_PYTHON_SITE']
+            cmake_args += [f"-DDLIO_PYTHON_SITE={dlio_site}"]
         project_dir = Path.cwd()
         dependency_file = open(f"{project_dir}/dependency/cpp.requirements.txt", 'r')
         dependencies = dependency_file.readlines()
