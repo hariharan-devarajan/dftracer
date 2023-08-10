@@ -42,19 +42,25 @@ dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category,
 void dlio_profiler::ChromeWriter::finalize() {
   if (fp != nullptr) {
     int status = fclose(fp);
+    if (status != 0) {
+      ERROR(status != 0, "unable to close log file %d for a+", filename.c_str());
+    }
     fp = fopen(filename.c_str(), "r+");
+    if (fp == nullptr) {
+      ERROR(fp == nullptr,"unable to create log file %s for r+", filename.c_str());
+    }
     status = fseek(fp, 0, SEEK_SET);
     if (status != 0) {
-      ERROR(status != -1, "unable to seek to start log file %d", filename.c_str());
+      ERROR(status != 0, "unable to seek to start log file %d", filename.c_str());
     }
     std::string data = "[\n";
     auto written_elements = fwrite(data.c_str(), data.size(), sizeof(char), fp);
     if (written_elements != 1) {
-      ERROR(written_elements != 1, "unable to initialize log file %s", filename.c_str());
+      ERROR(written_elements != 1, "unable to initialize log file %s for r+", filename.c_str());
     }
     status = fclose(fp);
     if (status != 0) {
-      ERROR(status != -1, "unable to close log file %d", filename.c_str());
+      ERROR(status != 0, "unable to close log file %d for r+", filename.c_str());
     }
   }
   hwloc_topology_destroy(topology);

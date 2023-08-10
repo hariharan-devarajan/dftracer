@@ -66,6 +66,7 @@ namespace dlio_profiler {
       dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->log(name, cat, start_time, duration, args);
     }
     void finalize() {
+      DLIO_PROFILER_LOGINFO("Calling finalize", "");
       dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->finalize();
     }
 } // dlio_profiler
