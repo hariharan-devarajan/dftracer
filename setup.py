@@ -121,7 +121,6 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/hariharan-devarajan/dlio-profiler",
     author="Hariharan Devarajan (Hari)",
-    email="mani.hariharan@gmail.com",
     classifiers=[  # Optional
         # How mature is this project? Common values are
         #   3 - Alpha
