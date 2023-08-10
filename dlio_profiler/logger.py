@@ -157,7 +157,7 @@ class fn_interceptor(object):
         if DLIO_PROFILER_ENABLED:
             self._arguments[iter_name] = 1
             name = f"{self._name}.iter"
-            kernal_name = f"{inspect.stack()[1].function}"
+            kernal_name = f"{self._name}.yield"
             start = dlio_logger.get_instance().get_time()
         for v in func:
             if DLIO_PROFILER_ENABLED:
