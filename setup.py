@@ -37,6 +37,8 @@ class CMakeBuild(build_ext):
         if "DLIO_LOGGER_USER" in os.environ:
             install_prefix=site.USER_BASE
             cmake_args += [f"-DUSER_INSTALL=ON"]
+        if "DLIO_PROFILER_DIR" in os.environ:
+            install_prefix = os.environ['DLIO_PROFILER_DIR']
         cmake_args += [f"-DCMAKE_INSTALL_PREFIX={install_prefix}"]
         project_dir = Path.cwd()
         dependency_file = open(f"{project_dir}/dependency/cpp.requirements.txt", 'r')
