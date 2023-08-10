@@ -34,7 +34,7 @@ class CMakeBuild(build_ext):
             install_prefix = os.environ['VIRTUAL_ENV']
         elif "CONDA_DEFAULT_ENV" in os.environ:
             install_prefix = os.environ['CONDA_DEFAULT_ENV']
-        elif "DLIO_LOGGER_USER" in os.environ:
+        if "DLIO_LOGGER_USER" in os.environ:
             install_prefix=site.USER_BASE
             cmake_args += [f"-DUSER_INSTALL=ON"]
         cmake_args += [f"-DCMAKE_INSTALL_PREFIX={install_prefix}"]
