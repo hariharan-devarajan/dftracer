@@ -13,7 +13,7 @@ set_property(TEST test APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_LEVEL=INFO)
 
 find_program(PYTHON_EXE python)
 message("-- Found python at location " ${PYTHON_EXE})
-add_test(test_py python3 ${CMAKE_CURRENT_SOURCE_DIR}/test.py)
+add_test(test_py ${PYTHON_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/test.py)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/test/data)
 set_property(TEST test_py APPEND PROPERTY ENVIRONMENT PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}/venv/lib)
 set_property(TEST test_py APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64)
