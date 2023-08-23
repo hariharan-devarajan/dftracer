@@ -15,7 +15,7 @@ namespace dlio_profiler {
     class ChromeWriter: public BaseWriter {
     private:
         hwloc_topology_t topology;
-        FILE* fp;
+        int fd;
         std::string convert_json(std::string &event_name, std::string &category, TimeResolution start_time, TimeResolution duration,
                                  std::unordered_map<std::string, std::any> &metadata, int process_id);
         bool is_first_write;
@@ -38,9 +38,9 @@ namespace dlio_profiler {
           return std::string(hostname);
         }
     public:
-        ChromeWriter(FILE* fp=nullptr):BaseWriter(), is_first_write(true), mtx_map(){
+        ChromeWriter(int fd=-1):BaseWriter(), is_first_write(true), mtx_map(){
           process_id = getpid();
-          this->fp = fp;
+          this->fd = fd;
           hwloc_topology_init(&topology);  // initialization
           hwloc_topology_load(topology);   // actual detection
         }

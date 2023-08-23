@@ -40,8 +40,8 @@ def write_read_jpeg(index):
     img.save(out_path_spec, format='JPEG', bits=8)
     with open(out_path_spec, "rb") as f:
         image = im.open(f)
+        out_records = np.asarray(image)
     #image = im.open(out_path_spec)
-    out_records = np.asarray(image)
 
 import threading
 
