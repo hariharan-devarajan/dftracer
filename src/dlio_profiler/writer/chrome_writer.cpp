@@ -17,10 +17,12 @@
 void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
   this->throw_error = throw_error;
   this->filename = filename;
-  if (this->fp == nullptr) {
-    fp = fopen(filename, "a+");
-    if (fp == nullptr) {
-      ERROR(fp == nullptr,"unable to create log file %s", filename);
+  if (fd == -1) {
+    fd = dlp_open(filename, O_WRONLY | O_APPEND | O_CREAT, S_IRUSR | S_IWUSR);
+    if (fd == -1) {
+      ERROR(fd == -1,"unable to create log file %s", filename);
+    } else {
+      DLIO_PROFILER_LOGINFO("created log file %s with fd %d", filename, fd);
     }
   }
 }
@@ -28,34 +30,33 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
 void
 dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category, TimeResolution &start_time, TimeResolution &duration,
                                  std::unordered_map<std::string, std::any> &metadata, int process_id) {
-  if (fp != nullptr) {
+  if (fd != -1) {
     std::string json = convert_json(event_name, category, start_time, duration, metadata, process_id);
-    auto written_elements = fwrite(json.c_str(), json.size(), sizeof(char), fp);
-    fflush(fp);
-    if (written_elements != 1) {
-      ERROR(written_elements != 1, "unable to write to log file %s", filename.c_str());
+    auto written_elements = dlp_write(fd, json.c_str(), json.size());
+    if (written_elements != json.size()) {
+      ERROR(written_elements != json.size(), "unable to log write %s fd %d for a+ written only %d of %d with error %s", filename.c_str(), fd, written_elements, json.size(), strerror(errno));
     }
   }
   is_first_write = false;
 }
 
 void dlio_profiler::ChromeWriter::finalize() {
-  if (fp != nullptr) {
+  if (fd != -1) {
     DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s\n", filename .c_str());
-    int status = fclose(fp);
+    int status = dlp_close(fd);
     if (status != 0) {
       ERROR(status != 0, "unable to close log file %d for a+", filename.c_str());
     }
-    fp = fopen(this->filename.c_str(), "r+");
-    if (fp == nullptr) {
-      ERROR(fp == nullptr,"unable to open log file %s with r+", this->filename.c_str());
+    fd = dlp_open(this->filename.c_str(), O_WRONLY);
+    if (fd != -1) {
+      ERROR(fd != -1,"unable to open log file %s with r+", this->filename.c_str());
     }
     std::string data = "[\n";
-    auto written_elements = fwrite(data.c_str(), data.size(), sizeof(char), fp);
-    if (written_elements != 1) {
-      ERROR(written_elements != 1, "unable to finalize log write %s for r+", filename.c_str());
+    auto written_elements = dlp_write(fd, data.c_str(), data.size());
+    if (written_elements != data.size()) {
+      ERROR(written_elements != data.size(), "unable to finalize log write %s for r+ written only %d of %d", filename.c_str(), data.size(), written_elements);
     }
-    status = fclose(fp);
+    status = dlp_close(fd);
     if (status != 0) {
       ERROR(status != 0, "unable to close log file %d for r+", filename.c_str());
     }

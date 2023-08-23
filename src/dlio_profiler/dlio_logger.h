@@ -30,19 +30,19 @@ public:
         throw_error = true;
       }
       this->is_init=true;
-      FILE *fp = NULL;
+      int fd = -1;
       std::string log_file;
       if (log_file.empty()) {
         char *dlio_profiler_log_dir = getenv("DLIO_PROFILER_LOG_DIR");
         if (dlio_profiler_log_dir == nullptr) {
-          fp = stderr;
+          fd = fileno(stderr);
           log_file = "STDERR";
         } else {
           if (strcmp(dlio_profiler_log_dir, "STDERR") == 0) {
-            fp = stderr;
+            fd = fileno(stderr);
             log_file = "STDERR";
           } else if (strcmp(dlio_profiler_log_dir, "STDOUT") == 0) {
-            fp = stdout;
+            fd = fileno(stdout);
             log_file = "STDOUT";
           } else {
             int pid = getpid();
@@ -57,7 +57,7 @@ public:
     }
     inline void update_log_file(std::string log_file, int process_id = -1) {
       this->process_id = process_id;
-      writer = std::make_shared<dlio_profiler::ChromeWriter>(nullptr);
+      writer = std::make_shared<dlio_profiler::ChromeWriter>(-1);
       writer->initialize(log_file.data(), this->throw_error);
       this->is_init=true;
       library_start = get_current_time();
