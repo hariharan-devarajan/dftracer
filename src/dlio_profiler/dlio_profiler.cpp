@@ -76,7 +76,7 @@ void dlio_profiler_init(void) {
     set_init(true);
   }
   size_t thread_hash = std::hash<std::thread::id>{}(std::this_thread::get_id());
-  DLIO_PROFILER_LOGINFO("Running DLIO Profiler on thread %ld", thread_hash);
+  DLIO_PROFILER_LOGINFO("Running DLIO Profiler on thread %ld and pid %ld", thread_hash, getpid());
 
 }
 void dlio_profiler_fini(void) {
