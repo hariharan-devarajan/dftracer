@@ -13,7 +13,7 @@
 #include <dlio_profiler/writer/chrome_writer.h>
 #include <unistd.h>
 #include <dlio_profiler/macro.h>
-#include <dlio_profiler/core/common.h>
+#include <dlio_profiler/utils/utils.h>
 
 typedef std::chrono::high_resolution_clock chrono;
 class DLIOLogger {
@@ -65,7 +65,6 @@ public:
     }
     inline TimeResolution get_time() {
       auto t =  get_current_time() - library_start;
-      DLIO_PROFILER_LOGINFO("Getting time %f", t);
       return t;
     }
     inline void log(std::string event_name, std::string category,

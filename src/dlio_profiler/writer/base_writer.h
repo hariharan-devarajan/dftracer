@@ -6,15 +6,10 @@
 #define DLIO_PROFILER_BASE_WRITER_H
 
 #include <any>
-#include <csignal>
-#include <dlio_profiler/core/common.h>
-#include <fcntl.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <syscall.h>
+#include <dlio_profiler/utils/utils.h>
 #include <unordered_map>
+#include <dlio_profiler/utils/posix_internal.h>
+
 namespace dlio_profiler {
     class BaseWriter {
     private:

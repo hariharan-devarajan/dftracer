@@ -8,7 +8,7 @@
 #include <fstream>
 #include<algorithm>
 #include <dlio_profiler/dlio_logger.h>
-#include <dlio_profiler/core/common.h>
+#include <dlio_profiler/utils/utils.h>
 namespace dlio_profiler {
     bool init = false;
 }

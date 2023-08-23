@@ -3,7 +3,7 @@
 #include <pybind11/pybind11.h>
 #include <dlio_profiler/brahma/posix.h>
 #include <dlio_profiler/brahma/stdio.h>
-#include <dlio_profiler/core/common.h>
+#include <dlio_profiler/utils/utils.h>
 #include <pybind11/stl.h>
 #include <iostream>
 #include <fstream>

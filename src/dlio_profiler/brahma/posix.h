@@ -5,14 +5,15 @@
 #ifndef DLIO_PROFILER_POSIX_H
 #define DLIO_PROFILER_POSIX_H
 
+#include <dlio_profiler/utils/utils.h>
 #include <brahma/brahma.h>
-#include <dlio_profiler/macro.h>
-#include <vector>
 #include <dlio_profiler/dlio_logger.h>
+#include <dlio_profiler/macro.h>
 #include <fcntl.h>
-#include <sys/param.h>
 #include <filesystem>
 #include <fstream>
+#include <sys/param.h>
+#include <vector>
 namespace fs = std::filesystem;
 
 namespace brahma {
@@ -23,49 +24,15 @@ class POSIXDLIOProfiler : public POSIX {
   std::vector<std::string> track_filename;
   std::vector<std::string> ignore_filename;
   std::shared_ptr<DLIOLogger> logger;
-  inline std::string get_filename(int fd) {
-    char proclnk[PATH_MAX];
-    char filename[PATH_MAX];
-    snprintf(proclnk, PATH_MAX, "/proc/self/fd/%d", fd);
-    size_t r = readlink(proclnk, filename, PATH_MAX);
-    filename[r] = '\0';
-    return filename;
-  }
+
   inline std::pair<bool, std::string> is_traced(int fd, const char* func) {
     if (fd == -1) return std::pair<bool, std::string>(false, "");
     auto iter = tracked_fd.find(fd);
     if (iter != tracked_fd.end()) return std::pair<bool, std::string>(true, "");
     return is_traced(get_filename(fd).c_str(), func);
   }
-
   inline std::pair<bool, std::string> is_traced(const char* filename, const char* func) {
-    bool found = false;
-    bool ignore = false;
-    char resolved_path[PATH_MAX];
-    char* data = realpath(filename, resolved_path);
-    (void) data;
-    if (ignore_files(resolved_path) || ignore_files(filename)) {
-        DLIO_PROFILER_LOGINFO("Profiler ignoring logfile %s", resolved_path);
-        return std::pair<bool, std::string>(false, filename);
-    }
-    for (const auto file : ignore_filename) {
-      if (strstr(resolved_path, file.c_str()) != NULL) {
-        DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing %s %s %s", resolved_path, filename, func);
-        ignore = true;
-        break;
-      }
-    }
-    if (!ignore) {
-        for (const auto file : track_filename) {
-          if (strstr(resolved_path, file.c_str()) != NULL) {
-            DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX tracing %s %s %s", resolved_path, filename, func);
-            found = true;
-            break;
-          }
-        }
-    }
-    DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing %s %s %s", resolved_path, filename, func);
-    return std::pair<bool, std::string>(found, filename);
+    return is_traced_common(filename, func, ignore_filename, track_filename);
   }
   inline void trace(int fd) {
     tracked_fd.insert(fd);

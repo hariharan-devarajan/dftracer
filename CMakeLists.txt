@@ -138,7 +138,8 @@ set(DLIO_PROFILER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/posix
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/stdio.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/writer/chrome_writer.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/writer/chrome_writer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/posix_internal.cpp)
 set(DLIO_PROFILER_PUBLIC_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/macro.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/posix.h
@@ -146,7 +147,9 @@ set(DLIO_PROFILER_PUBLIC_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler.h)
 set(DLIO_PROFILER_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_logger.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/constants.h)
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/constants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/posix_internal.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/utils.h)
 add_library(${PROJECT_NAME} SHARED)
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCY_LIB})
 #add_dependencies(${PROJECT_NAME} cpp-logger)

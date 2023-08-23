@@ -48,8 +48,8 @@ void dlio_profiler::ChromeWriter::finalize() {
       ERROR(status != 0, "unable to close log file %d for a+", filename.c_str());
     }
     fd = dlp_open(this->filename.c_str(), O_WRONLY);
-    if (fd != -1) {
-      ERROR(fd != -1,"unable to open log file %s with r+", this->filename.c_str());
+    if (fd == -1) {
+      ERROR(fd == -1,"unable to open log file %s with O_WRONLY", this->filename.c_str());
     }
     std::string data = "[\n";
     auto written_elements = dlp_write(fd, data.c_str(), data.size());
@@ -103,7 +103,6 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
   if (meta_size > 0) all_stream << ",";
   int i = 0;
   for(auto item : metadata) {
-    DLIO_PROFILER_LOGINFO("event metadata type %d", all_stream.str().c_str());
     if (item.second.type() == typeid(int)) {
       all_stream << "\"" << item.first << "\":" << std::any_cast<int>(item.second);
       if (i < meta_size - 1) all_stream << ",";
