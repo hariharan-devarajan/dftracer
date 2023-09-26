@@ -1,3 +1,3 @@
-cpp-logger,https://github.com/hariharan-devarajan/cpp-logger.git,dev,1
+cpp-logger,https://github.com/hariharan-devarajan/cpp-logger.git,0.0.1,1
 gotcha,https://github.com/LLNL/GOTCHA.git,1.0.4,1
-brahma,https://github.com/hariharan-devarajan/brahma.git,dev,1
+brahma,https://github.com/hariharan-devarajan/brahma.git,0.0.1,1
