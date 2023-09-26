@@ -1,9 +1,9 @@
 name: DLIO Profiler Build and Test
 
 on:
+  pull_request:
+    branches: [ main, dev ]
   push:
-    branches: [dev ]
-
 jobs:
   build-and-test:
     strategy:
@@ -21,16 +21,19 @@ jobs:
       PERM: ${{ matrix.perm }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - name: Push checkout
+        if: github.event_name == 'push'
+        uses: actions/checkout@v3
+      - name: PR checkout
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v3
         with:
-          fetch-depth: 2
-
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Install additional packages
         run: |
           sudo apt-get update
           sudo apt-get install gcc g++ libtool-bin openmpi-bin libopenmpi-dev
-          sudo apt-get install python3 python3-pip
+          sudo apt-get install python3.10 python3-pip
       - name: Build from ${{ matrix.dir }} on ${{ matrix.perm }}
         run: |
           LOC=.
@@ -45,3 +48,16 @@ jobs:
              echo pip install -v ${LOC}
              sudo pip install -v ${LOC}
           fi
+      - name: Test DLIO_Benchmark
+        if: matrix.os == 'ubuntu-22.04' && matrix.perm == 'root'
+        run: |
+          LOC=git+https://github.com/argonne-lcf/dlio_benchmark.git@main
+          if [[ $PERM == 'user' ]]; then
+            export DLIO_LOGGER_USER=1
+            echo pip install ${LOC}
+            pip install ${LOC}
+          else
+             echo pip install ${LOC}
+             sudo pip install ${LOC}
+          fi
+          dlio_benchmark workload=unet3d ++workload.train.computation_time=0.05 ++workload.evaluation.eval_time=0.01 ++workload.train.epochs=2 ++workload.workflow.train=True ++workload.workflow.generate_data=True ++workload.dataset.num_files_train=16 ++workload.dataset.num_files_eval=16 ++workload.reader.read_threads=2 ++workload.dataset.record_length=4096 ++workload.dataset.record_length_stdev=0
