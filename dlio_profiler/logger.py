@@ -37,15 +37,12 @@ class dlio_logger:
 
     @staticmethod
     def initialize_log(logfile, data_dir, process_id):
-        log_file = "Dummy"
-        if not DLIO_PROFILER_INIT_PRELOAD:
-            log_file = Path(logfile)
+        log_file = Path(logfile)
         instance = dlio_logger.get_instance(log_file)
         if DLIO_PROFILER_ENABLE:
-            if not DLIO_PROFILER_INIT_PRELOAD:
-                os.makedirs(log_file.parent, exist_ok=True)
-                if os.path.isfile(log_file):
-                    os.remove(log_file)
+            os.makedirs(log_file.parent, exist_ok=True)
+            if os.path.isfile(log_file):
+                os.remove(log_file)
             instance.logger = profiler
             instance.logger.initialize(f"{instance.logfile}", f"{data_dir}", process_id=process_id)
         return instance
