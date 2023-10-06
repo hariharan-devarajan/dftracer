@@ -4,8 +4,7 @@ import os
 DLIO_PROFILER_ENABLE = True if os.getenv("DLIO_PROFILER_ENABLE", '1') == '1' else False
 DLIO_PROFILER_INIT_PRELOAD = True if os.getenv("DLIO_PROFILER_INIT", 'PRELOAD') == 'PRELOAD' else False
 
-if DLIO_PROFILER_ENABLE:
-    import dlio_profiler_py as profiler
+
 
 from pathlib import Path
 import inspect
@@ -46,6 +45,7 @@ class dlio_logger:
                 os.makedirs(log_file.parent, exist_ok=True)
                 if os.path.isfile(log_file):
                     os.remove(log_file)
+                import dlio_profiler_py as profiler
             instance.logger = profiler
             instance.logger.initialize(f"{instance.logfile}", f"{data_dir}", process_id=process_id)
         return instance
