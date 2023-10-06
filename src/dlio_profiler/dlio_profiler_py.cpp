@@ -25,7 +25,10 @@ namespace dlio_profiler {
       if (init_type == nullptr || strcmp(init_type, "FUNCTION") == 0) {
         dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(true, true, log_file.c_str(), data_dirs.c_str(), &process_id);
       } else {
-        dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(true, false, log_file.c_str(), data_dirs.c_str(), &process_id);
+        int * pid = nullptr;
+        if (process_id != -1)
+          *pid = process_id;
+        dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(true, false, log_file.c_str(), data_dirs.c_str(), pid);
       }
     }
     TimeResolution get_time() {

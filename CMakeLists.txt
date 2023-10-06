@@ -147,7 +147,6 @@ set(DLIO_PROFILER_PY_PUBLIC_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/stdio.h
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler.h)
 set(DLIO_PROFILER_PY_PRIVATE_INCLUDE
-
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/dlio_profiler_main.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/constants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/posix_internal.h

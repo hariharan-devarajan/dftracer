@@ -45,7 +45,7 @@ def write_read_jpeg(index):
 
 import threading
 
-logger.initialize(f"{cwd}/log.pwf", f"{cwd}/data")
+logger.initialize(f"{cwd}/log-app.pwf", f"{cwd}/data")
 t1 = threading.Thread(target=posix_calls1, args=(10,))
 custom_events()
 t2 = threading.Thread(target=posix_calls2, args=(1,))
