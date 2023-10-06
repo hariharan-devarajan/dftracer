@@ -1,8 +1,11 @@
 from functools import wraps
 from typing import Dict
 import os
-DLIO_PROFILER_ENABLE = True if os.getenv("DLIO_PROFILER_ENABLE", '1') == '1' else False
-DLIO_PROFILER_INIT_PRELOAD = True if os.getenv("DLIO_PROFILER_INIT", 'PRELOAD') == 'PRELOAD' else False
+DLIO_PROFILER_ENABLE_ENV = "DLIO_PROFILER_ENABLE"
+DLIO_PROFILER_INIT_ENV = "DLIO_PROFILER_INIT"
+
+DLIO_PROFILER_ENABLE = True if os.getenv(DLIO_PROFILER_ENABLE_ENV, '1') == '1' else False
+DLIO_PROFILER_INIT_PRELOAD = True if os.getenv(DLIO_PROFILER_INIT_ENV, 'PRELOAD') == 'PRELOAD' else False
 
 if DLIO_PROFILER_ENABLE:
     import dlio_profiler_py as profiler

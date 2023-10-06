@@ -19,12 +19,16 @@ typedef std::chrono::high_resolution_clock chrono;
 class DLIOLogger {
 private:
     TimeResolution library_start;
-    bool throw_error;
+    bool throw_error, include_metadata;
     std::shared_ptr<dlio_profiler::BaseWriter> writer;
     bool is_init;
     int process_id;
 public:
-    DLIOLogger(bool init_log = false):is_init(false) {
+    DLIOLogger(bool init_log = false):is_init(false), include_metadata(false) {
+      char *dlio_profiler_meta = getenv(DLIO_PROFILER_INC_METADATA);
+      if (dlio_profiler_meta != nullptr && strcmp(dlio_profiler_meta, "1") == 0) {
+        include_metadata = true;
+      }
       char *dlio_profiler_error = getenv("DLIO_PROFILER_ERROR");
       if (dlio_profiler_error != nullptr && strcmp(dlio_profiler_error, "1") == 0) {
         throw_error = true;
@@ -72,6 +76,9 @@ public:
                     std::unordered_map<std::string, std::any> &metadata) {
       writer->log(event_name, category, start_time, duration, metadata, process_id);
     }
+    inline bool has_metadata() {
+      return this->include_metadata;
+    }
     inline void finalize() {
       writer->finalize();
     }
@@ -80,7 +87,7 @@ public:
   dlio_profiler::Singleton<DLIOLogger>::get_instance()
 #define DLIO_LOGGER_FINI() \
   dlio_profiler::Singleton<DLIOLogger>::get_instance()->finalize()
-#define DLIO_LOGGER_UPDATE(value) if (trace) metadata.insert_or_assign(#value, value);
+#define DLIO_LOGGER_UPDATE(value) if (trace && this->logger->has_metadata()) metadata.insert_or_assign(#value, value);
 #define DLIO_LOGGER_START(entity)                               \
   auto pair = is_traced(entity, __FUNCTION__);                  \
   bool trace = pair.first;                                      \
