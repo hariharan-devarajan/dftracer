@@ -22,7 +22,7 @@ void dlio_profiler_init(void) {
   char *init_type = getenv(DLIO_PROFILER_INIT);
   if (!is_init() && init_type != nullptr && strcmp(init_type, "PRELOAD") == 0) {
     dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(true);
-    DLIO_PROFILER_LOGINFO("Running initialize within constructor", "");
+    DLIO_PROFILER_LOGINFO("Running initialize within constructor %d", getpid());
     set_init(true);
   }
 
