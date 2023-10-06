@@ -22,7 +22,8 @@ void dlio_profiler_init(void) {
   char *init_type_count = getenv(DLIO_PROFILER_INIT_COUNT);
   char *init_type = getenv(DLIO_PROFILER_INIT);
   if (init_type_count == nullptr && init_type != nullptr && strcmp(init_type, "PRELOAD") == 0) {
-    dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(true, true);
+    int pid = getpid();
+    dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(true, true, nullptr, nullptr, &pid);
     DLIO_PROFILER_LOGINFO("Running initialize within constructor %d", getpid());
     set_init(true);
     int val = setenv(DLIO_PROFILER_INIT_COUNT, "1", 1);

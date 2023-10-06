@@ -73,11 +73,16 @@ namespace dlio_profiler {
               if (dlio_profiler_priority_str != nullptr) {
                 gotcha_priority = atoi(dlio_profiler_priority_str);
               }
-
+              if (process_id == nullptr) {
+                this->process_id = getpid();
+              } else {
+                this->process_id = *process_id;
+              }
+              DLIO_PROFILER_LOGINFO("Setting process_id to %d", this->process_id);
               if (log_file == nullptr) {
                 char *dlio_profiler_log = getenv(DLIO_PROFILER_LOG_FILE);
                 if (dlio_profiler_log != nullptr) {
-                  this->log_file = dlio_profiler_log;
+                  this->log_file = std::string(dlio_profiler_log) + "-" + std::to_string(this->process_id) + ".pfw";
                 } else {
                   const char *message = "log_file not defined. Please define env variable DLIO_PROFILER_LOG_FILE";
                   DLIO_PROFILER_LOGERROR(message, "");
@@ -101,12 +106,7 @@ namespace dlio_profiler {
               }
 
               DLIO_PROFILER_LOGINFO("Setting data_dirs to %s", this->data_dirs.c_str());
-              if (process_id == nullptr) {
-                this->process_id = getpid();
-              } else {
-                this->process_id = *process_id;
-              }
-              DLIO_PROFILER_LOGINFO("Setting process_id to %d", this->process_id);
+
 
               dlio_profiler::Singleton<DLIOLogger>::get_instance()->update_log_file(this->log_file, this->process_id);
               if (bind) {
