@@ -105,7 +105,7 @@ namespace dlio_profiler {
               } else {
                 this->process_id = *process_id;
               }
-              DLIO_PROFILER_LOGINFO("Setting process_id to %s", this->process_id);
+              DLIO_PROFILER_LOGINFO("Setting process_id to %d", this->process_id);
 
               dlio_profiler::Singleton<DLIOLogger>::get_instance()->update_log_file(this->log_file, this->process_id);
               brahma_gotcha_wrap("dlio_profiler", this->gotcha_priority);

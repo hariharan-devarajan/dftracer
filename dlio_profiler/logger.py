@@ -1,9 +1,9 @@
 from functools import wraps
 from typing import Dict
 import os
-DLIO_PROFILER_ENABLED = True if os.getenv("DLIO_PROFILER_ENABLED", '1') == '1' else False
+DLIO_PROFILER_ENABLE = True if os.getenv("DLIO_PROFILER_ENABLE", '1') == '1' else False
 
-if DLIO_PROFILER_ENABLED:
+if DLIO_PROFILER_ENABLE:
     import dlio_profiler_py as profiler
 
 from pathlib import Path
@@ -19,7 +19,7 @@ class dlio_logger:
     __instance = None
 
     def __init__(self, logfile):
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             self.logfile = logfile
             self.logger = None
         dlio_logger.__instance = self
@@ -38,7 +38,7 @@ class dlio_logger:
     def initialize_log(logfile, data_dir, process_id):
         log_file = Path(logfile)
         instance = dlio_logger.get_instance(log_file)
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             os.makedirs(log_file.parent, exist_ok=True)
             if os.path.isfile(log_file):
                 os.remove(log_file)
@@ -47,25 +47,25 @@ class dlio_logger:
         return instance
 
     def get_time(self):
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             return self.logger.get_time()
         return 0
 
     def log_event(self, name, cat, start_time, duration, int_args=None):
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             if int_args is None:
                 int_args = {}
             self.logger.log_event(name=name, cat=cat, start_time=start_time, duration=duration, int_args=int_args)
 
     def finalize(self):
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             self.logger.finalize()
 
 
 class fn_interceptor(object):
 
     def __init__(self, cat, name=None, epoch=None, step=None, image_idx=None, image_size=None):
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             if not name:
                 name = inspect.stack()[1].function
             self._name = name
@@ -78,12 +78,12 @@ class fn_interceptor(object):
             self.reset()
 
     def __enter__(self):
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             self._t1 = dlio_logger.get_instance().get_time()
         return self
 
     def update(self, epoch=None, step=None, image_idx=None, image_size=None):
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             if epoch is not None: self._arguments["epoch"] = epoch
             if step is not None: self._arguments["step"] = step
             if image_idx is not None: self._arguments["image_idx"] = image_idx
@@ -91,7 +91,7 @@ class fn_interceptor(object):
         return self
 
     def flush(self):
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             self._t2 = dlio_logger.get_instance().get_time()
             if len(self._arguments) > 0:
                 dlio_logger.get_instance().log_event(name=self._name, cat=self._cat, start_time=self._t1,
@@ -104,24 +104,24 @@ class fn_interceptor(object):
         return self
 
     def reset(self):
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             self._t1 = dlio_logger.get_instance().get_time()
             self._t2 = self._t1
             self._flush = False
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             if not self._flush:
                 self.flush()
 
     def log(self, func):
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             arg_names = inspect.getfullargspec(func)[0]
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if DLIO_PROFILER_ENABLED:
+            if DLIO_PROFILER_ENABLE:
                 if "self" == arg_names[0]:
                     if hasattr(args[0], "epoch"):
                         self._arguments["epoch"] = args[0].epoch
@@ -145,7 +145,7 @@ class fn_interceptor(object):
 
                 start = dlio_logger.get_instance().get_time()
             x = func(*args, **kwargs)
-            if DLIO_PROFILER_ENABLED:
+            if DLIO_PROFILER_ENABLE:
                 end = dlio_logger.get_instance().get_time()
                 if len(self._arguments) > 0:
                     dlio_logger.get_instance().log_event(name=func.__qualname__, cat=self._cat, start_time=start,
@@ -159,17 +159,17 @@ class fn_interceptor(object):
         return wrapper
 
     def iter(self, func, iter_name="step"):
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             self._arguments[iter_name] = 1
             name = f"{self._name}.iter"
             kernal_name = f"{self._name}.yield"
             start = dlio_logger.get_instance().get_time()
         for v in func:
-            if DLIO_PROFILER_ENABLED:
+            if DLIO_PROFILER_ENABLE:
                 end = dlio_logger.get_instance().get_time()
                 t0 = dlio_logger.get_instance().get_time()
             yield v
-            if DLIO_PROFILER_ENABLED:
+            if DLIO_PROFILER_ENABLE:
                 t1 = dlio_logger.get_instance().get_time()
 
                 if len(self._arguments) > 0:
@@ -188,19 +188,19 @@ class fn_interceptor(object):
                 start = dlio_logger.get_instance().get_time()
 
     def log_init(self, init):
-        if DLIO_PROFILER_ENABLED:
+        if DLIO_PROFILER_ENABLE:
             arg_names = inspect.getfullargspec(init)[0]
 
         @wraps(init)
         def new_init(args, *kwargs):
-            if DLIO_PROFILER_ENABLED:
+            if DLIO_PROFILER_ENABLE:
                 for name, value in zip(arg_names[1:], kwargs):
                     setattr(args, name, value)
                     if name == "epoch":
                         self._arguments["epoch"] = value
                 start = dlio_logger.get_instance().get_time()
             init(args, *kwargs)
-            if DLIO_PROFILER_ENABLED:
+            if DLIO_PROFILER_ENABLE:
                 end = dlio_logger.get_instance().get_time()
 
                 if len(self._arguments) > 0:
