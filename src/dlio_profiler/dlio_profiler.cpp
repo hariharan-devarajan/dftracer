@@ -19,18 +19,24 @@ namespace dlio_profiler {
 bool is_init() {return dlio_profiler::init;}
 void set_init(bool _init) { dlio_profiler::init = _init;}
 void dlio_profiler_init(void) {
+  char *init_type_count = getenv(DLIO_PROFILER_INIT_COUNT);
   char *init_type = getenv(DLIO_PROFILER_INIT);
-  if (!is_init() && init_type != nullptr && strcmp(init_type, "PRELOAD") == 0) {
+  if (init_type_count == nullptr && init_type != nullptr && strcmp(init_type, "PRELOAD") == 0) {
     dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(true);
     DLIO_PROFILER_LOGINFO("Running initialize within constructor %d", getpid());
     set_init(true);
+    int val = setenv(DLIO_PROFILER_INIT_COUNT, "1", 1);
+    (void) val;
   }
 
 }
 void dlio_profiler_fini(void) {
   char *init_type = getenv(DLIO_PROFILER_INIT);
-  if (is_init() && init_type != nullptr && strcmp(init_type, "PRELOAD")) {
+  char *init_type_count = getenv(DLIO_PROFILER_INIT_COUNT);
+  if (init_type_count != nullptr && init_type != nullptr && strcmp(init_type, "PRELOAD")) {
     dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(false)->finalize();
     set_init(false);
+    int val = unsetenv(DLIO_PROFILER_INIT_COUNT);
+    (void) val;
   }
 }
