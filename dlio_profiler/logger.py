@@ -2,6 +2,7 @@ from functools import wraps
 from typing import Dict
 import os
 DLIO_PROFILER_ENABLE = True if os.getenv("DLIO_PROFILER_ENABLE", '1') == '1' else False
+DLIO_PROFILER_INIT_PRELOAD = True if os.getenv("DLIO_PROFILER_INIT", 'PRELOAD') == 'PRELOAD' else False
 
 if DLIO_PROFILER_ENABLE:
     import dlio_profiler_py as profiler
@@ -36,12 +37,15 @@ class dlio_logger:
 
     @staticmethod
     def initialize_log(logfile, data_dir, process_id):
-        log_file = Path(logfile)
+        log_file = "Dummy"
+        if not DLIO_PROFILER_INIT_PRELOAD:
+            log_file = Path(logfile)
         instance = dlio_logger.get_instance(log_file)
         if DLIO_PROFILER_ENABLE:
-            os.makedirs(log_file.parent, exist_ok=True)
-            if os.path.isfile(log_file):
-                os.remove(log_file)
+            if not DLIO_PROFILER_INIT_PRELOAD:
+                os.makedirs(log_file.parent, exist_ok=True)
+                if os.path.isfile(log_file):
+                    os.remove(log_file)
             instance.logger = profiler
             instance.logger.initialize(f"{instance.logfile}", f"{data_dir}", process_id=process_id)
         return instance
