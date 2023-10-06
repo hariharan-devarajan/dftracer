@@ -3,7 +3,7 @@
 //
 
 #ifndef DLIO_PROFILER_DLIO_PROFILER_H
-#define DLIO_PROFILER_DLIO_PROFILER_H
+#define DLIO_PROFILER_DLIO_PROFILER_LIB_H
 #include <brahma/brahma.h>
 #include <dlio_profiler/brahma/posix.h>
 #include <dlio_profiler/brahma/stdio.h>
