@@ -11,7 +11,7 @@
 #include <vector>
 #include <cstring>
 #include <dlio_profiler/macro.h>
-const std::string ignore_filenames[4] = {".pfw", "/pipe", "/socket","/proc/self"};
+const std::string ignore_filenames[5] = {".pfw", "/pipe", "/socket","/proc/self", ".py"};
 inline std::vector<std::string> split(std::string str, char delimiter) {
   std::vector<std::string> res;
   if (str.find(delimiter) == std::string::npos) {
