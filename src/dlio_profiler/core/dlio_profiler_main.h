@@ -41,10 +41,11 @@ namespace dlio_profiler {
         std::string data_dirs;
         int process_id;
         bool is_init;
+        bool bind;
     public:
-        DLIOProfiler(bool is_init, const char *log_file = nullptr, const char *data_dirs = nullptr, const int *process_id = nullptr) : is_enabled(
+        DLIOProfiler(bool is_init, bool bind, const char *log_file = nullptr, const char *data_dirs = nullptr, const int *process_id = nullptr) : is_enabled(
                 false), gotcha_priority(1), logger_level(cpplogger::LoggerType::LOG_ERROR), log_file(), data_dirs(
-                ), is_init(is_init) {
+                ), is_init(is_init), bind(bind) {
           signal(SIGSEGV, handler);
           if (this->is_init) {
             char *dlio_profiler_log_level = getenv(DLIO_PROFILER_LOG_LEVEL);
@@ -108,16 +109,18 @@ namespace dlio_profiler {
               DLIO_PROFILER_LOGINFO("Setting process_id to %d", this->process_id);
 
               dlio_profiler::Singleton<DLIOLogger>::get_instance()->update_log_file(this->log_file, this->process_id);
-              brahma_gotcha_wrap("dlio_profiler", this->gotcha_priority);
-              auto posix_instance = brahma::POSIXDLIOProfiler::get_instance();
-              auto stdio_instance = brahma::STDIODLIOProfiler::get_instance();
-              auto paths = split(this->data_dirs, ':');
-              posix_instance->untrace(this->log_file.c_str());
-              stdio_instance->untrace(this->log_file.c_str());
-              for (const auto &path:paths) {
-                DLIO_PROFILER_LOGINFO("Profiler will trace %s\n", path.c_str());
-                posix_instance->trace(path.c_str());
-                stdio_instance->trace(path.c_str());
+              if (bind) {
+                brahma_gotcha_wrap("dlio_profiler", this->gotcha_priority);
+                auto posix_instance = brahma::POSIXDLIOProfiler::get_instance();
+                auto stdio_instance = brahma::STDIODLIOProfiler::get_instance();
+                auto paths = split(this->data_dirs, ':');
+                posix_instance->untrace(this->log_file.c_str());
+                stdio_instance->untrace(this->log_file.c_str());
+                for (const auto &path:paths) {
+                  DLIO_PROFILER_LOGINFO("Profiler will trace %s\n", path.c_str());
+                  posix_instance->trace(path.c_str());
+                  stdio_instance->trace(path.c_str());
+                }
               }
               size_t thread_hash = std::hash<std::thread::id>{}(std::this_thread::get_id());
               DLIO_PROFILER_LOGINFO("Running DLIO Profiler on thread %ld and pid %ld", thread_hash, this->process_id);
@@ -132,7 +135,9 @@ namespace dlio_profiler {
           if (is_init && is_enabled) {
             DLIO_PROFILER_LOGINFO("Calling finalize", "");
             dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->finalize();
-            free_bindings();
+            if (bind) {
+              free_bindings();
+            }
             return true;
           }
           return false;

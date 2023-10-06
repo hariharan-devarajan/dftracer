@@ -23,7 +23,9 @@ namespace dlio_profiler {
     void initialize(std::string &log_file, std::string &data_dirs, int process_id) {
       char *init_type = getenv(DLIO_PROFILER_INIT);
       if (init_type == nullptr || strcmp(init_type, "FUNCTION") == 0) {
-        dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(true, log_file.c_str(), data_dirs.c_str(), &process_id);
+        dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(true, true, log_file.c_str(), data_dirs.c_str(), &process_id);
+      } else {
+        dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(true, false, log_file.c_str(), data_dirs.c_str(), &process_id);
       }
     }
     TimeResolution get_time() {
@@ -42,7 +44,7 @@ namespace dlio_profiler {
     void finalize() {
       char *init_type = getenv(DLIO_PROFILER_INIT);
       if (init_type == nullptr || strcmp(init_type, "FUNCTION") == 0) {
-        dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(false)->finalize();
+        dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(false, false)->finalize();
       }
     }
 } // dlio_profiler
