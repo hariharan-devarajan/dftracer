@@ -133,8 +133,8 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
       }
       i++;
     }
-    all_stream << "}";
   }
+  all_stream << "}";
   all_stream << "}\n";
   DLIO_PROFILER_LOGINFO("event logged %s", all_stream.str().c_str());
   return all_stream.str();
