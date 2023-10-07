@@ -27,7 +27,7 @@ namespace dlio_profiler {
       } else {
         int * pid = nullptr;
         if (process_id != -1)
-          *pid = process_id;
+          pid = &process_id;
         dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(true, false, log_file.c_str(), data_dirs.c_str(), pid);
       }
     }
