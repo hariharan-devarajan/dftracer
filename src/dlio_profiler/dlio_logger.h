@@ -12,7 +12,7 @@
 #include <dlio_profiler/writer/base_writer.h>
 #include <dlio_profiler/writer/chrome_writer.h>
 #include <unistd.h>
-#include <dlio_profiler/macro.h>
+#include <dlio_profiler/core/macro.h>
 #include <dlio_profiler/utils/utils.h>
 
 typedef std::chrono::high_resolution_clock chrono;

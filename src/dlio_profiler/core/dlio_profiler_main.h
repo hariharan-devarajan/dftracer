@@ -10,7 +10,7 @@
 
 #include <cpp-logger/logger.h>
 #include <dlio_profiler/core/constants.h>
-#include <dlio_profiler/macro.h>
+#include <dlio_profiler/core/macro.h>
 #include <dlio_profiler/brahma/posix.h>
 #include <dlio_profiler/brahma/stdio.h>
 #include <dlio_profiler/dlio_logger.h>

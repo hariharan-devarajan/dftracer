@@ -143,9 +143,9 @@ set(DLIO_PROFILER_CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/posix_internal.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler.cpp)
 set(DLIO_PROFILER_CORE_PUBLIC_INCLUDE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/typedef.h
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler.h)
 set(DLIO_PROFILER_CORE_PRIVATE_INCLUDE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/typedef.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/dlio_profiler_main.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/constants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/posix_internal.h

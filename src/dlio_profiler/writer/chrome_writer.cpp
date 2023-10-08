@@ -4,7 +4,7 @@
 
 #include <dlio_profiler/writer/chrome_writer.h>
 #include <fcntl.h>
-#include <dlio_profiler/macro.h>
+#include <dlio_profiler/core/macro.h>
 #include <cassert>
 #include <unistd.h>
 #include <thread>

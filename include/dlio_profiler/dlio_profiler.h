@@ -8,7 +8,7 @@
 /**
  * Common to both C and CPP
  */
-#include <dlio_profiler/typedef.h>
+#include <dlio_profiler/core/typedef.h>
 #include <dlio_profiler/core/constants.h>
 #ifdef __cplusplus
 /**
@@ -33,7 +33,12 @@ public:
       dlio_profiler_core = DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_OTHER, ProfileType::PROFILER_CPP_APP);
       start_time = dlio_profiler_core->get_time();
     }
-    inline void update(const char* key, std::any& value) {
+    inline void update(const char* key, int value) {
+      if (dlio_profiler_core->is_active()) {
+        metadata.insert_or_assign(key, value);
+      }
+    }
+    inline void update(const char* key, const char* value) {
       if (dlio_profiler_core->is_active()) {
         metadata.insert_or_assign(key, value);
       }

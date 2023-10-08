@@ -39,7 +39,7 @@ add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_D
 set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
 
 set(test_name test_cpp_basic_meta)
-add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_basic ./data)
+add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_cpp ./data)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/lib/libdlio_profiler_preload.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_ENABLE=1)
@@ -53,7 +53,7 @@ add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_D
 set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
 
 set(test_name test_cpp_basic_affinity)
-add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_basic ./data)
+add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_cpp ./data)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/lib/libdlio_profiler_preload.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_ENABLE=1)

@@ -10,7 +10,7 @@
 #include <vector>
 #include <vector>
 #include <cstring>
-#include <dlio_profiler/macro.h>
+#include <dlio_profiler/core/macro.h>
 const std::string ignore_filenames[5] = {".pfw", "/pipe", "/socket","/proc/self", ".py"};
 inline std::vector<std::string> split(std::string str, char delimiter) {
   std::vector<std::string> res;

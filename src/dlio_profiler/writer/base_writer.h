@@ -9,7 +9,7 @@
 #include <dlio_profiler/utils/utils.h>
 #include <unordered_map>
 #include <dlio_profiler/utils/posix_internal.h>
-#include <dlio_profiler/typedef.h>
+#include <dlio_profiler/core/typedef.h>
 
 namespace dlio_profiler {
     class BaseWriter {
