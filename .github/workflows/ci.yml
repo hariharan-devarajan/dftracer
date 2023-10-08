@@ -49,7 +49,7 @@ jobs:
           fi
       - name: Build from ${{ matrix.dir }} on ${{ matrix.perm }}
         run: |
-          export CMAKE_BUILD_TYPE=Profile
+          export CMAKE_BUILD_TYPE=PROFILE
           export DLIO_PROFILER_ENABLE_TESTS=ON
           LOC=.
           if [[ $DIR == 'github' ]]; then
