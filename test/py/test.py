@@ -1,19 +1,24 @@
-import dlio_profiler_py as logger
+from dlio_profiler.logger import dlio_logger, fn_interceptor
 from time import sleep
 import os
-
+import threading
 cwd = os.getcwd()
+log_inst = dlio_logger.initialize_log(f"{cwd}/test_py-app.pwf", f"{cwd}/data", -1)
+dlio_log = fn_interceptor("COMPUTE")
 
+@dlio_log.log
+def custom_events2():
+    sleep(1)
 
 def custom_events():
     args = {
         "epoch": 1,
         "index": 1,
     }
-    start = logger.get_time()
-    sleep(2)
-    end = logger.get_time()
-    logger.log_event("test", "cat2", start, end - start, int_args=args)
+    start = log_inst.get_time()
+    sleep(1)
+    end = log_inst.get_time()
+    log_inst.log_event("test", "cat2", start, end - start, int_args=args)
 
 
 def posix_calls1(index):
@@ -43,20 +48,22 @@ def write_read_jpeg(index):
         out_records = np.asarray(image)
     #image = im.open(out_path_spec)
 
-import threading
+def main():
 
-logger.initialize(f"{cwd}/log-app.pwf", f"{cwd}/data")
-t1 = threading.Thread(target=posix_calls1, args=(10,))
-custom_events()
-t2 = threading.Thread(target=posix_calls2, args=(1,))
-t3 = threading.Thread(target=write_read_jpeg, args=(2,))
-# starting thread 1
-t1.start()
-t2.start()
-t3.start()
+    t1 = threading.Thread(target=posix_calls1, args=(10,))
+    custom_events()
+    t2 = threading.Thread(target=posix_calls2, args=(1,))
+    t3 = threading.Thread(target=write_read_jpeg, args=(2,))
+    # starting thread 1
+    t1.start()
+    t2.start()
+    t3.start()
 
-t1.join()
-t2.join()
-t3.join()
+    t1.join()
+    t2.join()
+    t3.join()
 
-logger.finalize()
+    log_inst.finalize()
+
+if __name__ == "__main__":
+    main()

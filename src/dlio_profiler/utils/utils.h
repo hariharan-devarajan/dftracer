@@ -34,7 +34,6 @@ inline bool ignore_files(const char* filename) {
   }
   return false;
 }
-typedef double TimeResolution;
 
 inline std::string get_filename(int fd) {
   char proclnk[PATH_MAX];
@@ -50,27 +49,30 @@ inline std::pair<bool, std::string> is_traced_common(const char* filename, const
                                               const std::vector<std::string>& track_filename) {
   bool found = false;
   bool ignore = false;
-  if (ignore_files(filename)) {
-    DLIO_PROFILER_LOGINFO("Profiler ignoring file %s for func %s", filename, func);
+  char resolved_path[PATH_MAX];
+  char* data = realpath(filename, resolved_path);
+  (void) data;
+  if (ignore_files(resolved_path) || ignore_files(filename)) {
+    DLIO_PROFILER_LOGINFO("Profiler ignoring file %s for func %s", resolved_path, func);
     return std::pair<bool, std::string>(false, filename);
   }
   for (const auto file : ignore_filename) {
-    if (strstr(filename, file.c_str()) != NULL) {
-      DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not file %s for func %s", filename, func);
+    if (strstr(resolved_path, file.c_str()) != NULL) {
+      DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not file %s for func %s", resolved_path, func);
       ignore = true;
       break;
     }
   }
   if (!ignore) {
     for (const auto file : track_filename) {
-      if (strstr(filename, file.c_str()) != NULL) {
-        DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX tracing file %s for func %s", filename, func);
+      if (strstr(resolved_path, file.c_str()) != NULL) {
+        DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX tracing file %s for func %s", resolved_path, func);
         found = true;
         break;
       }
     }
   }
-  if (!found and !ignore) DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing file %s for func %s", filename, func);
+  if (!found and !ignore) DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing file %s for func %s", resolved_path, func);
   return std::pair<bool, std::string>(found, filename);
 }
 #endif // DLIO_PROFILER_UTILS_H

@@ -44,10 +44,16 @@ class STDIODLIOProfiler : public STDIO {
   }
 
   inline void trace(const char* filename) {
-    track_filename.push_back(filename);
+    char resolved_path[PATH_MAX];
+    char* data = realpath(filename, resolved_path);
+    (void) data;
+    track_filename.push_back(resolved_path);
   }
   inline void untrace(const char* filename) {
-    ignore_filename.push_back(filename);
+    char resolved_path[PATH_MAX];
+    char* data = realpath(filename, resolved_path);
+    (void) data;
+    ignore_filename.push_back(resolved_path);
   }
 
   ~STDIODLIOProfiler() = default;

@@ -134,23 +134,26 @@ endif ()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(DLIO_PROFILER_PRELOAD_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler.cpp)
-set(DLIO_PROFILER_PRELOAD_PRIVATE_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_logger.h)
+set(DLIO_PROFILER_PRELOAD_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler_preload.cpp)
+set(DLIO_PROFILER_PRELOAD_PRIVATE_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_logger_preload.h)
 
-set(DLIO_PROFILER_PY_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/posix.cpp
+set(DLIO_PROFILER_CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/posix.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/stdio.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/writer/chrome_writer.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/posix_internal.cpp)
-set(DLIO_PROFILER_PY_PUBLIC_INCLUDE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/macro.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/posix.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/stdio.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/posix_internal.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler.cpp)
+set(DLIO_PROFILER_CORE_PUBLIC_INCLUDE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/typedef.h
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler.h)
-set(DLIO_PROFILER_PY_PRIVATE_INCLUDE
+set(DLIO_PROFILER_CORE_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/dlio_profiler_main.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/constants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/posix_internal.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/utils.h)
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/utils.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/macro.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/posix.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/stdio.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler_preload.h)
 add_library(${PROJECT_NAME} SHARED)
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCY_LIB})
 add_library(${PROJECT_NAME}_preload SHARED)
@@ -160,13 +163,13 @@ target_link_libraries(${PROJECT_NAME}_preload ${DEPENDENCY_LIB} ${PROJECT_NAME})
 #add_dependencies(${PROJECT_NAME} gotcha)
 message(STATUS ${CMAKE_PREFIX_PATH})
 if (BUILD_PYTHON_BINDINGS)
-    pybind11_add_module(${PROJECT_NAME}_py ${DLIO_PROFILER_PY_SRC} ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler_py.cpp)
+    pybind11_add_module(${PROJECT_NAME}_py ${DLIO_PROFILER_CORE_SRC} ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler_py.cpp)
     target_compile_definitions(${PROJECT_NAME}_py PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
     target_link_libraries(${PROJECT_NAME}_py PRIVATE ${DEPENDENCY_LIB})
 endif()
 target_sources(${PROJECT_NAME}
         PRIVATE
-        ${DLIO_PROFILER_PY_SRC}
+        ${DLIO_PROFILER_CORE_SRC}
         )
 target_sources(${PROJECT_NAME}_preload
         PRIVATE
@@ -233,7 +236,7 @@ include(GNUInstallDirs)
 # the variant with PUBLIC_HEADER property unfortunately does not preserve the folder structure
 #set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${public_headers}")
 # so instead we iterate through public headers and install them "manually"
-foreach (header ${DLIO_PROFILER_PY_PUBLIC_INCLUDE})
+foreach (header ${DLIO_PROFILER_CORE_PUBLIC_INCLUDE})
     file(RELATIVE_PATH header_file_path "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}" "${header}")
     get_filename_component(header_directory_path "${header_file_path}" DIRECTORY)
     install(

@@ -21,15 +21,7 @@ namespace dlio_profiler {
 
 
     void initialize(std::string &log_file, std::string &data_dirs, int process_id) {
-      char *init_type = getenv(DLIO_PROFILER_INIT);
-      if (init_type == nullptr || strcmp(init_type, "FUNCTION") == 0) {
-        dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(true, true, log_file.c_str(), data_dirs.c_str(), &process_id);
-      } else {
-        int * pid = nullptr;
-        if (process_id != -1)
-          pid = &process_id;
-        dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(true, false, log_file.c_str(), data_dirs.c_str(), pid);
-      }
+      dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_INIT, ProfileType::PROFILER_PY_APP, log_file.c_str(), data_dirs.c_str(), &process_id);
     }
     TimeResolution get_time() {
       return dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->get_time();
@@ -45,10 +37,7 @@ namespace dlio_profiler {
       dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->log(name, cat, start_time, duration, args);
     }
     void finalize() {
-      char *init_type = getenv(DLIO_PROFILER_INIT);
-      if (init_type == nullptr || strcmp(init_type, "FUNCTION") == 0) {
-        dlio_profiler::Singleton<dlio_profiler::DLIOProfiler>::get_instance(false, false)->finalize();
-      }
+      dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_FINI, ProfileType::PROFILER_PY_APP)->finalize();
     }
 } // dlio_profiler
 PYBIND11_MODULE(dlio_profiler_py, m) {
