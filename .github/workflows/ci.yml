@@ -148,6 +148,6 @@ jobs:
           total_lines=`cat $PWD/output/.trace*.pfw | wc -l`
           echo $num_posix_lines of $total_lines
           rm -rf $PWD/output
-          if [[ "$num_posix_lines" -ne "640" ]]; then
+          if [[ "$num_posix_lines" -ne "641" ]]; then
             exit 1
           fi
