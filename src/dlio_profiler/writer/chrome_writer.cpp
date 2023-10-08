@@ -82,7 +82,7 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
   }
   auto start_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(start_time);
   auto duration_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(duration);
-  if (is_first_write) all_stream << "  ";
+  if (is_first_write) all_stream << "   ";
   all_stream  << R"({"name":")" << event_name << "\","
               << R"("cat":")" << category << "\","
               << "\"pid\":" << pid << ","
@@ -136,6 +136,6 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
   }
   all_stream << "}";
   all_stream << "}\n";
-  DLIO_PROFILER_LOGINFO("event logged %s", all_stream.str().c_str());
+  DLIO_PROFILER_LOGINFO("event logged %s into %s", all_stream.str().c_str(), this->filename.c_str());
   return all_stream.str();
 }

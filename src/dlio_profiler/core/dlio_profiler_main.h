@@ -123,11 +123,6 @@ namespace dlio_profiler {
                   stdio_instance->trace(path.c_str());
                 }
               }
-              size_t thread_hash = std::hash<std::thread::id>{}(std::this_thread::get_id());
-              DLIO_PROFILER_LOGINFO("Running DLIO Profiler on thread %ld and pid %ld", thread_hash, this->process_id);
-              if (this->process_id == 0)
-                DLIO_PROFILER_LOGPRINT("Running DLIO Profiler with log_file %s data_dir %s and process %d",
-                                       this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
             }
             is_initialized = true;
           }
@@ -142,6 +137,8 @@ namespace dlio_profiler {
                 if (user_init_type != nullptr && strcmp(user_init_type, "PRELOAD") == 0) {
                   initlialize(true, true, log_file, data_dirs, process_id);
                 }
+                DLIO_PROFILER_LOGINFO("Preloading DLIO Profiler with log_file %s data_dir %s and process %d",
+                                      this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
               }
               break;
             }
@@ -150,10 +147,12 @@ namespace dlio_profiler {
             case ProfileType::PROFILER_CPP_APP: {
               if (stage == ProfilerStage::PROFILER_INIT) {
                 bool bind = false;
-                if (user_init_type != nullptr && strcmp(user_init_type, "FUNCTION") == 0) {
+                if (user_init_type == nullptr || strcmp(user_init_type, "FUNCTION") == 0) {
                   bind = true;
                 }
                 initlialize(true, bind, log_file, data_dirs, process_id);
+                DLIO_PROFILER_LOGINFO("Initializing DLIO Profiler with log_file %s data_dir %s and process %d",
+                                      this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
               }
               break;
             }
@@ -183,11 +182,12 @@ namespace dlio_profiler {
 
         bool finalize() {
           if (this->is_initialized && is_enabled) {
-            DLIO_PROFILER_LOGINFO("Calling finalize", "");
+            DLIO_PROFILER_LOGINFO("Calling finalize on pid %d", this->process_id);
             dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->finalize();
             if (bind) {
               free_bindings();
             }
+            this->is_initialized = false;
             return true;
           }
           return false;

@@ -10,11 +10,11 @@ from dlio_profiler.logger import dlio_logger, fn_interceptor
 
 cwd = os.getcwd()
 log_file=os.getenv("LOG_FILE", f"{cwd}/test_py-app.pwf")
-log_inst = dlio_logger.initialize_log(log_file, f"{cwd}/data", -1)
+log_inst = dlio_logger.initialize_log(logfile=None, data_dir=None, process_id=-1)
 dlio_log = fn_interceptor("COMPUTE")
 
 @dlio_log.log
-def log_events():
+def log_events(index):
     sleep(1)
 
 def custom_events():
@@ -28,11 +28,17 @@ def custom_events():
     log_inst.log_event("test", "cat2", start, end - start, int_args=args)
 
 
-def posix_calls(index):
+def posix_calls(val):
+    index, is_spawn = val
     path=f"{cwd}/data/demofile{index}.txt"
     f = open(path, "w+")
     f.write("Now the file has more content!")
     f.close()
+    if is_spawn:
+        print(f"Calling spawn on {index} with pid {os.getpid()}")
+        log_inst.finalize()
+    else:
+        print(f"Not calling spawn on {index} with pid {os.getpid()}")
 
 def npz_calls(index):
     #print(f"{cwd}/data/demofile2.npz")
@@ -57,23 +63,29 @@ def init():
     print(f'Initializing process {os.getpid()}')
 def main():
 
-    t1 = threading.Thread(target=posix_calls, args=(10,))
+    t1 = threading.Thread(target=posix_calls, args=(10,False))
     custom_events()
     t2 = threading.Thread(target=npz_calls, args=(1,))
     t3 = threading.Thread(target=jpeg_calls, args=(2,))
+    t4 = threading.Thread(target=log_events, args=(3,))
     # starting thread 1
     t1.start()
     t2.start()
     t3.start()
+    t4.start()
 
     t1.join()
     t2.join()
     t3.join()
-    index = 3
-    for context in ('fork', 'spawn'):
-        with get_context(context).Pool(2, initializer=init) as pool:
-            pool.map(posix_calls, (index, index + 1, index + 2))
-        index = index + 3
+    t4.join()
+    index = 4
+    with get_context('fork').Pool(1, initializer=init) as pool:
+        pool.map(posix_calls, ((index,False),))
+    index = index + 1
+
+    with get_context('spawn').Pool(1, initializer=init) as pool:
+        pool.map(posix_calls, ((index, True),))
+    index = index + 1
 
     log_inst.finalize()
 

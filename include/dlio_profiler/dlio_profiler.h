@@ -17,6 +17,7 @@
 // Internal Headers
 #include <dlio_profiler/dlio_logger.h>
 #include <dlio_profiler/core/dlio_profiler_main.h>
+#include <dlio_profiler/core/enumeration.h>
 
 // External Headers
 #include <any>
@@ -51,9 +52,9 @@ public:
     }
 };
 #define DLIO_PROFILER_CPP_INIT(log_file, data_dirs, process_id)                                               \
-DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_INIT, ProfileType::PROFILER_CPP_APP, log_file, data_dirs, process_id);
+DLIO_PROFILER_MAIN_SINGLETON_INIT(ProfilerStage::PROFILER_INIT, ProfileType::PROFILER_CPP_APP, log_file, data_dirs, process_id);
 #define DLIO_PROFILER_CPP_FINI()                                               \
-DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_FINI, ProfileType::PROFILER_CPP_APP);
+DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_FINI, ProfileType::PROFILER_CPP_APP)->finalize();
 #define DLIO_PROFILER_CPP_FUNCTION() \
 DLIOProfiler profiler_dlio_fn = DLIOProfiler(__FUNCTION__);
 
@@ -69,7 +70,7 @@ delete profiler_##name
 extern "C" {
 #endif
 // C APIs
-void initialize(const char * log_file, const char * data_dirs, int process_id);
+void initialize(const char * log_file, const char * data_dirs, int* process_id);
 TimeResolution get_time();
 void log_event(const char * name, const char * cat, TimeResolution start_time, TimeResolution duration);
 void finalize();

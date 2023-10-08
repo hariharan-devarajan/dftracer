@@ -20,11 +20,11 @@ namespace dlio_profiler {
 
 
 
-    void initialize(std::string &log_file, std::string &data_dirs, int process_id) {
-      dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_INIT, ProfileType::PROFILER_PY_APP, log_file.c_str(), data_dirs.c_str(), &process_id);
+    void initialize(const char* log_file, const char* data_dirs, int process_id) {
+      dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_INIT, ProfileType::PROFILER_PY_APP, log_file, data_dirs, &process_id);
     }
     TimeResolution get_time() {
-      return dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->get_time();
+      return dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_OTHER, ProfileType::PROFILER_PY_APP)->get_time();
     }
     void log_event(std::string &name, std::string &cat, TimeResolution start_time, TimeResolution duration,
                       std::unordered_map<std::string, int> &int_args,
@@ -34,7 +34,7 @@ namespace dlio_profiler {
       for (auto item:int_args) args.insert_or_assign(item.first, item.second);
       for (auto item:string_args) args.insert_or_assign(item.first, item.second);
       for (auto item:float_args) args.insert_or_assign(item.first, item.second);
-      dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->log(name, cat, start_time, duration, args);
+      dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_OTHER, ProfileType::PROFILER_PY_APP)->log(name.c_str(), cat.c_str(), start_time, duration, args);
     }
     void finalize() {
       dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_FINI, ProfileType::PROFILER_PY_APP)->finalize();
@@ -43,8 +43,8 @@ namespace dlio_profiler {
 PYBIND11_MODULE(dlio_profiler_py, m) {
   m.doc() = "Python module for dlio_logger"; // optional module docstring
   m.def("initialize", &dlio_profiler::initialize, "initialize dlio profiler",
-        py::arg("log_file"),
-        py::arg("data_dirs"),
+        py::arg("log_file") = nullptr,
+        py::arg("data_dirs") = nullptr,
         py::arg("process_id") = -1);
   m.def("get_time", &dlio_profiler::get_time, "get time from profiler");
   m.def("log_event", &dlio_profiler::log_event, "log event with args",
