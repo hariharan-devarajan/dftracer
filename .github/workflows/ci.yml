@@ -34,6 +34,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install gcc g++ libtool-bin openmpi-bin libopenmpi-dev
           sudo apt-get install python3.10 python3-pip
+      - name: Install dlio benchmark
+        if: matrix.os == 'ubuntu-22.04' && matrix.perm == 'root' && matrix.dir == 'github'
+        run: |
+          LOC=git+https://github.com/argonne-lcf/dlio_benchmark.git@main
+          if [[ $PERM == 'user' ]]; then
+            export DLIO_LOGGER_USER=1
+            echo pip install ${LOC}
+            pip install ${LOC}
+          else
+             echo pip install ${LOC}
+             sudo pip install ${LOC}
+          fi
       - name: Build from ${{ matrix.dir }} on ${{ matrix.perm }}
         run: |
           LOC=.
@@ -55,22 +67,14 @@ jobs:
           cd build/temp*/dlio_profiler_py
           ctest -VV
       - name: Test DLIO_Benchmark
-        if: matrix.os == 'ubuntu-22.04' && matrix.perm == 'root'
+        if: matrix.os == 'ubuntu-22.04' && matrix.perm == 'root' && matrix.dir == 'github'
         run: |
-          LOC=git+https://github.com/argonne-lcf/dlio_benchmark.git@main
-          if [[ $PERM == 'user' ]]; then
-            export DLIO_LOGGER_USER=1
-            echo pip install ${LOC}
-            pip install ${LOC}
-          else
-             echo pip install ${LOC}
-             sudo pip install ${LOC}
-          fi
           export DLIO_PROFILER_ENABLE=1
           dlio_benchmark workload=unet3d ++workload.output.folder=$PWD/output ++workload.train.computation_time=0.05 ++workload.evaluation.eval_time=0.01 ++workload.train.epochs=2 ++workload.workflow.train=True ++workload.workflow.generate_data=True ++workload.dataset.num_files_train=16 ++workload.dataset.num_files_eval=16 ++workload.reader.read_threads=2 ++workload.dataset.record_length=4096 ++workload.dataset.record_length_stdev=0
           ls -a $PWD/output
           num_posix_lines=`cat $PWD/output/.trace*.pfw | grep POSIX | wc -l`
-          echo $num_posix_lines
+          total_lines=`cat $PWD/output/.trace*.pfw | wc -l`
+          echo $num_posix_lines of $total_lines
           if [[ "$num_posix_lines" == '0' ]]; then
             exit 1
           fi
