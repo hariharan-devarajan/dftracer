@@ -15,7 +15,6 @@
  * CPP Only
  */
 // Internal Headers
-#include <dlio_profiler/dlio_logger.h>
 #include <dlio_profiler/core/dlio_profiler_main.h>
 #include <dlio_profiler/core/enumeration.h>
 

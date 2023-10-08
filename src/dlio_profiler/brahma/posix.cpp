@@ -3,7 +3,6 @@
 //
 #include <cpp-logger/logger.h>
 #include <dlio_profiler/brahma/posix.h>
-#include <dlio_profiler/dlio_logger.h>
 
 #define CATEGORY "POSIX"
 

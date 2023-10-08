@@ -7,8 +7,8 @@
 
 #include <dlio_profiler/utils/utils.h>
 #include <brahma/brahma.h>
-#include <dlio_profiler/dlio_logger.h>
 #include <dlio_profiler/core/macro.h>
+#include <dlio_profiler/dlio_logger.h>
 #include <fcntl.h>
 #include <filesystem>
 #include <fstream>

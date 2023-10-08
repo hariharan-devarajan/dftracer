@@ -69,7 +69,7 @@ class CMakeBuild(build_ext):
         build_type = os.environ.get("CMAKE_BUILD_TYPE", "Release")
         cmake_args += [f"-DCMAKE_BUILD_TYPE={build_type}"]
         enable_tests = os.environ.get("DLIO_PROFILER_ENABLE_TESTS", "Off")
-        cmake_args += [f"-DLIO_PROFILER_ENABLE_TESTS={enable_tests}"]
+        cmake_args += [f"-DDLIO_PROFILER_ENABLE_TESTS={enable_tests}"]
 
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.

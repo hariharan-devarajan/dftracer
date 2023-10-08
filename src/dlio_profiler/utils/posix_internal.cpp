@@ -2,7 +2,7 @@
 // Created by haridev on 8/23/23.
 //
 
-#include "posix_internal.h"
+#include <dlio_profiler/utils/posix_internal.h>
 
 int dlp_open(const char *pathname, int flags, ...) {
   mode_t mode;
