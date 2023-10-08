@@ -48,6 +48,14 @@ jobs:
              echo pip install -v ${LOC}
              sudo pip install -v ${LOC}
           fi
+      - name: Build through cmake
+        run: |
+          mkdir build
+          cmake --build build
+      - name: Test ctest
+        run: |
+          cd build
+          ctest -VV
       - name: Test DLIO_Benchmark
         if: matrix.os == 'ubuntu-22.04' && matrix.perm == 'root'
         run: |
