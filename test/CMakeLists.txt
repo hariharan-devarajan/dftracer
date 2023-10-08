@@ -35,6 +35,17 @@ set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_FIL
 add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 7)
 set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
 
+set(test_name test_cpp_basic_app_disable_only)
+add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_cpp ./data 1)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_LEVEL=INFO)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_ENABLE=0)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_DATA_DIR=${CMAKE_CURRENT_BINARY_DIR}/data)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
+
+add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 0)
+set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
 set(test_name test_c_basic_only)
 add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_c ./data)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_LEVEL=INFO)
@@ -54,6 +65,17 @@ set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_DATA_DI
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
 
 add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 7)
+set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+set(test_name test_c_basic_app_disable_only)
+add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_c ./data 1)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_LEVEL=INFO)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_ENABLE=0)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_DATA_DIR=${CMAKE_CURRENT_BINARY_DIR}/data)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
+
+add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 0)
 set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
 
 set(test_name test_cpp_basic_meta)
@@ -99,6 +121,18 @@ set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_LEV
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_INC_METADATA=1)
 
 add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 75)
+set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+
+set(test_name test_py_disable_only)
+add_test(${test_name} ${PYTHON_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/py/test.py)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}/venv/lib)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name}_app)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:${CMAKE_SOURCE_DIR}/dependency/.spack-env/view/lib64)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_DATA_DIR=${CMAKE_CURRENT_BINARY_DIR}/data)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_ENABLE=0)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_LEVEL=INFO)
+
+add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 0)
 set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
 
 find_program(PYTHON_EXE python)
