@@ -28,6 +28,7 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_BINARY_DIR})
 # Build options
 #------------------------------------------------------------------------------
 option(BUILD_PYTHON_BINDINGS "Build python bindings." ON)
+option(DLIO_PROFILER_ENABLE_TESTS "Enable internal tests" Off)
 #------------------------------------------------------------------------------
 # Setup install and output Directories
 #------------------------------------------------------------------------------
@@ -68,6 +69,15 @@ if (NOT DLIO_PROFILER_EXTERNALLY_CONFIGURED)
             )
 endif ()
 
+
+if(DLIO_PROFILER_ENABLE_TESTS)
+    enable_testing()
+    if(CMAKE_BUILD_TYPE STREQUAL "PROFILE")
+        set(CMAKE_C_FLAGS_PROFILE --coverage)
+        set(CMAKE_CXX_FLAGS_PROFILE --coverage)
+    endif()
+    add_subdirectory(test)
+endif()
 
 if (BUILD_PYTHON_BINDINGS)
     find_package(pybind11 REQUIRED)
@@ -321,8 +331,3 @@ install(EXPORT
         FILE
         ${DLIO_PROFILER_EXPORTED_TARGETS}.cmake
         )
-option(DLIO_PROFILER_BUILD_TEST "Build the unit tests" ON)
-if (DLIO_PROFILER_BUILD_TEST)
-    enable_testing()
-    add_subdirectory(test)
-endif ()
