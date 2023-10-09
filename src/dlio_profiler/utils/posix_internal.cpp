@@ -32,9 +32,9 @@ ssize_t dlp_write(int fd, const void *buf, size_t count) {
   return syscall(SYS_write, fd, buf, count);
 }
 
-ssize_t dlp_read(int fd, void *buf, size_t count) {  // GCOV_EXCL_START
+off_t dlp_read(int fd, void *buf, size_t count) {
   return syscall(SYS_read, fd, buf, count);
-}  // GCOV_EXCL_STOP
+}
 
 int dlp_close(int fd) {
   return syscall(SYS_close, fd);
