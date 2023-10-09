@@ -56,17 +56,17 @@ inline std::pair<bool, std::string> is_traced_common(const char* filename, const
     DLIO_PROFILER_LOGINFO("Profiler ignoring file %s for func %s", resolved_path, func);
     return std::pair<bool, std::string>(false, filename);
   }
-  for (const auto file : ignore_filename) {
-    if (strstr(resolved_path, file.c_str()) != NULL) {
-      DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not file %s for func %s", resolved_path, func);
-      ignore = true;
-      break;
+  if (!ignore) {
+    for (const auto file : ignore_filename) {
+      if (strstr(resolved_path, file.c_str()) != NULL) {
+        ignore = true;
+        break;
+      }
     }
   }
   if (!ignore) {
     for (const auto file : track_filename) {
       if (strstr(resolved_path, file.c_str()) != NULL) {
-        DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX tracing file %s for func %s", resolved_path, func);
         found = true;
         break;
       }
