@@ -19,6 +19,7 @@ jobs:
       CXX: g++
       DIR: ${{ matrix.dir }}
       PERM: ${{ matrix.perm }}
+      OS: ${{ matrix.os }}
 
     steps:
       - name: Push checkout
@@ -36,7 +37,7 @@ jobs:
           sudo apt-get install python3.10 python3-pip
           sudo apt-get install gcovr
       - name: Install dlio benchmark
-        if: matrix.os == 'ubuntu-22.04' && matrix.perm == 'root' && matrix.dir == 'github'
+        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'user'
         run: |
           LOC=git+https://github.com/argonne-lcf/dlio_benchmark.git@main
           if [[ $PERM == 'user' ]]; then
@@ -51,6 +52,9 @@ jobs:
         run: |
           export CMAKE_BUILD_TYPE=PROFILE
           export DLIO_PROFILER_ENABLE_TESTS=ON
+          if [ $OS == 'ubuntu-22.04' ] && [ $DIR == 'github' ] && [ $PERM == 'user' ]; then
+            export ENABLE_DLIO_BENCHMARK_TESTS=ON
+          fi
           LOC=.
           if [[ $DIR == 'github' ]]; then
             LOC=git+https://github.com/hariharan-devarajan/dlio-profiler.git@dev
@@ -81,74 +85,3 @@ jobs:
           fi
           cat $FILE
           curl -v -F json_file=@$FILE https://coveralls.io/api/v1/jobs
-      - name: Test dlio benchmark npz
-        if: matrix.os == 'ubuntu-22.04' && matrix.perm == 'root' && matrix.dir == 'github'
-        run: |
-          export DLIO_PROFILER_ENABLE=1
-          export DLIO_PROFILER_LOG_LEVEL=ERROR
-          dlio_benchmark workload=unet3d ++workload.output.folder=$PWD/output ++workload.train.computation_time=0.05 ++workload.evaluation.eval_time=0.01 ++workload.train.epochs=2 ++workload.workflow.train=True ++workload.workflow.generate_data=True ++workload.dataset.num_files_train=16 ++workload.dataset.num_files_eval=16 ++workload.reader.read_threads=2 ++workload.dataset.record_length=4096 ++workload.dataset.record_length_stdev=0 \
-                        ++workload.framework=tensorflow ++workload.reader.data_loader=tensorflow ++workload.dataset.format=npz
-          ls -a $PWD/output
-          num_posix_lines=`cat $PWD/output/.trace*.pfw | grep POSIX | wc -l`
-          total_lines=`cat $PWD/output/.trace*.pfw | wc -l`
-          echo $num_posix_lines of $total_lines
-          rm -rf $PWD/output
-          if [[ "$num_posix_lines" -ne "1728" ]]; then
-            exit 1
-          fi
-      - name: Test dlio benchmark tfrecord
-        if: matrix.os == 'ubuntu-22.04' && matrix.perm == 'root' && matrix.dir == 'github'
-        run: |
-          export DLIO_PROFILER_ENABLE=1
-          dlio_benchmark workload=unet3d ++workload.output.folder=$PWD/output ++workload.train.computation_time=0.05 ++workload.evaluation.eval_time=0.01 ++workload.train.epochs=2 ++workload.workflow.train=True ++workload.workflow.generate_data=True ++workload.dataset.num_files_train=16 ++workload.dataset.num_files_eval=16 ++workload.reader.read_threads=2 ++workload.dataset.record_length=4096 ++workload.dataset.record_length_stdev=0 \
-                        ++workload.framework=tensorflow ++workload.reader.data_loader=tensorflow ++workload.dataset.format=tfrecord
-          ls -a $PWD/output
-          num_posix_lines=`cat $PWD/output/.trace*.pfw | grep POSIX | wc -l`
-          total_lines=`cat $PWD/output/.trace*.pfw | wc -l`
-          echo $num_posix_lines of $total_lines
-          rm -rf $PWD/output
-          if [[ "$num_posix_lines" -ne "192" ]]; then
-            exit 1
-          fi
-      - name: Test dlio benchmark jpeg
-        if: matrix.os == 'ubuntu-22.04' && matrix.perm == 'root' && matrix.dir == 'github'
-        run: |
-          export DLIO_PROFILER_ENABLE=1
-          dlio_benchmark workload=unet3d ++workload.output.folder=$PWD/output ++workload.train.computation_time=0.05 ++workload.evaluation.eval_time=0.01 ++workload.train.epochs=2 ++workload.workflow.train=True ++workload.workflow.generate_data=True ++workload.dataset.num_files_train=16 ++workload.dataset.num_files_eval=16 ++workload.reader.read_threads=2 ++workload.dataset.record_length=4096 ++workload.dataset.record_length_stdev=0 \
-                        ++workload.framework=tensorflow ++workload.reader.data_loader=tensorflow ++workload.dataset.format=jpeg
-          ls -a $PWD/output
-          num_posix_lines=`cat $PWD/output/.trace*.pfw | grep POSIX | wc -l`
-          total_lines=`cat $PWD/output/.trace*.pfw | wc -l`
-          echo $num_posix_lines of $total_lines
-          rm -rf $PWD/output
-          if [[ "$num_posix_lines" -ne "416" ]]; then
-            exit 1
-          fi
-      - name: Test dlio benchmark png
-        if: matrix.os == 'ubuntu-22.04' && matrix.perm == 'root' && matrix.dir == 'github'
-        run: |
-          export DLIO_PROFILER_ENABLE=1
-          dlio_benchmark workload=unet3d ++workload.output.folder=$PWD/output ++workload.train.computation_time=0.05 ++workload.evaluation.eval_time=0.01 ++workload.train.epochs=2 ++workload.workflow.train=True ++workload.workflow.generate_data=True ++workload.dataset.num_files_train=16 ++workload.dataset.num_files_eval=16 ++workload.reader.read_threads=2 ++workload.dataset.record_length=4096 ++workload.dataset.record_length_stdev=0 \
-                        ++workload.framework=tensorflow ++workload.reader.data_loader=tensorflow ++workload.dataset.format=png
-          ls -a $PWD/output
-          num_posix_lines=`cat $PWD/output/.trace*.pfw | grep POSIX | wc -l`
-          total_lines=`cat $PWD/output/.trace*.pfw | wc -l`
-          echo $num_posix_lines of $total_lines
-          rm -rf $PWD/output
-          if [[ "$num_posix_lines" -ne "544" ]]; then
-            exit 1
-          fi
-      - name: Test dlio benchmark hdf5
-        if: matrix.os == 'ubuntu-22.04' && matrix.perm == 'root' && matrix.dir == 'github'
-        run: |
-          export DLIO_PROFILER_ENABLE=1
-          dlio_benchmark workload=unet3d ++workload.output.folder=$PWD/output ++workload.train.computation_time=0.05 ++workload.evaluation.eval_time=0.01 ++workload.train.epochs=2 ++workload.workflow.train=True ++workload.workflow.generate_data=True ++workload.dataset.num_files_train=16 ++workload.dataset.num_files_eval=16 ++workload.reader.read_threads=2 ++workload.dataset.record_length=4096 ++workload.dataset.record_length_stdev=0 \
-                        ++workload.framework=tensorflow ++workload.reader.data_loader=tensorflow ++workload.dataset.format=hdf5
-          ls -a $PWD/output
-          num_posix_lines=`cat $PWD/output/.trace*.pfw | grep POSIX | wc -l`
-          total_lines=`cat $PWD/output/.trace*.pfw | wc -l`
-          echo $num_posix_lines of $total_lines
-          rm -rf $PWD/output
-          if [[ "$num_posix_lines" -ne "640" ]]; then
-            exit 1
-          fi

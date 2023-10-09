@@ -29,6 +29,7 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_BINARY_DIR})
 #------------------------------------------------------------------------------
 option(BUILD_PYTHON_BINDINGS "Build python bindings." ON)
 option(DLIO_PROFILER_ENABLE_TESTS "Enable internal tests" Off)
+option(ENABLE_DLIO_BENCHMARK_TESTS "Enable dlio_benchmark tests" Off)
 #------------------------------------------------------------------------------
 # Setup install and output Directories
 #------------------------------------------------------------------------------
