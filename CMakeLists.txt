@@ -160,17 +160,17 @@ set(DLIO_PROFILER_CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/dlio_profiler_main.cpp)
 set(DLIO_PROFILER_CORE_PUBLIC_INCLUDE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler.h)
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/dlio_profiler_main.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/constants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/macro.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/singleton.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/typedef.h)
 set(DLIO_PROFILER_CORE_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/posix_internal.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/utils.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/posix.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/stdio.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/dlio_profiler_main.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/constants.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/macro.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/singleton.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/typedef.h)
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/stdio.h)
 add_library(${PROJECT_NAME} SHARED)
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCY_LIB})
 add_library(${PROJECT_NAME}_preload SHARED)
