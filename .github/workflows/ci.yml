@@ -85,6 +85,7 @@ jobs:
         if: matrix.os == 'ubuntu-22.04' && matrix.perm == 'root' && matrix.dir == 'github'
         run: |
           export DLIO_PROFILER_ENABLE=1
+          export DLIO_PROFILER_LOG_LEVEL=ERROR
           dlio_benchmark workload=unet3d ++workload.output.folder=$PWD/output ++workload.train.computation_time=0.05 ++workload.evaluation.eval_time=0.01 ++workload.train.epochs=2 ++workload.workflow.train=True ++workload.workflow.generate_data=True ++workload.dataset.num_files_train=16 ++workload.dataset.num_files_eval=16 ++workload.reader.read_threads=2 ++workload.dataset.record_length=4096 ++workload.dataset.record_length_stdev=0 \
                         ++workload.framework=tensorflow ++workload.reader.data_loader=tensorflow ++workload.dataset.format=npz
           ls -a $PWD/output

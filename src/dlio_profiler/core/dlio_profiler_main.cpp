@@ -37,10 +37,10 @@ dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileTy
       }
       break;
     }
-    default: {
+    default: {  // GCOVR_EXCL_START
       DLIO_PROFILER_LOGERROR(UNKNOWN_PROFILER_TYPE.message, type);
       throw std::runtime_error(UNKNOWN_PROFILER_TYPE.code);
-    }
+    }  // GCOVR_EXCL_STOP
   }
 }
 
@@ -73,7 +73,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
   bind_signals();
   if (is_init) {
     char *dlio_profiler_log_level = getenv(DLIO_PROFILER_LOG_LEVEL);
-    if (dlio_profiler_log_level == nullptr) {
+    if (dlio_profiler_log_level == nullptr) {  // GCOV_EXCL_START
       logger_level = cpplogger::LoggerType::LOG_ERROR;
     } else {
       if (strcmp(dlio_profiler_log_level, "ERROR") == 0) {
@@ -83,7 +83,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
       } else if (strcmp(dlio_profiler_log_level, "DEBUG") == 0) {
         logger_level = cpplogger::LoggerType::LOG_WARN;
       }
-    }
+    }  // GCOV_EXCL_STOP
     DLIO_PROFILER_LOGGER->level = logger_level;
     DLIO_PROFILER_LOGINFO("Enabling logging level %d", logger_level);
 
@@ -95,7 +95,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
       DLIO_PROFILER_LOGINFO("DLIO Profiler enabled", "");
       char *dlio_profiler_priority_str = getenv(DLIO_PROFILER_GOTCHA_PRIORITY);
       if (dlio_profiler_priority_str != nullptr) {
-        gotcha_priority = atoi(dlio_profiler_priority_str);
+        gotcha_priority = atoi(dlio_profiler_priority_str); // GCOV_EXCL_LINE
       }
       if (_process_id == nullptr || *_process_id == -1) {
         this->process_id = getpid();
@@ -107,10 +107,10 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
         char *dlio_profiler_log = getenv(DLIO_PROFILER_LOG_FILE);
         if (dlio_profiler_log != nullptr) {
           this->log_file = std::string(dlio_profiler_log) + "-" + std::to_string(this->process_id) + ".pfw";
-        } else {
+        } else {  // GCOV_EXCL_START
           DLIO_PROFILER_LOGERROR(UNDEFINED_LOG_FILE.message, "");
           throw std::runtime_error(UNDEFINED_LOG_FILE.code);
-        }
+        } // GCOV_EXCL_STOP
       } else {
         this->log_file = _log_file;
       }
@@ -119,10 +119,10 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
         char *dlio_profiler_data_dirs = getenv(DLIO_PROFILER_DATA_DIR);
         if (dlio_profiler_data_dirs != nullptr) {
           this->data_dirs = dlio_profiler_data_dirs;
-        } else {
+        } else { // GCOV_EXCL_START
           DLIO_PROFILER_LOGERROR(UNDEFINED_DATA_DIR.message, "");
           throw std::runtime_error(UNDEFINED_DATA_DIR.code);
-        }
+        } // GCOV_EXCL_STOP
       } else {
         this->data_dirs = _data_dirs;
       }

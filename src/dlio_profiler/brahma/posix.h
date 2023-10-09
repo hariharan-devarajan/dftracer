@@ -57,7 +57,7 @@ class POSIXDLIOProfiler : public POSIX {
     (void) data;
     ignore_filename.push_back(resolved_path);
   }
-  ~POSIXDLIOProfiler() override = default;
+  ~POSIXDLIOProfiler() override = default;   // GCOVR_EXCL_LINE
   static std::shared_ptr<POSIXDLIOProfiler> get_instance() {
     if (instance == nullptr) {
       instance = std::make_shared<POSIXDLIOProfiler>();

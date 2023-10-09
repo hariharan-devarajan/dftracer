@@ -31,7 +31,7 @@ public:
       }
       char *dlio_profiler_error = getenv("DLIO_PROFILER_ERROR");
       if (dlio_profiler_error != nullptr && strcmp(dlio_profiler_error, "1") == 0) {
-        throw_error = true;
+        throw_error = true; // GCOVR_EXCL_LINE
       }
       this->is_init=true;
       int fd = -1;
@@ -42,7 +42,7 @@ public:
           fd = fileno(stderr);
           log_file = "STDERR";
         } else {
-          if (strcmp(dlio_profiler_log_dir, "STDERR") == 0) {
+          if (strcmp(dlio_profiler_log_dir, "STDERR") == 0) { // GCOV_EXCL_START
             fd = fileno(stderr);
             log_file = "STDERR";
           } else if (strcmp(dlio_profiler_log_dir, "STDOUT") == 0) {
@@ -51,7 +51,7 @@ public:
           } else {
             int pid = getpid();
             log_file = std::string(dlio_profiler_log_dir) + "/" + "trace_ll_" + std::to_string(pid) + ".pfw";
-          }
+          } // GCOV_EXCL_STOP
         }
       }
       update_log_file(log_file);

@@ -25,24 +25,24 @@ int dlp_open(const char *pathname, int flags, ...) {
 
   if (result >= 0)
     return (int) result;
-  return -1;
+  return -1; // GCOV_EXCL_LINE
 }
 
 ssize_t dlp_write(int fd, const void *buf, size_t count) {
   return syscall(SYS_write, fd, buf, count);
 }
 
-ssize_t dlp_read(int fd, void *buf, size_t count) {
+ssize_t dlp_read(int fd, void *buf, size_t count) {  // GCOV_EXCL_START
   return syscall(SYS_read, fd, buf, count);
-}
+}  // GCOV_EXCL_STOP
 
 int dlp_close(int fd) {
   return syscall(SYS_close, fd);
 }
 
-int dlp_fsync(int fd) {
+int dlp_fsync(int fd) { // GCOV_EXCL_START
   return syscall(SYS_fsync, fd);
-}
+} // GCOV_EXCL_STOP
 
 ssize_t dlp_readlink(const char *path, char *buf, size_t bufsize) {
   return syscall(SYS_readlink, path, buf, bufsize);

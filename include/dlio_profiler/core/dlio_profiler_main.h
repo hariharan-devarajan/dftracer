@@ -20,7 +20,7 @@
 #include <csignal>
 #include "typedef.h"
 
-static void handler(int sig) {
+static void handler(int sig) {  // GCOVR_EXCL_START
   void *array[10];
   size_t size;
 
@@ -31,7 +31,7 @@ static void handler(int sig) {
   fprintf(stderr, "Error: signal %d:\n", sig);
   backtrace_symbols_fd(array, size, STDERR_FILENO);
   exit(1);
-}
+}  // GCOVR_EXCL_STOP
 
 namespace dlio_profiler {
     class DLIOProfilerCore {
