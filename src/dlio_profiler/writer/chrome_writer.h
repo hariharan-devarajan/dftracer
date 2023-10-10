@@ -60,7 +60,7 @@ namespace dlio_profiler {
           if (enable_core_affinity_str != nullptr && strcmp(enable_core_affinity_str, "1") == 0) {
             enable_core_affinity = true;
           }
-          process_id = getpid();
+          process_id = dlp_getpid();
           this->fd = fd;
           if (enable_core_affinity) {
             hwloc_topology_init(&topology);  // initialization

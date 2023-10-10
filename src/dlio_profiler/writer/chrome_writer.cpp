@@ -78,11 +78,11 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
   std::stringstream all_stream;
   int tid, pid;
   if (process_id == -1) {
-    tid = std::hash<std::thread::id>{}(std::this_thread::get_id()) % 100000;
-    pid = getpid();
+    tid = dlp_gettid();
+    pid = dlp_getpid();
   } else {
     pid = process_id;
-    tid = getpid() + std::hash<std::thread::id>{}(std::this_thread::get_id()) % 100000;
+    tid = dlp_getpid() + dlp_gettid();
   }
   auto start_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(start_time);
   auto duration_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(duration);

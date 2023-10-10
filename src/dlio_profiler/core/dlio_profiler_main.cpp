@@ -100,7 +100,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
         gotcha_priority = atoi(dlio_profiler_priority_str); // GCOV_EXCL_LINE
       }
       if (_process_id == nullptr || *_process_id == -1) {
-        this->process_id = getpid();
+        this->process_id = dlp_getpid();
       } else {
         this->process_id = *_process_id;
       }
@@ -108,7 +108,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
       if (_log_file == nullptr) {
         char *dlio_profiler_log = getenv(DLIO_PROFILER_LOG_FILE);
         char proc_name[PATH_MAX], cmd[128];
-        sprintf(cmd, "/proc/%d/cmdline", getpid());
+        sprintf(cmd, "/proc/%d/cmdline", dlp_getpid());
         int fd = dlp_open(cmd, O_RDONLY);
         const char *exec_file_name = nullptr;
         if (fd != -1) {
