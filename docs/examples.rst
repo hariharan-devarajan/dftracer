@@ -557,3 +557,14 @@ Here is the list applications that currently use DLIO Profiler.
 
 1. `DLIO Benchmark <https://github.com/argonne-lcf/dlio_benchmark>`_
 2. MuMMI
+
+****************************
+Example Chrome Tracing Plots
+****************************
+
+Example of Unet3D application with DLIO Benchmark. This trace shows the first few steps of the benchmark.
+Here, we can see that we can get application level calls (e.g., ``train`` and ``TorchDataset``) as well as low-level I/O calls (dark green color).
+
+.. image:: images/tracing/trace.png
+  :width: 400
+  :alt: Unet3D applications
