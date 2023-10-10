@@ -20,19 +20,6 @@
 #include <csignal>
 #include "typedef.h"
 
-static void handler(int sig) {  // GCOVR_EXCL_START
-  void *array[10];
-  size_t size;
-
-  // get void*'s for all entries on the stack
-  size = backtrace(array, 10);
-
-  // print out all the frames to stderr
-  fprintf(stderr, "Error: signal %d:\n", sig);
-  backtrace_symbols_fd(array, size, STDERR_FILENO);
-  exit(1);
-}  // GCOVR_EXCL_STOP
-
 namespace dlio_profiler {
     class DLIOProfilerCore {
     private:
@@ -44,9 +31,6 @@ namespace dlio_profiler {
         int process_id;
         bool is_initialized;
         bool bind;
-        inline void bind_signals() {
-          signal(SIGSEGV, handler);
-        }
         void initlialize(bool is_init, bool _bind, const char *_log_file = nullptr, const char *_data_dirs = nullptr, const int *_process_id = nullptr);
     public:
         DLIOProfilerCore(ProfilerStage stage, ProfileType type, const char *log_file = nullptr, const char *data_dirs = nullptr, const int *process_id = nullptr);

@@ -70,7 +70,7 @@ void
 dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const char *_log_file, const char *_data_dirs,
                                              const int *_process_id)  {
   this->bind = _bind;
-  bind_signals();
+  set_signal();
   if (is_init) {
     char *dlio_profiler_log_level = getenv(DLIO_PROFILER_LOG_LEVEL);
     if (dlio_profiler_log_level == nullptr) {  // GCOV_EXCL_START
