@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     }
   }
   char filename[1024];
-  sprintf(filename, "%s/demofile.txt", argv[1]);
+  sprintf(filename, "%s/demofile_c.txt", argv[1]);
   foo();
   FILE* fh = fopen(filename, "w+");
   fwrite("hello", sizeof("hello"), 1, fh);

@@ -1,3 +1,6 @@
+[![DLIO Profiler Build and Test](https://github.com/hariharan-devarajan/dlio-profiler/actions/workflows/ci.yml/badge.svg)](https://github.com/hariharan-devarajan/dlio-profiler/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/hariharan-devarajan/dlio-profiler/badge.svg?branch=feature/apis)](https://coveralls.io/github/hariharan-devarajan/dlio-profiler?branch=dev)
+
 # dlio-profiler
 A low-level profiler for capture I/O calls from deep learning applications.
 

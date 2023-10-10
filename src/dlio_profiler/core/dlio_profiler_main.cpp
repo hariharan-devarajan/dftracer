@@ -154,10 +154,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
       } else {
         this->data_dirs = _data_dirs;
       }
-
       DLIO_PROFILER_LOGINFO("Setting data_dirs to %s", this->data_dirs.c_str());
-
-
       dlio_profiler::Singleton<DLIOLogger>::get_instance()->update_log_file(this->log_file, this->process_id);
       if (bind) {
         brahma_gotcha_wrap("dlio_profiler", this->gotcha_priority);
