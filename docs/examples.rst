@@ -548,3 +548,12 @@ Example of running this configurations are:
     export DLIO_PROFILER_INIT=PRELOAD
     # Enable profiler
     DLIO_PROFILER_ENABLE=1
+
+***********************
+Integrated Applications
+***********************
+
+Here is the list applications that currently use DLIO Profiler.
+
+1. `DLIO Benchmark <https://github.com/argonne-lcf/dlio_benchmark>`_
+2. MuMMI
