@@ -4,6 +4,7 @@
 
 #ifndef DLIO_PROFILER_CHROME_WRITER_H
 #define DLIO_PROFILER_CHROME_WRITER_H
+
 #include <dlio_profiler/writer/base_writer.h>
 #include <string>
 #include <unordered_map>
@@ -14,16 +15,20 @@
 #include <dlio_profiler/core/constants.h>
 
 namespace dlio_profiler {
-    class ChromeWriter: public BaseWriter {
+    class ChromeWriter : public BaseWriter {
     private:
         bool enable_core_affinity, include_metadata;
         hwloc_topology_t topology;
         int fd;
-        std::string convert_json(std::string &event_name, std::string &category, TimeResolution start_time, TimeResolution duration,
-                                 std::unordered_map<std::string, std::any> &metadata, int process_id);
+
+        std::string
+        convert_json(std::string &event_name, std::string &category, TimeResolution start_time, TimeResolution duration,
+                     std::unordered_map<std::string, std::any> &metadata, int process_id);
+
         bool is_first_write;
         int process_id;
         std::unordered_map<int, std::mutex> mtx_map;
+
         std::vector<unsigned> core_affinity() {
           auto cores = std::vector<unsigned>();
           if (enable_core_affinity) {
@@ -36,14 +41,17 @@ namespace dlio_profiler {
           }
           return cores;
         }
+
         std::string hostname() {
-          const int SIZE=256;
+          const int SIZE = 256;
           char hostname[SIZE];
           gethostname(hostname, SIZE);
           return std::string(hostname);
         }
+
     public:
-        ChromeWriter(int fd=-1):BaseWriter(), is_first_write(true), mtx_map(), enable_core_affinity(false), include_metadata(false){
+        ChromeWriter(int fd = -1)
+                : BaseWriter(), is_first_write(true), mtx_map(), enable_core_affinity(false), include_metadata(false) {
           char *dlio_profiler_meta = getenv(DLIO_PROFILER_INC_METADATA);
           if (dlio_profiler_meta != nullptr && strcmp(dlio_profiler_meta, "1") == 0) {
             include_metadata = true;
@@ -59,10 +67,11 @@ namespace dlio_profiler {
             hwloc_topology_load(topology);   // actual detection
           }
         }
+
         void initialize(char *filename, bool throw_error) override;
 
         void log(std::string &event_name, std::string &category, TimeResolution &start_time, TimeResolution &duration,
-                 std::unordered_map<std::string , std::any> &metadata, int process_id) override;
+                 std::unordered_map<std::string, std::any> &metadata, int process_id) override;
 
         void finalize() override;
     };

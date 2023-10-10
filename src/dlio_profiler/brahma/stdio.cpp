@@ -8,6 +8,7 @@
 #define CATEGORY "STDIO"
 
 std::shared_ptr<brahma::STDIODLIOProfiler> brahma::STDIODLIOProfiler::instance = nullptr;
+
 FILE *brahma::STDIODLIOProfiler::fopen64(const char *path, const char *mode) {
   BRAHMA_MAP_OR_FAIL(fopen64);
   DLIO_LOGGER_START(path);
@@ -18,6 +19,7 @@ FILE *brahma::STDIODLIOProfiler::fopen64(const char *path, const char *mode) {
   if (trace) this->trace(ret);
   return ret;
 }
+
 FILE *brahma::STDIODLIOProfiler::fopen(const char *path, const char *mode) {
   BRAHMA_MAP_OR_FAIL(fopen);
   DLIO_LOGGER_START(path);
@@ -28,6 +30,7 @@ FILE *brahma::STDIODLIOProfiler::fopen(const char *path, const char *mode) {
   if (trace) this->trace(ret);
   return ret;
 }
+
 int brahma::STDIODLIOProfiler::fclose(FILE *fp) {
   BRAHMA_MAP_OR_FAIL(fclose);
   DLIO_LOGGER_START(fp);
@@ -36,8 +39,9 @@ int brahma::STDIODLIOProfiler::fclose(FILE *fp) {
   if (trace) this->remove_trace(fp);
   return ret;
 }
+
 size_t brahma::STDIODLIOProfiler::fread(void *ptr, size_t size, size_t nmemb,
-                                    FILE *fp) {
+                                        FILE *fp) {
   BRAHMA_MAP_OR_FAIL(fread);
   DLIO_LOGGER_START(fp);
   DLIO_LOGGER_UPDATE(size);
@@ -46,8 +50,9 @@ size_t brahma::STDIODLIOProfiler::fread(void *ptr, size_t size, size_t nmemb,
   DLIO_LOGGER_END();
   return ret;
 }
+
 size_t brahma::STDIODLIOProfiler::fwrite(const void *ptr, size_t size, size_t nmemb,
-                                     FILE *fp) {
+                                         FILE *fp) {
   BRAHMA_MAP_OR_FAIL(fwrite);
   DLIO_LOGGER_START(fp);
   DLIO_LOGGER_UPDATE(size);
@@ -56,6 +61,7 @@ size_t brahma::STDIODLIOProfiler::fwrite(const void *ptr, size_t size, size_t nm
   DLIO_LOGGER_END();
   return ret;
 }
+
 long brahma::STDIODLIOProfiler::ftell(FILE *fp) {
   BRAHMA_MAP_OR_FAIL(ftell);
   DLIO_LOGGER_START(fp);
@@ -63,6 +69,7 @@ long brahma::STDIODLIOProfiler::ftell(FILE *fp) {
   DLIO_LOGGER_END();
   return ret;
 }
+
 int brahma::STDIODLIOProfiler::fseek(FILE *fp, long offset, int whence) {
   BRAHMA_MAP_OR_FAIL(fseek);
   DLIO_LOGGER_START(fp);

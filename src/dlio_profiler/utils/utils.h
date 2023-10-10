@@ -4,6 +4,7 @@
 
 #ifndef DLIO_PROFILER_UTILS_H
 #define DLIO_PROFILER_UTILS_H
+
 #include <string>
 #include <limits.h>
 #include <dlio_profiler/utils/posix_internal.h>
@@ -34,6 +35,7 @@ inline std::string sh(std::string cmd) {
   }
   return result;
 }
+
 inline void print_backtrace(void) {
   void *bt[1024];
   int bt_size;
@@ -58,62 +60,61 @@ inline void print_backtrace(void) {
   free(bt_syms);
 }
 
-inline void signal_handler(int sig){
-  switch(sig) {
-    case SIGHUP:{
-      DLIO_PROFILER_LOGPRINT("hangup signal caught",0);
+inline void signal_handler(int sig) {
+  switch (sig) {
+    case SIGHUP: {
+      DLIO_PROFILER_LOGPRINT("hangup signal caught", 0);
       break;
     }
-    case SIGTERM:{
-      DLIO_PROFILER_LOGPRINT("terminate signal caught",0);
+    case SIGTERM: {
+      DLIO_PROFILER_LOGPRINT("terminate signal caught", 0);
       //MPI_Finalize();
       exit(0);
       break;
     }
-    default:{
-      DLIO_PROFILER_LOGPRINT("signal caught %d",sig);
+    default: {
+      DLIO_PROFILER_LOGPRINT("signal caught %d", sig);
       //print_backtrace();
       void *array[20];
       size_t size;
       void *trace[16];
-      char **messages = (char **)NULL;
+      char **messages = (char **) NULL;
       int i, trace_size = 0;
 
       size = backtrace(array, 20);
       messages = backtrace_symbols(array, size);
       /* skip first stack frame (points here) */
       std::stringstream myString;
-      myString << "[bt] Execution path with signal "<<sig<< ":\n";
-      for (i=1; i<size; ++i)
-      {
-          //printf("%s\n", messages[i]);
-          std::string m_string(messages[i]);
-          //./prog(myfunc3+0x5c) [0x80487f0]
-          std::size_t open_paren = m_string.find_first_of("(");
-          if (open_paren == std::string::npos) {
-              myString << "[bt] #"<< i <<" " << messages[i] << "\n";
-              continue;
-          }
-          std::size_t plus = m_string.find_first_of("+");
-          std::size_t close_paren = m_string.find_first_of(")");
-          std::size_t open_square = m_string.find_first_of("[");
-          std::size_t close_square = m_string.find_first_of("]");
-          std::string prog_name = m_string.substr(0, open_paren);
-          std::string func_name = m_string.substr(open_paren + 1, plus - open_paren - 1);
-          std::string offset = m_string.substr(plus + 1, close_paren - plus -1);
-          std::string addr = m_string.substr(open_square + 1, close_square - open_square -1);
-          if (func_name.empty()) {
-              myString << "[bt] #"<< i <<" " << messages[i] << "\n";
-              continue;
-          }
-          char command[256];
-          sprintf(command,"nm %s | grep \"\\s%s$\" | awk '{print $1}'", prog_name.c_str(), func_name.c_str());
-          std::string base_addr=sh(command);
-          sprintf(command,"python2 -c \"print hex(0x%s+%s)\"", base_addr.c_str(), offset.c_str());
-          std::string hex_val=sh(command);
-          sprintf(command,"addr2line -e %s %s", prog_name.c_str(), hex_val.c_str());
-          std::string line=sh(command); // line has a new line char already
-          myString << "[bt] #"<< i <<" " << prog_name << "(" << func_name  << "+" << offset << ")" << line;
+      myString << "[bt] Execution path with signal " << sig << ":\n";
+      for (i = 1; i < size; ++i) {
+        //printf("%s\n", messages[i]);
+        std::string m_string(messages[i]);
+        //./prog(myfunc3+0x5c) [0x80487f0]
+        std::size_t open_paren = m_string.find_first_of("(");
+        if (open_paren == std::string::npos) {
+          myString << "[bt] #" << i << " " << messages[i] << "\n";
+          continue;
+        }
+        std::size_t plus = m_string.find_first_of("+");
+        std::size_t close_paren = m_string.find_first_of(")");
+        std::size_t open_square = m_string.find_first_of("[");
+        std::size_t close_square = m_string.find_first_of("]");
+        std::string prog_name = m_string.substr(0, open_paren);
+        std::string func_name = m_string.substr(open_paren + 1, plus - open_paren - 1);
+        std::string offset = m_string.substr(plus + 1, close_paren - plus - 1);
+        std::string addr = m_string.substr(open_square + 1, close_square - open_square - 1);
+        if (func_name.empty()) {
+          myString << "[bt] #" << i << " " << messages[i] << "\n";
+          continue;
+        }
+        char command[256];
+        sprintf(command, "nm %s | grep \"\\s%s$\" | awk '{print $1}'", prog_name.c_str(), func_name.c_str());
+        std::string base_addr = sh(command);
+        sprintf(command, "python2 -c \"print hex(0x%s+%s)\"", base_addr.c_str(), offset.c_str());
+        std::string hex_val = sh(command);
+        sprintf(command, "addr2line -e %s %s", prog_name.c_str(), hex_val.c_str());
+        std::string line = sh(command); // line has a new line char already
+        myString << "[bt] #" << i << " " << prog_name << "(" << func_name << "+" << offset << ")" << line;
       }
       std::string res = myString.str();
       std::cout << res;
@@ -130,12 +131,13 @@ inline void set_signal() {
   sa.sa_flags = SA_RESTART;
   sigaction(SIGSEGV, &sa, NULL);
   sigaction(SIGUSR1, &sa, NULL);
-  sigaction(SIGABRT,&sa, NULL);
+  sigaction(SIGABRT, &sa, NULL);
   sigaction(SIGHUP, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
 }  // GCOVR_EXCL_STOP
 
-const std::string ignore_filenames[5] = {".pfw", "/pipe", "/socket","/proc/self", ".py"};
+const std::string ignore_filenames[5] = {".pfw", "/pipe", "/socket", "/proc/self", ".py"};
+
 inline std::vector<std::string> split(std::string str, char delimiter) {
   std::vector<std::string> res;
   if (str.find(delimiter) == std::string::npos) {
@@ -150,8 +152,9 @@ inline std::vector<std::string> split(std::string str, char delimiter) {
   }
   return res;
 }
-inline bool ignore_files(const char* filename) {
-  for(auto &file: ignore_filenames) {
+
+inline bool ignore_files(const char *filename) {
+  for (auto &file: ignore_filenames) {
     if (strstr(filename, file.c_str()) != NULL) {
       return true;
     }
@@ -168,13 +171,13 @@ inline std::string get_filename(int fd) {
   return filename;
 }
 
-inline std::pair<bool, std::string> is_traced_common(const char* filename, const char* func,
-                                              const std::vector<std::string>& ignore_filename,
-                                              const std::vector<std::string>& track_filename) {
+inline std::pair<bool, std::string> is_traced_common(const char *filename, const char *func,
+                                                     const std::vector<std::string> &ignore_filename,
+                                                     const std::vector<std::string> &track_filename) {
   bool found = false;
   bool ignore = false;
   char resolved_path[PATH_MAX];
-  char* data = realpath(filename, resolved_path);
+  char *data = realpath(filename, resolved_path);
   (void) data;
   if (ignore_files(resolved_path) || ignore_files(filename)) {
     DLIO_PROFILER_LOGINFO("Profiler ignoring file %s for func %s", resolved_path, func);
@@ -194,7 +197,9 @@ inline std::pair<bool, std::string> is_traced_common(const char* filename, const
       }
     }
   }
-  if (!found and !ignore) DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing file %s for func %s", resolved_path, func);
+  if (!found and !ignore)
+    DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing file %s for func %s", resolved_path, func);
   return std::pair<bool, std::string>(found, filename);
 }
+
 #endif // DLIO_PROFILER_UTILS_H

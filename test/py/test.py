@@ -1,4 +1,3 @@
-
 from time import sleep
 import os
 import threading
@@ -9,13 +8,15 @@ import PIL.Image as im
 from dlio_profiler.logger import dlio_logger, fn_interceptor
 
 cwd = os.getcwd()
-log_file=os.getenv("LOG_FILE", f"{cwd}/test_py-app.pwf")
+log_file = os.getenv("LOG_FILE", f"{cwd}/test_py-app.pwf")
 log_inst = dlio_logger.initialize_log(logfile=None, data_dir=None, process_id=-1)
 dlio_log = fn_interceptor("COMPUTE")
+
 
 @dlio_log.log
 def log_events(index):
     sleep(1)
+
 
 def custom_events():
     args = {
@@ -30,7 +31,7 @@ def custom_events():
 
 def posix_calls(val):
     index, is_spawn = val
-    path=f"{cwd}/data/demofile{index}.txt"
+    path = f"{cwd}/data/demofile{index}.txt"
     f = open(path, "w+")
     f.write("Now the file has more content!")
     f.close()
@@ -40,14 +41,16 @@ def posix_calls(val):
     else:
         print(f"Not calling spawn on {index} with pid {os.getpid()}")
 
+
 def npz_calls(index):
-    #print(f"{cwd}/data/demofile2.npz")
+    # print(f"{cwd}/data/demofile2.npz")
     path = f"{cwd}/data/demofile{index}.npz"
     if os.path.exists(path):
         os.remove(path)
     records = np.random.randint(255, size=(8, 8, 1024), dtype=np.uint8)
     record_labels = [0] * 1024
     np.savez(path, x=records, y=record_labels)
+
 
 def jpeg_calls(index):
     records = np.random.randint(255, size=(1024, 1024), dtype=np.uint8)
@@ -57,13 +60,16 @@ def jpeg_calls(index):
     with open(out_path_spec, "rb") as f:
         image = im.open(f)
         out_records = np.asarray(image)
-    #image = im.open(out_path_spec)
+    # image = im.open(out_path_spec)
+
+
 def init():
     """This function is called when new processes start."""
     print(f'Initializing process {os.getpid()}')
-def main():
 
-    t1 = threading.Thread(target=posix_calls, args=(10,False))
+
+def main():
+    t1 = threading.Thread(target=posix_calls, args=(10, False))
     custom_events()
     t2 = threading.Thread(target=npz_calls, args=(1,))
     t3 = threading.Thread(target=jpeg_calls, args=(2,))
@@ -80,7 +86,7 @@ def main():
     t4.join()
     index = 4
     with get_context('fork').Pool(1, initializer=init) as pool:
-        pool.map(posix_calls, ((index,False),))
+        pool.map(posix_calls, ((index, False),))
     index = index + 1
 
     with get_context('spawn').Pool(1, initializer=init) as pool:
@@ -88,7 +94,6 @@ def main():
     index = index + 1
 
     log_inst.finalize()
-
 
 
 if __name__ == "__main__":

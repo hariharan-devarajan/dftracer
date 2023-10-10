@@ -10,6 +10,7 @@
  */
 #include <dlio_profiler/core/typedef.h>
 #include <dlio_profiler/core/constants.h>
+
 #ifdef __cplusplus
 /**
  * CPP Only
@@ -24,25 +25,28 @@
 #include <string>
 
 class DLIOProfiler {
-    const char* name;
+    const char *name;
     TimeResolution start_time;
     std::unordered_map<std::string, std::any> metadata;
     std::shared_ptr<dlio_profiler::DLIOProfilerCore> dlio_profiler_core;
 public:
-    DLIOProfiler(const char* _name):name(_name), metadata(){
+    DLIOProfiler(const char *_name) : name(_name), metadata() {
       dlio_profiler_core = DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_OTHER, ProfileType::PROFILER_CPP_APP);
       start_time = dlio_profiler_core->get_time();
     }
-    inline void update(const char* key, int value) {
+
+    inline void update(const char *key, int value) {
       if (dlio_profiler_core->is_active()) {
         metadata.insert_or_assign(key, value);
       }
     }
-    inline void update(const char* key, const char* value) {
+
+    inline void update(const char *key, const char *value) {
       if (dlio_profiler_core->is_active()) {
         metadata.insert_or_assign(key, value);
       }
     }
+
     ~DLIOProfiler() {
       if (dlio_profiler_core->is_active()) {
         TimeResolution end_time = dlio_profiler_core->get_time();
@@ -50,6 +54,7 @@ public:
       }
     }
 };
+
 #define DLIO_PROFILER_CPP_INIT(log_file, data_dirs, process_id)                                               \
 DLIO_PROFILER_MAIN_SINGLETON_INIT(ProfilerStage::PROFILER_INIT, ProfileType::PROFILER_CPP_APP, log_file, data_dirs, process_id);
 #define DLIO_PROFILER_CPP_FINI()                                               \
@@ -69,9 +74,9 @@ delete profiler_##name
 extern "C" {
 #endif
 // C APIs
-void initialize(const char * log_file, const char * data_dirs, int* process_id);
+void initialize(const char *log_file, const char *data_dirs, int *process_id);
 TimeResolution get_time();
-void log_event(const char * name, const char * cat, TimeResolution start_time, TimeResolution duration);
+void log_event(const char *name, const char *cat, TimeResolution start_time, TimeResolution duration);
 void finalize();
 
 #define DLIO_PROFILER_C_INIT(log_file, data_dirs, process_id) \

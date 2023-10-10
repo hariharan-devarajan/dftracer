@@ -12,8 +12,7 @@ int dlp_open(const char *pathname, int flags, ...) {
   va_start(args, flags);
   if (flags & O_CREAT) {
     mode = va_arg(args, mode_t);
-  }
-  else {
+  } else {
     mode = 0;
   }
   va_end(args);

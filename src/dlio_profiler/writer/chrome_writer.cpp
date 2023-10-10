@@ -14,13 +14,14 @@
 #define ERROR(cond, format, ...) \
   DLIO_PROFILER_LOGERROR(format, __VA_ARGS__); \
   if (this->throw_error) assert(cond);
+
 void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
   this->throw_error = throw_error;
   this->filename = filename;
   if (fd == -1) {
     fd = dlp_open(filename, O_WRONLY | O_APPEND | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd == -1) {
-      ERROR(fd == -1,"unable to create log file %s", filename);
+      ERROR(fd == -1, "unable to create log file %s", filename);
     } else {
       DLIO_PROFILER_LOGINFO("created log file %s with fd %d", filename, fd);
     }
@@ -28,13 +29,15 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
 }
 
 void
-dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category, TimeResolution &start_time, TimeResolution &duration,
+dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category, TimeResolution &start_time,
+                                 TimeResolution &duration,
                                  std::unordered_map<std::string, std::any> &metadata, int process_id) {
   if (fd != -1) {
     std::string json = convert_json(event_name, category, start_time, duration, metadata, process_id);
     auto written_elements = dlp_write(fd, json.c_str(), json.size());
     if (written_elements != json.size()) {
-      ERROR(written_elements != json.size(), "unable to log write %s fd %d for a+ written only %d of %d with error %s", filename.c_str(), fd, written_elements, json.size(), strerror(errno));
+      ERROR(written_elements != json.size(), "unable to log write %s fd %d for a+ written only %d of %d with error %s",
+            filename.c_str(), fd, written_elements, json.size(), strerror(errno));
     }
   }
   is_first_write = false;
@@ -42,19 +45,20 @@ dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category,
 
 void dlio_profiler::ChromeWriter::finalize() {
   if (fd != -1) {
-    DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s\n", filename .c_str());
+    DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s\n", filename.c_str());
     int status = dlp_close(fd);
     if (status != 0) {
       ERROR(status != 0, "unable to close log file %d for a+", filename.c_str());
     }
     fd = dlp_open(this->filename.c_str(), O_WRONLY);
     if (fd == -1) {
-      ERROR(fd == -1,"unable to open log file %s with O_WRONLY", this->filename.c_str());
+      ERROR(fd == -1, "unable to open log file %s with O_WRONLY", this->filename.c_str());
     }
     std::string data = "[\n";
     auto written_elements = dlp_write(fd, data.c_str(), data.size());
     if (written_elements != data.size()) {
-      ERROR(written_elements != data.size(), "unable to finalize log write %s for r+ written only %d of %d", filename.c_str(), data.size(), written_elements);
+      ERROR(written_elements != data.size(), "unable to finalize log write %s for r+ written only %d of %d",
+            filename.c_str(), data.size(), written_elements);
     }
     status = dlp_close(fd);
     if (status != 0) {
@@ -83,14 +87,14 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
   auto start_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(start_time);
   auto duration_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(duration);
   if (is_first_write) all_stream << "   ";
-  all_stream  << R"({"name":")" << event_name << "\","
-              << R"("cat":")" << category << "\","
-              << "\"pid\":" << pid << ","
-              << "\"tid\":" << tid << ","
-              << "\"ts\":" <<  std::chrono::duration_cast<std::chrono::microseconds>(start_sec).count() << ","
-              << "\"dur\":" << std::chrono::duration_cast<std::chrono::microseconds>(duration_sec).count() << ","
-              << R"("ph":"X",)"
-              << R"("args":{)";
+  all_stream << R"({"name":")" << event_name << "\","
+             << R"("cat":")" << category << "\","
+             << "\"pid\":" << pid << ","
+             << "\"tid\":" << tid << ","
+             << "\"ts\":" << std::chrono::duration_cast<std::chrono::microseconds>(start_sec).count() << ","
+             << "\"dur\":" << std::chrono::duration_cast<std::chrono::microseconds>(duration_sec).count() << ","
+             << R"("ph":"X",)"
+             << R"("args":{)";
   if (include_metadata) {
     all_stream << "\"hostname\":\"" << hostname() << "\",";
     all_stream << "\"core_affinity\": [";

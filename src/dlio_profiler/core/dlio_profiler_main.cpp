@@ -9,9 +9,11 @@
 #include <dlio_profiler/dlio_logger.h>
 
 dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileType type, const char *log_file,
-                                                  const char *data_dirs, const int *process_id): is_enabled(
-        false), gotcha_priority(1), logger_level(cpplogger::LoggerType::LOG_ERROR), log_file(), data_dirs(), is_initialized(false), bind(false) {
-  const char* user_init_type = getenv(DLIO_PROFILER_INIT);
+                                                  const char *data_dirs, const int *process_id) : is_enabled(
+        false), gotcha_priority(1), logger_level(cpplogger::LoggerType::LOG_ERROR), log_file(), data_dirs(),
+                                                                                                  is_initialized(false),
+                                                                                                  bind(false) {
+  const char *user_init_type = getenv(DLIO_PROFILER_INIT);
   switch (type) {
     case ProfileType::PROFILER_PRELOAD: {
       if (stage == ProfilerStage::PROFILER_INIT) {
@@ -46,7 +48,7 @@ dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileTy
 
 void dlio_profiler::DLIOProfilerCore::log(const char *event_name, const char *category, TimeResolution start_time,
                                           TimeResolution duration,
-                                          std::unordered_map<std::string, std::any> &metadata)  {
+                                          std::unordered_map<std::string, std::any> &metadata) {
   if (this->is_initialized && is_enabled) {
     dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->
             log(event_name, category, start_time, duration, metadata);
@@ -68,7 +70,7 @@ bool dlio_profiler::DLIOProfilerCore::finalize() {
 
 void
 dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const char *_log_file, const char *_data_dirs,
-                                             const int *_process_id)  {
+                                             const int *_process_id) {
   this->bind = _bind;
   set_signal();
   if (is_init) {
@@ -108,37 +110,38 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
         char proc_name[PATH_MAX], cmd[128];
         sprintf(cmd, "/proc/%d/cmdline", getpid());
         int fd = dlp_open(cmd, O_RDONLY);
-        const char* exec_file_name = nullptr;
+        const char *exec_file_name = nullptr;
         if (fd != -1) {
-            ssize_t read_bytes = dlp_read(fd, proc_name, PATH_MAX);
-            dlp_close(fd);
-            int index = 0, prev = 0;
-            char exec_name[PATH_MAX];
-            while (index < read_bytes) {
-              if (proc_name[index] == '\0') {
-                strcpy(exec_name, proc_name + prev);
-                exec_file_name = basename(exec_name);
-                if (strstr(exec_file_name, "python") == nullptr) {
-                  break;
-                }
-                prev = index + 1;
-
+          ssize_t read_bytes = dlp_read(fd, proc_name, PATH_MAX);
+          dlp_close(fd);
+          int index = 0, prev = 0;
+          char exec_name[PATH_MAX];
+          while (index < read_bytes) {
+            if (proc_name[index] == '\0') {
+              strcpy(exec_name, proc_name + prev);
+              exec_file_name = basename(exec_name);
+              if (strstr(exec_file_name, "python") == nullptr) {
+                break;
               }
-              index ++;
-            }
-          }
-          DLIO_PROFILER_LOGINFO("Extracted process_name %s", exec_file_name);
-          if (dlio_profiler_log != nullptr) {
-            if (exec_file_name != nullptr) {
-              this->log_file = std::string(dlio_profiler_log) + "-" + std::string(exec_file_name) + "-" + std::to_string(this->process_id) + ".pfw";
-            } else {
-              this->log_file = std::string(dlio_profiler_log) + "-" + std::to_string(this->process_id) + ".pfw";
-            }
+              prev = index + 1;
 
-          } else {  // GCOV_EXCL_START
-            DLIO_PROFILER_LOGERROR(UNDEFINED_LOG_FILE.message, "");
-            throw std::runtime_error(UNDEFINED_LOG_FILE.code);
-          } // GCOV_EXCL_STOP
+            }
+            index++;
+          }
+        }
+        DLIO_PROFILER_LOGINFO("Extracted process_name %s", exec_file_name);
+        if (dlio_profiler_log != nullptr) {
+          if (exec_file_name != nullptr) {
+            this->log_file = std::string(dlio_profiler_log) + "-" + std::string(exec_file_name) + "-" +
+                             std::to_string(this->process_id) + ".pfw";
+          } else {
+            this->log_file = std::string(dlio_profiler_log) + "-" + std::to_string(this->process_id) + ".pfw";
+          }
+
+        } else {  // GCOV_EXCL_START
+          DLIO_PROFILER_LOGERROR(UNDEFINED_LOG_FILE.message, "");
+          throw std::runtime_error(UNDEFINED_LOG_FILE.code);
+        } // GCOV_EXCL_STOP
       } else {
         this->log_file = _log_file;
       }
@@ -174,7 +177,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
   }
 }
 
-TimeResolution dlio_profiler::DLIOProfilerCore::get_time()  {
+TimeResolution dlio_profiler::DLIOProfilerCore::get_time() {
   if (this->is_initialized && is_enabled) {
     return dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->get_time();
   }

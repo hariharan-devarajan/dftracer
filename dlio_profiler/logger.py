@@ -1,6 +1,7 @@
 from functools import wraps
 from typing import Dict
 import os
+
 DLIO_PROFILER_ENABLE_ENV = "DLIO_PROFILER_ENABLE"
 DLIO_PROFILER_INIT_ENV = "DLIO_PROFILER_INIT"
 
@@ -12,12 +13,16 @@ if DLIO_PROFILER_ENABLE:
 
 from pathlib import Path
 import inspect
-import sys,signal
+import sys, signal
+
+
 def capture_signal(signal_number, frame):
     dlio_logger.get_instance().finalize()
     sys.exit(1)
 
+
 signal.signal(signal.SIGABRT, capture_signal)
+
 
 class dlio_logger:
     __instance = None
@@ -38,7 +43,7 @@ class dlio_logger:
     @staticmethod
     def initialize_log(logfile, data_dir, process_id):
         log_file = None
-        if logfile :
+        if logfile:
             log_file = Path(logfile)
         instance = dlio_logger.get_instance(log_file)
         if DLIO_PROFILER_ENABLE:
@@ -51,7 +56,7 @@ class dlio_logger:
                 log_file = f"{instance.logfile}"
             if data_dir:
                 data_dir = f"{data_dir}"
-            instance.logger.initialize(log_file = log_file, data_dirs = data_dir, process_id=process_id)
+            instance.logger.initialize(log_file=log_file, data_dirs=data_dir, process_id=process_id)
         return instance
 
     def get_time(self):

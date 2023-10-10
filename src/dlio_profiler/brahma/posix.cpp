@@ -7,6 +7,7 @@
 #define CATEGORY "POSIX"
 
 std::shared_ptr<brahma::POSIXDLIOProfiler> brahma::POSIXDLIOProfiler::instance = nullptr;
+
 int brahma::POSIXDLIOProfiler::open(const char *pathname, int flags, ...) {
   BRAHMA_MAP_OR_FAIL(open);
   DLIO_LOGGER_START(pathname);
@@ -28,6 +29,7 @@ int brahma::POSIXDLIOProfiler::open(const char *pathname, int flags, ...) {
   if (trace) this->trace(ret);
   return ret;
 }
+
 int brahma::POSIXDLIOProfiler::close(int fd) {
   BRAHMA_MAP_OR_FAIL(close);
   DLIO_LOGGER_START(fd);
@@ -38,6 +40,7 @@ int brahma::POSIXDLIOProfiler::close(int fd) {
   if (trace) this->remove_trace(fd);
   return ret;
 }
+
 ssize_t brahma::POSIXDLIOProfiler::write(int fd, const void *buf, size_t count) {
   BRAHMA_MAP_OR_FAIL(write);
   DLIO_LOGGER_START(fd);
@@ -48,6 +51,7 @@ ssize_t brahma::POSIXDLIOProfiler::write(int fd, const void *buf, size_t count) 
   DLIO_LOGGER_END();
   return ret;
 }
+
 ssize_t brahma::POSIXDLIOProfiler::read(int fd, void *buf, size_t count) {
   BRAHMA_MAP_OR_FAIL(read);
   DLIO_LOGGER_START(fd);
@@ -58,6 +62,7 @@ ssize_t brahma::POSIXDLIOProfiler::read(int fd, void *buf, size_t count) {
   DLIO_LOGGER_END();
   return ret;
 }
+
 off_t brahma::POSIXDLIOProfiler::lseek(int fd, off_t offset, int whence) {
   BRAHMA_MAP_OR_FAIL(lseek);
   DLIO_LOGGER_START(fd);
@@ -93,7 +98,7 @@ int brahma::POSIXDLIOProfiler::open64(const char *path, int flags, ...) {
     va_end(args);
     DLIO_LOGGER_UPDATE(mode)
     ret = __real_open64(path, flags, mode);
-  }else {
+  } else {
     ret = __real_open64(path, flags);
   }
   DLIO_LOGGER_UPDATE(path)
@@ -211,7 +216,7 @@ void *brahma::POSIXDLIOProfiler::mmap(void *addr, size_t length, int prot, int f
   DLIO_LOGGER_UPDATE(flags);
   DLIO_LOGGER_UPDATE(offset);
   DLIO_LOGGER_UPDATE(fd);
-  void* ret = __real_mmap(addr, length, prot, flags, fd, offset);
+  void *ret = __real_mmap(addr, length, prot, flags, fd, offset);
   DLIO_LOGGER_END();
   return ret;
 }
@@ -223,7 +228,7 @@ void *brahma::POSIXDLIOProfiler::mmap64(void *addr, size_t length, int prot, int
   DLIO_LOGGER_UPDATE(flags);
   DLIO_LOGGER_UPDATE(offset);
   DLIO_LOGGER_UPDATE(fd);
-  void* ret = __real_mmap64(addr, length, prot, flags, fd, offset);
+  void *ret = __real_mmap64(addr, length, prot, flags, fd, offset);
   DLIO_LOGGER_END();
   return ret;
 }
@@ -435,18 +440,19 @@ int brahma::POSIXDLIOProfiler::utime(const char *filename, const utimbuf *buf) {
   return ret;
 }
 
-DIR* brahma::POSIXDLIOProfiler::opendir(const char *name) {
+DIR *brahma::POSIXDLIOProfiler::opendir(const char *name) {
   BRAHMA_MAP_OR_FAIL(opendir);
   DLIO_LOGGER_START(name);
   DLIO_LOGGER_UPDATE(name);
-  DIR* ret = __real_opendir(name);
+  DIR *ret = __real_opendir(name);
   DLIO_LOGGER_END();
   return ret;
 }
 
 int brahma::POSIXDLIOProfiler::fcntl(int fd, int cmd, ...) {
   BRAHMA_MAP_OR_FAIL(fcntl);
-  if(cmd==F_DUPFD || cmd==F_DUPFD_CLOEXEC || cmd==F_SETFD || cmd==F_SETFL || cmd==F_SETOWN) {            // arg: int
+  if (cmd == F_DUPFD || cmd == F_DUPFD_CLOEXEC || cmd == F_SETFD || cmd == F_SETFL ||
+      cmd == F_SETOWN) {            // arg: int
     va_list arg;
     va_start(arg, cmd);
     int val = va_arg(arg, int);
@@ -457,14 +463,14 @@ int brahma::POSIXDLIOProfiler::fcntl(int fd, int cmd, ...) {
     int ret = __real_fcntl(fd, cmd, val);
     DLIO_LOGGER_END();
     return ret;
-  } else if(cmd==F_GETFD || cmd==F_GETFL || cmd==F_GETOWN) {
+  } else if (cmd == F_GETFD || cmd == F_GETFL || cmd == F_GETOWN) {
     DLIO_LOGGER_START(fd);
     DLIO_LOGGER_UPDATE(fd);
     DLIO_LOGGER_UPDATE(cmd);
     int ret = __real_fcntl(fd, cmd);
     DLIO_LOGGER_END();
     return ret;
-  } else if(cmd==F_SETLK || cmd==F_SETLKW || cmd==F_GETLK) {
+  } else if (cmd == F_SETLK || cmd == F_SETLKW || cmd == F_GETLK) {
     va_list arg;
     va_start(arg, cmd);
     struct flock *lk = va_arg(arg, struct flock*);
@@ -512,12 +518,14 @@ int brahma::POSIXDLIOProfiler::mkfifo(const char *pathname, mode_t mode) {
   return ret;
 }
 
-mode_t brahma::POSIXDLIOProfiler::umask(mode_t mask) {
-  BRAHMA_MAP_OR_FAIL(umask);
-  DLIO_LOGGER_START(mask);
-  mode_t ret = __real_umask(mask);
-  DLIO_LOGGER_END();
-  return ret;
+mode_t brahma::POSIXDLIOProfiler::umask(mode_t
+mask) {
+BRAHMA_MAP_OR_FAIL(umask);
+DLIO_LOGGER_START(mask);
+mode_t ret = __real_umask(mask);
+DLIO_LOGGER_END();
+return
+ret;
 }
 
 int brahma::POSIXDLIOProfiler::access(const char *path, int amode) {

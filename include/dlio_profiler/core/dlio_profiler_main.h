@@ -4,6 +4,7 @@
 
 #ifndef DLIO_PROFILER_DLIO_PROFILER_MAIN_H
 #define DLIO_PROFILER_DLIO_PROFILER_MAIN_H
+
 #include <cstring>
 #include <thread>
 #include <stdexcept>
@@ -31,16 +32,23 @@ namespace dlio_profiler {
         int process_id;
         bool is_initialized;
         bool bind;
-        void initlialize(bool is_init, bool _bind, const char *_log_file = nullptr, const char *_data_dirs = nullptr, const int *_process_id = nullptr);
+
+        void initlialize(bool is_init, bool _bind, const char *_log_file = nullptr, const char *_data_dirs = nullptr,
+                         const int *_process_id = nullptr);
+
     public:
-        DLIOProfilerCore(ProfilerStage stage, ProfileType type, const char *log_file = nullptr, const char *data_dirs = nullptr, const int *process_id = nullptr);
+        DLIOProfilerCore(ProfilerStage stage, ProfileType type, const char *log_file = nullptr,
+                         const char *data_dirs = nullptr, const int *process_id = nullptr);
+
         inline bool is_active() {
           return is_enabled;
         }
+
         TimeResolution get_time();
-        void log(const char* event_name, const char* category,
-                        TimeResolution start_time, TimeResolution duration,
-                        std::unordered_map<std::string, std::any> &metadata);
+
+        void log(const char *event_name, const char *category,
+                 TimeResolution start_time, TimeResolution duration,
+                 std::unordered_map<std::string, std::any> &metadata);
 
         bool finalize();
     };
