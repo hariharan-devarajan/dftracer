@@ -41,57 +41,67 @@ make install -j
 ```
 
 Usage
+
 ```
-import dlio_profiler_py as logger
-from time import sleep
-import os
+    from dlio_profiler.logger import dlio_logger, fn_interceptor
+    log_inst = dlio_logger.initialize_log(logfile=None, data_dir=None, process_id=-1)
+    dlio_log = fn_interceptor("COMPUTE")
 
-cwd = os.getcwd()
+    # Example of using function decorators
+    @dlio_log.log
+    def log_events(index):
+        sleep(1)
+
+    # Example of function spawning and implicit I/O calls
+    def posix_calls(val):
+        index, is_spawn = val
+        path = f"{cwd}/data/demofile{index}.txt"
+        f = open(path, "w+")
+        f.write("Now the file has more content!")
+        f.close()
+        if is_spawn:
+            print(f"Calling spawn on {index} with pid {os.getpid()}")
+            log_inst.finalize() # This need to be called to correctly finalize DLIO Profiler.
+        else:
+            print(f"Not calling spawn on {index} with pid {os.getpid()}")
+
+    # NPZ calls internally calls POSIX calls.
+    def npz_calls(index):
+        # print(f"{cwd}/data/demofile2.npz")
+        path = f"{cwd}/data/demofile{index}.npz"
+        if os.path.exists(path):
+            os.remove(path)
+        records = np.random.randint(255, size=(8, 8, 1024), dtype=np.uint8)
+        record_labels = [0] * 1024
+        np.savez(path, x=records, y=record_labels)
+
+    def main():
+        log_events(0)
+        npz_calls(1)
+        with get_context('spawn').Pool(1, initializer=init) as pool:
+            pool.map(posix_calls, ((2, True),))
+        log_inst.finalize()
 
 
-def custom_events():
-    args = {
-        "epoch": 1,
-        "index": 1,
-    }
-    start = logger.get_time()
-    sleep(2)
-    end = logger.get_time()
-    logger.log_event("test", "cat2", start, end - start, int_args=args)
+    if __name__ == "__main__":
+        main()
 
-
-def posix_calls1(index):
-    path=f"{cwd}/data/demofile{index}.txt"
-    f = open(path, "w+")
-    f.write("Now the file has more content!")
-    f.close()
-
-import numpy as np
-
-def posix_calls2(index):
-    #print(f"{cwd}/data/demofile2.npz")
-    path = f"{cwd}/data/demofile{index}.npz"
-    if os.path.exists(path):
-        os.remove(path)
-    records = np.random.randint(255, size=(8, 8, 1024), dtype=np.uint8)
-    record_labels = [0] * 1024
-    np.savez(path, x=records, y=record_labels)
-
-import threading
-
-logger.initialize(f"{cwd}/log.pwf", f"{cwd}/data")
-t1 = threading.Thread(target=posix_calls1, args=(10,))
-custom_events()
-t2 = threading.Thread(target=posix_calls2, args=(1,))
-t3 = threading.Thread(target=posix_calls2, args=(2,))
-# starting thread 1
-t1.start()
-t2.start()
-t3.start()
-
-t1.join()
-t2.join()
-t3.join()
-
-logger.finalize()
 ```
+
+For this example, as the DLIO_PROFILER_CPP_INIT do not pass log file or data dir, we need to set ``DLIO_PROFILER_LOG_FILE`` and ``DLIO_PROFILER_DATA_DIR``.
+By default the DLIO Profiler mode is set to FUNCTION.
+Example of running this configurations are:
+
+```
+
+    # the process id, app_name and .pfw will be appended by the profiler for each app and process.
+    # name of final log file is ~/log_file-<APP_NAME>-<PID>.pfw
+    DLIO_PROFILER_LOG_FILE=~/log_file
+    # Colon separated paths for including for profiler
+    DLIO_PROFILER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset:$PWD/data
+    # Enable profiler
+    DLIO_PROFILER_ENABLE=1
+```
+
+For more example check [Examples](https://dlio-profiler.readthedocs.io/en/latest/examples.html).
+
