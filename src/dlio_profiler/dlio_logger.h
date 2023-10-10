@@ -51,7 +51,7 @@ public:
             fd = fileno(stdout);
             log_file = "STDOUT";
           } else {
-            int pid = getpid();
+            int pid = dlp_getpid();
             log_file = std::string(dlio_profiler_log_dir) + "/" + "trace_ll_" + std::to_string(pid) + ".pfw";
           } // GCOV_EXCL_STOP
         }

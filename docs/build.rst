@@ -6,13 +6,13 @@ This section describes how to build DLIO Profiler.
 
 There are three build options:
 
-* build DLIO Profiler with pip (recommended),
-* build DLIO Profiler with Spack, and
-* build DLIO Profiler with cmake
+- build DLIO Profiler with pip (recommended),
+- build DLIO Profiler with Spack, and
+- build DLIO Profiler with cmake
 
 ----------
 
------------------------------------------
+----------------------------
 Build DLIO Profiler with pip
 ----------------------------
 

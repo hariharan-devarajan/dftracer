@@ -635,3 +635,27 @@ Job submition script
      LD_PRELOAD=./dlio_ml_workloads/PolarisAT/conda-envs/ml_workload_latest_conda/lib/libdlio_profiler_preload.so aprun -n 4 -N 4 python resnet_hvd_dlio.py --batch-size 64 --epochs 1 > dlio_log 2>&1
    
      cat *.pfw > combined_logs.pfw # To combine to a single pfw file. 
+
+
+***********************
+Integrated Applications
+***********************
+
+Here is the list applications that currently use DLIO Profiler.
+
+1. `DLIO Benchmark <https://github.com/argonne-lcf/dlio_benchmark>`_
+2. MuMMI
+3. Resnet50 with pytorch and torchvision
+
+****************************
+Example Chrome Tracing Plots
+****************************
+
+Example of Unet3D application with DLIO Benchmark. This trace shows the first few steps of the benchmark.
+Here, we can see that we can get application level calls (e.g., ``train`` and ``TorchDataset``) as well as low-level I/O calls (dark green color).
+
+.. image:: images/tracing/trace.png
+  :width: 400
+  :alt: Unet3D applications
+  
+ 

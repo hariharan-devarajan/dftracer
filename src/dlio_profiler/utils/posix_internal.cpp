@@ -46,3 +46,11 @@ int dlp_fsync(int fd) { // GCOV_EXCL_START
 ssize_t dlp_readlink(const char *path, char *buf, size_t bufsize) {
   return syscall(SYS_readlink, path, buf, bufsize);
 }
+
+pid_t dlp_gettid(){
+  return syscall(SYS_gettid);
+}
+
+pid_t dlp_getpid(){
+  return syscall(SYS_getpid);
+}

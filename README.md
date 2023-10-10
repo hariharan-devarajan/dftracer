@@ -7,39 +7,32 @@ A low-level profiler for capture I/O calls from deep learning applications.
 
 Requirements
 1. Python > 3.8
-2. spack
 
-Using spack dlio-profiler
-```
-spack env create -d ./spack-env
-spack env activate -p ./spack-env
-spack add py-dlio-profiler@0.0.1
-spack install
+
+## Build DLIO Profiler with pip
+
+Users can easily install DLIO profiler using pip. This is the way most python packages are installed.
+This method would work for both native python environments and conda environments.
+
+### From source
+
+```bash
+    git clone git@github.com:hariharan-devarajan/dlio-profiler.git
+    cd dlio-profiler
+    # You can skip this for installing the dev branch.
+    # for latest stable version use master branch.
+    git checkout tags/<Release> -b <Release>
+    pip install .
 ```
 
-create a virtual env for your python package where u will use dlio_profiler.
+### From Github
+
+```bash
+DLP_VERSION=dev
+pip install git+https://github.com/hariharan-devarajan/dlio-profiler.git@${DLP_VERSION}
 ```
-python3 -m venv ./venv
-source venv/bin/activate
-pip install .
-```
-install in local user
-```
-export DLIO_LOGGER_USER=1
-pip install .
-```
-install directly from github
-```
-pip install git+https://github.com/hariharan-devarajan/dlio-profiler.git
-```
-Build dlio profiler through cmake
-```
-cd dlio-profiler
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=../venv ../
-make install -j
-```
+
+For more build instructions check [here](https://dlio-profiler.readthedocs.io/en/latest/build.html)
 
 Usage
 
