@@ -16,7 +16,7 @@
 #include <sstream>
 #include <regex>
 
-inline std::string getexepath() {
+inline std::string getexepath() { // GCOVR_EXCL_START
   char result[PATH_MAX];
   ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
   return std::string(result, (count > 0) ? count : 0);
@@ -133,7 +133,7 @@ inline void set_signal() {
   sigaction(SIGABRT,&sa, NULL);
   sigaction(SIGHUP, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
-}
+}  // GCOVR_EXCL_STOP
 
 const std::string ignore_filenames[5] = {".pfw", "/pipe", "/socket","/proc/self", ".py"};
 inline std::vector<std::string> split(std::string str, char delimiter) {
