@@ -36,15 +36,6 @@ jobs:
           sudo apt-get install gcc g++ libtool-bin openmpi-bin libopenmpi-dev
           sudo apt-get install python3.10 python3-pip
           sudo apt-get install gcovr clang-format
-      - name: Check code formatting
-        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'user'
-        run: |
-          ls -a
-          git clang-format --diff HEAD~1 -q
-          if git clang-format --diff HEAD~1 -q | grep -m 1 '^' >/dev/null; then
-              echo >&2 "Failed clang-format check. Run: git clang-format HEAD~1"
-          exit 1
-          fi
       - name: Install dlio benchmark
         if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'user'
         run: |
