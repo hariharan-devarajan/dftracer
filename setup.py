@@ -66,9 +66,12 @@ class CMakeBuild(build_ext):
         print(f"{extdir}")
         # Using this requires trailing slash for auto-detection & inclusion of
         # auxiliary "native" libs
-
-        debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
-        cfg = "Debug" if debug else "Release"
+        build_type = os.environ.get("CMAKE_BUILD_TYPE", "Release")
+        cmake_args += [f"-DCMAKE_BUILD_TYPE={build_type}"]
+        enable_tests = os.environ.get("DLIO_PROFILER_ENABLE_TESTS", "Off")
+        cmake_args += [f"-DDLIO_PROFILER_ENABLE_TESTS={enable_tests}"]
+        enable_dlio_tests = os.environ.get("ENABLE_DLIO_BENCHMARK_TESTS", "Off")
+        cmake_args += [f"-DENABLE_DLIO_BENCHMARK_TESTS={enable_tests}"]
 
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.

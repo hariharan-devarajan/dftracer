@@ -4,7 +4,9 @@
 
 #ifndef DLIO_PROFILER_MACRO_H
 #define DLIO_PROFILER_MACRO_H
+
 #include <cpp-logger/logger.h>
+
 #define DLIO_PROFILER_LOGGER cpplogger::Logger::Instance("DLIO_PROFILER")
 #define DLIO_PROFILER_LOGINFO(format, ...) \
   DLIO_PROFILER_LOGGER->log(cpplogger::LOG_INFO, format, __VA_ARGS__);
