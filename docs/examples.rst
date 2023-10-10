@@ -611,9 +611,9 @@ Note: dlio-profiler python level log file location is provided inside the python
                top1.update(acc1[0], images.size(0))
                top5.update(acc5[0], images.size(0))
 
-  ...
-  # At the end of main function
-  log_inst.finalize()
+     ...
+     # At the end of main function
+     log_inst.finalize()
 
 Job submition script 
 
