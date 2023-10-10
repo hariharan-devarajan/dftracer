@@ -637,9 +637,9 @@ Job submition script
      cat *.pfw > combined_logs.pfw # To combine to a single pfw file. 
 
 
-***********************
+-----------------------
 Integrated Applications
-***********************
+-----------------------
 
 Here is the list applications that currently use DLIO Profiler.
 
@@ -647,9 +647,9 @@ Here is the list applications that currently use DLIO Profiler.
 2. MuMMI
 3. Resnet50 with pytorch and torchvision
 
-****************************
+----------------------------
 Example Chrome Tracing Plots
-****************************
+----------------------------
 
 Example of Unet3D application with DLIO Benchmark. This trace shows the first few steps of the benchmark.
 Here, we can see that we can get application level calls (e.g., ``train`` and ``TorchDataset``) as well as low-level I/O calls (dark green color).
