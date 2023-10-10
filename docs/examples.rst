@@ -481,9 +481,10 @@ Example of running this configurations are:
     export DLIO_PROFILER_ENABLE=1
 
 
+.. _python-hybrid-mode:
+
 Hybrid Example:
 **************************
-.. _python-hybrid-mode:
 
 .. code-block:: python
    :linenos:
@@ -588,27 +589,27 @@ Note: dlio-profiler python level log file location is provided inside the python
 .. code-block:: python
    :linenos:
 
-  ...
-  # From the preamble
-  from dlio_profiler.logger import dlio_logger as logger, fn_interceptor as dlp_event_logging
-  dlp_pid=os.getpid()
-  log_inst=logger.initialize_log(f"./resnet50/dlio_log_py_level-{dlp_pid}.pfw", "", dlp_pid)
-  compute_dlp = dlp_event_logging("Compute")
-  io_dlp = dlp_event_logging("IO", name="real_IO")
-  ...
-  # From the train() function
-  for i, (images, target) in io_dlp.iter(enumerate(train_loader)):
-        with dlp_event_logging("communication-except-io", name="cpu-gpu-transfer", step=i, epoch=epoch) as transfer:
-            images = images.to(device)
-            target = target.to(device)
-        with dlp_event_logging("compute", name="model-compute-forward-prop", step=i, epoch=epoch) as compute:
-            output = model(images)
-            loss = criterion(output, target)
-        with dlp_event_logging("compute", name="model-compute-backward-prop", step=i, epoch=epoch) as compute:
-            acc1, acc5 = accuracy(output, target, topk=(1, 5))
-            losses.update(loss.item(), images.size(0))
-            top1.update(acc1[0], images.size(0))
-            top5.update(acc5[0], images.size(0))
+     ...
+     # From the preamble
+     from dlio_profiler.logger import dlio_logger as logger, fn_interceptor as dlp_event_logging
+     dlp_pid=os.getpid()
+     log_inst=logger.initialize_log(f"./resnet50/dlio_log_py_level-{dlp_pid}.pfw", "", dlp_pid)
+     compute_dlp = dlp_event_logging("Compute")
+     io_dlp = dlp_event_logging("IO", name="real_IO")
+     ...
+     # From the train() function
+     for i, (images, target) in io_dlp.iter(enumerate(train_loader)):
+           with dlp_event_logging("communication-except-io", name="cpu-gpu-transfer", step=i, epoch=epoch) as transfer:
+               images = images.to(device)
+               target = target.to(device)
+           with dlp_event_logging("compute", name="model-compute-forward-prop", step=i, epoch=epoch) as compute:
+               output = model(images)
+               loss = criterion(output, target)
+           with dlp_event_logging("compute", name="model-compute-backward-prop", step=i, epoch=epoch) as compute:
+               acc1, acc5 = accuracy(output, target, topk=(1, 5))
+               losses.update(loss.item(), images.size(0))
+               top1.update(acc1[0], images.size(0))
+               top5.update(acc5[0], images.size(0))
 
   ...
   # At the end of main function
@@ -619,18 +620,18 @@ Job submition script
 .. code-block:: bash
    :linenos:
   
-  export MODULEPATH=/soft/modulefiles/conda/:$MODULEPATH
-  module load 2023-10-04
-  conda activate./dlio_ml_workloads/PolarisAT/conda-envs/ml_workload_latest_conda
-
-  export LD_LIBRARY_PATH=$env_path/lib/:$LD_LIBRARY_PATH
-  export DLIO_PROFILER_LOG_LEVEL=ERROR
-  export DLIO_PROFILER_ENABLE=1
-  export DLIO_PROFILER_INC_METADATA=1
-  export DLIO_PROFILER_INIT=PRELOAD
-  export DLIO_PROFILER_DATA_DIR=./resnet_original_data #Path to the orignal resnet 50 dataset 
-  export DLIO_PROFILER_LOG_FILE=./dlio_log_posix_level.pfw
-
-  LD_PRELOAD=./dlio_ml_workloads/PolarisAT/conda-envs/ml_workload_latest_conda/lib/libdlio_profiler_preload.so aprun -n 4 -N 4 python resnet_hvd_dlio.py --batch-size 64 --epochs 1 > dlio_log 2>&1
-
-  cat *.pfw > combined_logs.pfw # To combine to a single pfw file. 
+     export MODULEPATH=/soft/modulefiles/conda/:$MODULEPATH
+     module load 2023-10-04
+     conda activate./dlio_ml_workloads/PolarisAT/conda-envs/ml_workload_latest_conda
+   
+     export LD_LIBRARY_PATH=$env_path/lib/:$LD_LIBRARY_PATH
+     export DLIO_PROFILER_LOG_LEVEL=ERROR
+     export DLIO_PROFILER_ENABLE=1
+     export DLIO_PROFILER_INC_METADATA=1
+     export DLIO_PROFILER_INIT=PRELOAD
+     export DLIO_PROFILER_DATA_DIR=./resnet_original_data #Path to the orignal resnet 50 dataset 
+     export DLIO_PROFILER_LOG_FILE=./dlio_log_posix_level.pfw
+   
+     LD_PRELOAD=./dlio_ml_workloads/PolarisAT/conda-envs/ml_workload_latest_conda/lib/libdlio_profiler_preload.so aprun -n 4 -N 4 python resnet_hvd_dlio.py --batch-size 64 --epochs 1 > dlio_log 2>&1
+   
+     cat *.pfw > combined_logs.pfw # To combine to a single pfw file. 
