@@ -483,7 +483,7 @@ Example of running this configurations are:
 
 Hybrid Example:
 **************************
-
+.. _python-hybrid-mode:
 
 .. code-block:: python
    :linenos:
@@ -550,8 +550,9 @@ Example of running this configurations are:
     DLIO_PROFILER_ENABLE=1
 
 
+----------------------------------------------------------------
 Resnet50 with pytorch and torchvision example from ALCF Polaris:
-****************************************************************** 
+----------------------------------------------------------------
 
 Create a separate conda environment for the application and install dlio-profiler
 
@@ -578,7 +579,8 @@ Create a separate conda environment for the application and install dlio-profile
       #INSTALL OTHER MISSING FILES    
   fi
 
-Since, torchvision.datasets.ImageFolder spawns separate python processes to help the parallel data loading in torch, we will be using the `HYBRID MODE` of the DLIO Profiler, so that the application can use both APP and PRELOAD Mode to log I/O from all dynamically spawned processes and function profiling from application. 
+Since, torchvision.datasets.ImageFolder spawns separate python processes to help the parallel data loading in torch, we will be using the `HYBRID MODE` of the DLIO Profiler (e.g., see 
+:ref:Python Hybrid mode <python-hybrid-mode>), so that the application can use both APP and PRELOAD Mode to log I/O from all dynamically spawned processes and function profiling from application. 
 
 The following dlio_profiler code is added to profile the application at the function level.
 Note: dlio-profiler python level log file location is provided inside the python code in the dlio_logger.initialize_log() function and the POSIX or STDIO calls level log file location is provided in the job scirpt environment variable `DLIO_PROFILER_LOG_FILE`
