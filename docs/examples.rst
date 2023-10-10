@@ -559,28 +559,28 @@ Create a separate conda environment for the application and install dlio-profile
 .. code-block:: bash
    :linenos:
   
-  #!/bin/bash +x
-  set -e
-  set -x
-  export MODULEPATH=/soft/modulefiles/conda/:$MODULEPATH
-  module load 2023-10-04  # This is the latest conda module on Polaris
-
-  export ML_ENV=$PWD/PolarisAT/conda-envs/ml_workload_latest_conda_2 # Please change the following path accordingly 
-
-  if [[ -e $ML_ENV ]]; then
-      conda activate $ML_ENV
-  else
-      conda create  -p $ML_ENV --clone  /soft/datascience/conda/2023-10-04/mconda3/
-      conda activate $ML_ENV
-      yes | MPICC="cc -shared -target-accel=nvidia80" pip install --force-reinstall --no-cache-dir --no-binary=mpi4py mpi4py
-      yes | pip install --no-cache-dir git+https://github.com/hariharan-devarajan/dlio-profiler.git
-      pip uninstall -y torch horovod 
-      yes | pip install --no-cache-dir horovod
-      #INSTALL OTHER MISSING FILES    
-  fi
+     #!/bin/bash +x
+     set -e
+     set -x
+     export MODULEPATH=/soft/modulefiles/conda/:$MODULEPATH
+     module load 2023-10-04  # This is the latest conda module on Polaris
+   
+     export ML_ENV=$PWD/PolarisAT/conda-envs/ml_workload_latest_conda_2 # Please change the following path accordingly 
+   
+     if [[ -e $ML_ENV ]]; then
+         conda activate $ML_ENV
+     else
+         conda create  -p $ML_ENV --clone  /soft/datascience/conda/2023-10-04/mconda3/
+         conda activate $ML_ENV
+         yes | MPICC="cc -shared -target-accel=nvidia80" pip install --force-reinstall --no-cache-dir --no-binary=mpi4py mpi4py
+         yes | pip install --no-cache-dir git+https://github.com/hariharan-devarajan/dlio-profiler.git
+         pip uninstall -y torch horovod 
+         yes | pip install --no-cache-dir horovod
+         #INSTALL OTHER MISSING FILES    
+     fi
 
 Since, torchvision.datasets.ImageFolder spawns separate python processes to help the parallel data loading in torch, we will be using the `HYBRID MODE` of the DLIO Profiler (e.g., see 
-:ref:Python Hybrid mode <python-hybrid-mode>), so that the application can use both APP and PRELOAD Mode to log I/O from all dynamically spawned processes and function profiling from application. 
+:ref:`Python Hybrid mode <python-hybrid-mode>`), so that the application can use both APP and PRELOAD Mode to log I/O from all dynamically spawned processes and function profiling from application. 
 
 The following dlio_profiler code is added to profile the application at the function level.
 Note: dlio-profiler python level log file location is provided inside the python code in the dlio_logger.initialize_log() function and the POSIX or STDIO calls level log file location is provided in the job scirpt environment variable `DLIO_PROFILER_LOG_FILE`
