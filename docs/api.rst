@@ -34,7 +34,7 @@ Configurations of DLIO Profiler
    DLIO_PROFILER_SET_CORE_AFFINITY  INT     Include or exclude core affinity (default 0).
                                             DLIO_PROFILER_INC_METADATA needs to be enabled.
    DLIO_PROFILER_GOTCHA_PRIORITY    INT     PRIORITY of DLIO Profiler in GOTCHA (default: 1).
-   DLIO_PROFILER_LOG_LEVEL          STRING  Logging level within DLIO Profiler ERROR/INFO (default INFO).
+   DLIO_PROFILER_LOG_LEVEL          STRING  Logging level within DLIO Profiler ERROR/WARN/INFO/DEBUG (default ERROR).
    DLIO_PROFILER_DISABLE_IO         STRING  Disable automatic binding of all I/O calls.
    DLIO_PROFILER_DISABLE_POSIX      STRING  Disable automatic binding of POSIX I/O calls.
    DLIO_PROFILER_DISABLE_STDIO      STRING  Disable automatic binding of STDIO I/O calls.

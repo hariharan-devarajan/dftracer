@@ -86,14 +86,14 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
       }
     }  // GCOV_EXCL_STOP
     DLIO_PROFILER_LOGGER->level = logger_level;
-    DLIO_PROFILER_LOGINFO("Enabling logging level %d", logger_level);
+    DLIO_PROFILER_LOGDEBUG("Enabling logging level %d", logger_level);
 
     char *dlio_profiler_enable = getenv(DLIO_PROFILER_ENABLE);
     if (dlio_profiler_enable != nullptr && strcmp(dlio_profiler_enable, "1") == 0) {
       is_enabled = true;
     }
     if (is_enabled) {
-      DLIO_PROFILER_LOGINFO("DLIO Profiler enabled", "");
+      DLIO_PROFILER_LOGDEBUG("DLIO Profiler enabled", "");
       char *dlio_profiler_priority_str = getenv(DLIO_PROFILER_GOTCHA_PRIORITY);
       if (dlio_profiler_priority_str != nullptr) {
         gotcha_priority = atoi(dlio_profiler_priority_str); // GCOV_EXCL_LINE
@@ -103,7 +103,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
       } else {
         this->process_id = *_process_id;
       }
-      DLIO_PROFILER_LOGINFO("Setting process_id to %d", this->process_id);
+      DLIO_PROFILER_LOGDEBUG("Setting process_id to %d", this->process_id);
       if (_log_file == nullptr) {
         char *dlio_profiler_log = getenv(DLIO_PROFILER_LOG_FILE);
         char proc_name[PATH_MAX], cmd[128];
@@ -128,7 +128,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
             index++;
           }
         }
-        DLIO_PROFILER_LOGINFO("Extracted process_name %s", exec_file_name);
+        DLIO_PROFILER_LOGDEBUG("Extracted process_name %s", exec_file_name);
         if (dlio_profiler_log != nullptr) {
           if (exec_file_name != nullptr) {
             this->log_file = std::string(dlio_profiler_log) + "-" + std::string(exec_file_name) + "-" +
@@ -144,7 +144,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
       } else {
         this->log_file = _log_file;
       }
-      DLIO_PROFILER_LOGINFO("Setting log file to %s", this->log_file.c_str());
+      DLIO_PROFILER_LOGDEBUG("Setting log file to %s", this->log_file.c_str());
       if (_data_dirs == nullptr) {
         char *dlio_profiler_data_dirs = getenv(DLIO_PROFILER_DATA_DIR);
         if (dlio_profiler_data_dirs != nullptr) {
@@ -156,7 +156,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
       } else {
         this->data_dirs = _data_dirs;
       }
-      DLIO_PROFILER_LOGINFO("Setting data_dirs to %s", this->data_dirs.c_str());
+      DLIO_PROFILER_LOGDEBUG("Setting data_dirs to %s", this->data_dirs.c_str());
       dlio_profiler::Singleton<DLIOLogger>::get_instance()->update_log_file(this->log_file, this->process_id);
       if (bind) {
         char *disable_io = getenv(DLIO_PROFILER_DISABLE_IO);
@@ -171,7 +171,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
             auto posix_instance = brahma::POSIXDLIOProfiler::get_instance();
             posix_instance->untrace(this->log_file.c_str());
             for (const auto &path:paths) {
-              DLIO_PROFILER_LOGINFO("Profiler will trace %s\n", path.c_str());
+              DLIO_PROFILER_LOGDEBUG("Profiler will trace %s\n", path.c_str());
               posix_instance->trace(path.c_str());
             }
           }

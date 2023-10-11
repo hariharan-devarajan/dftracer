@@ -63,17 +63,17 @@ inline void print_backtrace(void) {
 inline void signal_handler(int sig) {
   switch (sig) {
     case SIGHUP: {
-      DLIO_PROFILER_LOGPRINT("hangup signal caught", 0);
+      DLIO_PROFILER_LOGDEBUG("hangup signal caught", 0);
       break;
     }
     case SIGTERM: {
-      DLIO_PROFILER_LOGPRINT("terminate signal caught", 0);
+      DLIO_PROFILER_LOGDEBUG("terminate signal caught", 0);
       //MPI_Finalize();
       exit(0);
       break;
     }
     default: {
-      DLIO_PROFILER_LOGPRINT("signal caught %d", sig);
+      DLIO_PROFILER_LOGINFO("signal caught %d", sig);
       //print_backtrace();
       void *array[20];
       size_t size;
@@ -110,7 +110,7 @@ inline void signal_handler(int sig) {
         char command[256];
         sprintf(command, "nm %s | grep \"\\s%s$\" | awk '{print $1}'", prog_name.c_str(), func_name.c_str());
         std::string base_addr = sh(command);
-        sprintf(command, "python2 -c \"print hex(0x%s+%s)\"", base_addr.c_str(), offset.c_str());
+        sprintf(command, "python -c \"print(hex(0x%s+%s))\"", base_addr.c_str(), offset.c_str());
         std::string hex_val = sh(command);
         sprintf(command, "addr2line -e %s %s", prog_name.c_str(), hex_val.c_str());
         std::string line = sh(command); // line has a new line char already
@@ -180,7 +180,7 @@ inline std::pair<bool, std::string> is_traced_common(const char *filename, const
   char *data = realpath(filename, resolved_path);
   (void) data;
   if (ignore_files(resolved_path) || ignore_files(filename)) {
-    DLIO_PROFILER_LOGINFO("Profiler ignoring file %s for func %s", resolved_path, func);
+    DLIO_PROFILER_LOGDEBUG("Profiler ignoring file %s for func %s", resolved_path, func);
     return std::pair<bool, std::string>(false, filename);
   }
   for (const auto file : ignore_filename) {
@@ -197,8 +197,12 @@ inline std::pair<bool, std::string> is_traced_common(const char *filename, const
       }
     }
   }
-  if (!found and !ignore)
-    DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing file %s for func %s", resolved_path, func);
+  if (!found && !ignore) {
+    DLIO_PROFILER_LOGDEBUG("Profiler Intercepted POSIX not tracing file %s for func %s", resolved_path, func);
+  }
+  else {
+    DLIO_PROFILER_LOGWARN("Profiler Intercepted POSIX tracing file %s for func %s", resolved_path, func);
+  }
   return std::pair<bool, std::string>(found, filename);
 }
 
