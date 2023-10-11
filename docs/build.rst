@@ -12,9 +12,9 @@ There are three build options:
 
 ----------
 
-----------------------------
-Build DLIO Profiler with pip
-----------------------------
+------------------------------------------
+Build DLIO Profiler with pip (Recommended)
+------------------------------------------
 
 Users can easily install DLIO profiler using pip. This is the way most python packages are installed.
 This method would work for both native python environments and conda environments.
