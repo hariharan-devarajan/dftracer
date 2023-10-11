@@ -52,10 +52,10 @@ jobs:
             pip install ${LOC}
           elif [[ $PERM == 'venv' ]]; then
             source ./venv/bin/activate
-            pip install --install-option="--jobs=6" ${LOC}
+            pip install ${LOC}
           else
-            echo pip install --install-option="--jobs=6" ${LOC}
-            sudo pip install --install-option="--jobs=6" ${LOC}
+            echo pip install ${LOC}
+            sudo pip install ${LOC}
           fi
       - name: Build from ${{ matrix.dir }} on ${{ matrix.perm }}
         run: |
