@@ -74,7 +74,7 @@ void dlio_profiler::ChromeWriter::finalize() {
 std::string
 dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &category, TimeResolution start_time,
                                           TimeResolution duration, std::unordered_map<std::string, std::any> &metadata,
-                                          int process_id, int tid) {
+                                          int process_id, int thread_id) {
   std::stringstream all_stream;
   int tid, pid;
   if (process_id == -1) {
