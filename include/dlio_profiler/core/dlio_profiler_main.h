@@ -32,6 +32,9 @@ namespace dlio_profiler {
         int process_id;
         bool is_initialized;
         bool bind;
+        bool enable_posix;
+        bool enable_stdio;
+        bool enable_io;
 
         void initlialize(bool is_init, bool _bind, const char *_log_file = nullptr, const char *_data_dirs = nullptr,
                          const int *_process_id = nullptr);

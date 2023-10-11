@@ -11,8 +11,7 @@
 dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileType type, const char *log_file,
                                                   const char *data_dirs, const int *process_id) : is_enabled(
         false), gotcha_priority(1), logger_level(cpplogger::LoggerType::LOG_ERROR), log_file(), data_dirs(),
-                                                                                                  is_initialized(false),
-                                                                                                  bind(false) {
+        is_initialized(false), bind(false), enable_io(false), enable_stdio(false), enable_posix(false) {
   const char *user_init_type = getenv(DLIO_PROFILER_INIT);
   switch (type) {
     case ProfileType::PROFILER_PRELOAD: {
@@ -59,7 +58,7 @@ bool dlio_profiler::DLIOProfilerCore::finalize() {
   if (this->is_initialized && is_enabled) {
     DLIO_PROFILER_LOGINFO("Calling finalize on pid %d", this->process_id);
     dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->finalize();
-    if (bind) {
+    if (bind && enable_io) {
       free_bindings();
     }
     this->is_initialized = false;
@@ -160,16 +159,30 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
       DLIO_PROFILER_LOGINFO("Setting data_dirs to %s", this->data_dirs.c_str());
       dlio_profiler::Singleton<DLIOLogger>::get_instance()->update_log_file(this->log_file, this->process_id);
       if (bind) {
-        brahma_gotcha_wrap("dlio_profiler", this->gotcha_priority);
-        auto posix_instance = brahma::POSIXDLIOProfiler::get_instance();
-        auto stdio_instance = brahma::STDIODLIOProfiler::get_instance();
-        auto paths = split(this->data_dirs, ':');
-        posix_instance->untrace(this->log_file.c_str());
-        stdio_instance->untrace(this->log_file.c_str());
-        for (const auto &path:paths) {
-          DLIO_PROFILER_LOGINFO("Profiler will trace %s\n", path.c_str());
-          posix_instance->trace(path.c_str());
-          stdio_instance->trace(path.c_str());
+        char *disable_io = getenv(DLIO_PROFILER_DISABLE_IO);
+        char *disable_posix = getenv(DLIO_PROFILER_DISABLE_POSIX);
+        char *disable_stdio = getenv(DLIO_PROFILER_DISABLE_STDIO);
+        if (disable_io == nullptr || strcmp(disable_io, "1") != 0) {
+          enable_io = true;
+          auto paths = split(this->data_dirs, ':');
+          brahma_gotcha_wrap("dlio_profiler", this->gotcha_priority);
+          if (disable_posix == nullptr || strcmp(disable_posix, "1") != 0) {
+            enable_posix = true;
+            auto posix_instance = brahma::POSIXDLIOProfiler::get_instance();
+            posix_instance->untrace(this->log_file.c_str());
+            for (const auto &path:paths) {
+              DLIO_PROFILER_LOGINFO("Profiler will trace %s\n", path.c_str());
+              posix_instance->trace(path.c_str());
+            }
+          }
+          if (disable_stdio == nullptr || strcmp(disable_stdio, "1") != 0) {
+            enable_stdio = true;
+            auto stdio_instance = brahma::STDIODLIOProfiler::get_instance();
+            stdio_instance->untrace(this->log_file.c_str());
+            for (const auto &path:paths) {
+              stdio_instance->trace(path.c_str());
+            }
+          }
         }
       }
     }
