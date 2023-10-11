@@ -14,6 +14,7 @@ jobs:
         perm: ["root", "user"]
     name: ${{ matrix.os }}-${{ matrix.dir }}-${{ matrix.perm }}
     runs-on: ${{ matrix.os }}
+    if: ${{ matrix.dir != 'clone' || matrix.perm != 'user' }}
     env:
       CC: gcc
       CXX: g++
@@ -37,7 +38,7 @@ jobs:
           sudo apt-get install python3.10 python3-pip
           sudo apt-get install gcovr clang-format
       - name: Install dlio benchmark
-        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'user'
+        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'github' && matrix.perm == 'user'
         run: |
           LOC=git+https://github.com/argonne-lcf/dlio_benchmark.git@main
           if [[ $PERM == 'user' ]]; then
@@ -61,20 +62,20 @@ jobs:
           fi
           if [[ $PERM == 'user' ]]; then
             export DLIO_LOGGER_USER=1
-            echo pip install -v ${LOC}
+            echo pip install --user -v ${LOC}
             pip install -v ${LOC}
           else
              echo pip install -v ${LOC}
              sudo pip install -v ${LOC}
           fi
       - name: Test ctest
-        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'user'
+        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'github' && matrix.perm == 'user'
         run: |
           pip install -r test/py/requirements.txt
           cd build/temp*/dlio_profiler_py
           ctest -VV
       - name: Create Coverage
-        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'user'
+        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'github' && matrix.perm == 'user'
         run: |
           mkdir coverage
           FILE=$PWD/coverage/coverage.json
