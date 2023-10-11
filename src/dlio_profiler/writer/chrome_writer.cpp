@@ -76,21 +76,13 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
                                           TimeResolution duration, std::unordered_map<std::string, std::any> &metadata,
                                           int process_id, int thread_id) {
   std::stringstream all_stream;
-  int tid, pid;
-  if (process_id == -1) {
-    tid = dlp_gettid();
-    pid = dlp_getpid();
-  } else {
-    pid = process_id;
-    tid = dlp_getpid() + dlp_gettid();
-  }
   auto start_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(start_time);
   auto duration_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(duration);
   if (is_first_write) all_stream << "   ";
   all_stream << R"({"name":")" << event_name << "\","
              << R"("cat":")" << category << "\","
-             << "\"pid\":" << pid << ","
-             << "\"tid\":" << tid << ","
+             << "\"pid\":" << process_id << ","
+             << "\"tid\":" << thread_id << ","
              << "\"ts\":" << std::chrono::duration_cast<std::chrono::microseconds>(start_sec).count() << ","
              << "\"dur\":" << std::chrono::duration_cast<std::chrono::microseconds>(duration_sec).count() << ","
              << R"("ph":"X",)"
