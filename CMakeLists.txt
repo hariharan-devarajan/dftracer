@@ -67,7 +67,7 @@ if (NOT DLIO_PROFILER_INSTALL_DATA_DIR)
 endif ()
 
 if (NOT CMAKE_INSTALL_RPATH)
-    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${PYTHON_SITE_PACKAGES}/lib:${PYTHON_SITE_PACKAGES}/lib64")
+    set(CMAKE_BUILD_RPATH_USE_ORIGIN ".")
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif ()
 
@@ -302,10 +302,18 @@ install(TARGETS ${PROJECT_NAME}_preload
 install(TARGETS ${PROJECT_NAME}_py
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/symlink.sh CONTENT "echo -- Installing: symlink $<TARGET_FILE_NAME:${PROJECT_NAME}_py>;ln -sf ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}_py> ${PYTHON_SITE_PACKAGES}/$<TARGET_FILE_NAME:${PROJECT_NAME}_py>")
+#install(CODE TARGETS ${PROJECT_NAME}_py "execute_process(COMMAND ${CMAKE_BINARY_DIR}/symlink.sh)")
 
-install(TARGETS ${PROJECT_NAME}_py
-        LIBRARY DESTINATION ${PYTHON_SITE_PACKAGES}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(CODE "execute_process(
+    COMMAND bash -c \"set -e
+    chmod +x ${CMAKE_BINARY_DIR}/symlink.sh
+    . ${CMAKE_BINARY_DIR}/symlink.sh
+    \")")
+
+#install(TARGETS ${PROJECT_NAME}_py
+#        LIBRARY DESTINATION ${PYTHON_SITE_PACKAGES}
+#        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 #-----------------------------------------------------------------------------
 # Configure the ${PROJECT_NAME}-config-version .cmake file for the install directory
 #-----------------------------------------------------------------------------
