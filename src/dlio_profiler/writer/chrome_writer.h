@@ -71,7 +71,7 @@ namespace dlio_profiler {
         void initialize(char *filename, bool throw_error) override;
 
         void log(std::string &event_name, std::string &category, TimeResolution &start_time, TimeResolution &duration,
-                 std::unordered_map<std::string, std::any> &metadata, int process_id) override;
+                 std::unordered_map<std::string, std::any> &metadata, int process_id, int tid) override;
 
         void finalize() override;
     };
