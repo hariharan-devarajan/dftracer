@@ -11,7 +11,7 @@ jobs:
       matrix:
         os: [ ubuntu-20.04,  ubuntu-22.04]
         dir: ["clone", "github"]
-        perm: ["root", "user"]
+        perm: ["root", "user", "venv"]
         exclude:
           - dir: "clone"
             perm: "user"
@@ -39,23 +39,29 @@ jobs:
           sudo apt-get install gcc g++ libtool-bin openmpi-bin libopenmpi-dev
           sudo apt-get install python3.10 python3-pip
           sudo apt-get install gcovr clang-format
+          if [[ $PERM == 'venv' ]]; then
+          python -m venv ./venv
+          fi
       - name: Install dlio benchmark
-        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'root'
+        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'venv'
         run: |
           LOC=git+https://github.com/argonne-lcf/dlio_benchmark.git@main
           if [[ $PERM == 'user' ]]; then
             export DLIO_LOGGER_USER=1
             echo pip install ${LOC}
             pip install ${LOC}
+          elif [[ $PERM == 'venv' ]]; then
+            source ./venv/bin/activate
+            pip install ${LOC}
           else
-             echo pip install ${LOC}
-             sudo pip install ${LOC}
+            echo pip install ${LOC}
+            sudo pip install ${LOC}
           fi
       - name: Build from ${{ matrix.dir }} on ${{ matrix.perm }}
         run: |
           export CMAKE_BUILD_TYPE=PROFILE
           export DLIO_PROFILER_ENABLE_TESTS=On
-          if [ $OS == 'ubuntu-22.04' ] && [ $DIR == 'clone' ] && [ $PERM == 'root' ]; then
+          if [ $OS == 'ubuntu-22.04' ] && [ $DIR == 'clone' ] && [ $PERM == 'venv' ]; then
             export ENABLE_DLIO_BENCHMARK_TESTS=On
           fi
           LOC=.
@@ -66,18 +72,23 @@ jobs:
             export DLIO_LOGGER_USER=1
             echo pip install --user -v ${LOC}
             pip install -v ${LOC}
+          elif [[ $PERM == 'venv' ]]; then
+            source ./venv/bin/activate
+            echo pip install -v ${LOC}
+            pip install -v ${LOC}
           else
              echo pip install -v ${LOC}
              sudo pip install -v ${LOC}
           fi
       - name: Test ctest
-        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'root'
+        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'venv'
         run: |
+          source ./venv/bin/activate
           pip install -r test/py/requirements.txt
           cd build/temp*/dlio_profiler_py
           ctest -VV
       - name: Create Coverage
-        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'root'
+        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'venv'
         run: |
           mkdir coverage
           FILE=$PWD/coverage/coverage.json

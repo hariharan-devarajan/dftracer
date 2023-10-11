@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
   chdir(dir);
   int fd = openat(dd, "demofile.txt", O_RDONLY);
   if (fd != -1) close(fd);
-  fd = openat(dd, "demofile2.txt", O_WRONLY | O_CREAT);
+  fd = openat(dd, "demofile2.txt", O_WRONLY | O_CREAT, 777);
   if (fd != -1) close(fd);
   close(dd);
   char filename2[1024];
