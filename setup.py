@@ -29,13 +29,10 @@ class CMakeExtension(Extension):
 class CMakeBuild(build_ext):
     def build_extension(self, ext: CMakeExtension) -> None:
         cmake_args = []
-        install_prefix = sys.prefix
-        if "VIRTUAL_ENV" in os.environ:
-            install_prefix = os.environ['VIRTUAL_ENV']
-        elif "CONDA_DEFAULT_ENV" in os.environ:
-            install_prefix = os.environ['CONDA_DEFAULT_ENV']
+        from distutils.sysconfig import get_python_lib
+        install_prefix = f"{get_python_lib()}/dlio_profiler"
         if "DLIO_LOGGER_USER" in os.environ:
-            install_prefix=site.USER_BASE
+            install_prefix=f"{site.USER_SITE}/dlio_profiler"
             cmake_args += [f"-DUSER_INSTALL=ON"]
         if "DLIO_PROFILER_DIR" in os.environ:
             install_prefix = os.environ['DLIO_PROFILER_DIR']
