@@ -65,10 +65,10 @@ class CMakeBuild(build_ext):
         # auxiliary "native" libs
         build_type = os.environ.get("CMAKE_BUILD_TYPE", "Release")
         cmake_args += [f"-DCMAKE_BUILD_TYPE={build_type}"]
-        enable_tests = os.environ.get("DLIO_PROFILER_ENABLE_TESTS", "Off")
+        enable_tests = os.environ.get("DLIO_PROFILER_ENABLE_TESTS", "On")
         cmake_args += [f"-DDLIO_PROFILER_ENABLE_TESTS={enable_tests}"]
-        enable_dlio_tests = os.environ.get("ENABLE_DLIO_BENCHMARK_TESTS", "Off")
-        cmake_args += [f"-DENABLE_DLIO_BENCHMARK_TESTS={enable_tests}"]
+        enable_dlio_tests = os.environ.get("ENABLE_DLIO_BENCHMARK_TESTS", "On")
+        cmake_args += [f"-DENABLE_DLIO_BENCHMARK_TESTS={enable_dlio_tests}"]
 
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.

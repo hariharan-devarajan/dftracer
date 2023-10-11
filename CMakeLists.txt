@@ -47,10 +47,10 @@ if (BUILD_PYTHON_BINDINGS)
     message("-- " "[Python] ${PYTHON_SITE_PACKAGES} found for installing python binding")
 endif()
 
-set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cmake ${PYTHON_SITE_PACKAGES}/lib/cmake)
-message(STATUS "-- ${DLIO_PROFILER_CMAKE_DIR}")
+set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cmake ${PYTHON_SITE_PACKAGES}/dlio_profiler/lib/cmake)
+message("-- " "[DLIO Profiler] DLIO_PROFILER_CMAKE_DIR ${DLIO_PROFILER_CMAKE_DIR}")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${DLIO_PROFILER_CMAKE_DIR})
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_BINARY_DIR})
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PYTHON_SITE_PACKAGES}/dlio_profiler/lib/cmake)
 
 if (NOT DLIO_PROFILER_INSTALL_BIN_DIR)
     set(DLIO_PROFILER_INSTALL_BIN_DIR ${CMAKE_INSTALL_PREFIX}/bin)
@@ -91,6 +91,7 @@ endif ()
 
 
 if(DLIO_PROFILER_ENABLE_TESTS)
+    message("-- " "[DLIO Profiler] Enabling Testing")
     if(CMAKE_BUILD_TYPE STREQUAL "PROFILE")
         message("-- " "[DLIO Profiler] building with CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE}")
         set(CMAKE_C_FLAGS_PROFILE --coverage)
