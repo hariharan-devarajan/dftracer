@@ -338,7 +338,7 @@ Hybrid Example:
       return 0;
     }
 
-For this example, link with libdlio_profiler.so at compile time and LD_PRELOAD the executable with libdlio_profiler_preload.soat runtime.
+For this example, link with libdlio_profiler.so at compile time and LD_PRELOAD the executable with libdlio_profiler_preload.so at runtime.
 As the DLIO_PROFILER_CPP_INIT do not pass log file or data dir, we need to set ``DLIO_PROFILER_LOG_FILE`` and ``DLIO_PROFILER_DATA_DIR``.
 By default the DLIO Profiler mode is set to FUNCTION.
 Example of running this configurations are:
@@ -632,7 +632,7 @@ Job submition script
      export DLIO_PROFILER_DATA_DIR=./resnet_original_data #Path to the orignal resnet 50 dataset 
      export DLIO_PROFILER_LOG_FILE=./dlio_log_posix_level.pfw
    
-     LD_PRELOAD=./dlio_ml_workloads/PolarisAT/conda-envs/ml_workload_latest_conda/lib/libdlio_profiler_preload.so aprun -n 4 -N 4 python resnet_hvd_dlio.py --batch-size 64 --epochs 1 > dlio_log 2>&1
+     LD_PRELOAD=./dlio_ml_workloads/PolarisAT/conda-envs/ml_workload_latest_conda/lib/python*/site-packages/dlio_profiler/lib/libdlio_profiler_preload.so aprun -n 4 -N 4 python resnet_hvd_dlio.py --batch-size 64 --epochs 1 > dlio_log 2>&1
    
      cat *.pfw > combined_logs.pfw # To combine to a single pfw file. 
 

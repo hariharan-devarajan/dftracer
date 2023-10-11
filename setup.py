@@ -29,14 +29,11 @@ class CMakeExtension(Extension):
 class CMakeBuild(build_ext):
     def build_extension(self, ext: CMakeExtension) -> None:
         cmake_args = []
-        install_prefix = sys.prefix
-        if "VIRTUAL_ENV" in os.environ:
-            install_prefix = os.environ['VIRTUAL_ENV']
-        elif "CONDA_DEFAULT_ENV" in os.environ:
-            install_prefix = os.environ['CONDA_DEFAULT_ENV']
+        from distutils.sysconfig import get_python_lib
+        install_prefix = f"{get_python_lib()}/dlio_profiler"
         if "DLIO_LOGGER_USER" in os.environ:
-            install_prefix=site.USER_BASE
-            cmake_args += [f"-DUSER_INSTALL=ON"]
+            install_prefix=f"{site.USER_SITE}/dlio_profiler"
+            # cmake_args += [f"-DUSER_INSTALL=ON"]
         if "DLIO_PROFILER_DIR" in os.environ:
             install_prefix = os.environ['DLIO_PROFILER_DIR']
         cmake_args += [f"-DCMAKE_INSTALL_PREFIX={install_prefix}"]
@@ -68,10 +65,10 @@ class CMakeBuild(build_ext):
         # auxiliary "native" libs
         build_type = os.environ.get("CMAKE_BUILD_TYPE", "Release")
         cmake_args += [f"-DCMAKE_BUILD_TYPE={build_type}"]
-        enable_tests = os.environ.get("DLIO_PROFILER_ENABLE_TESTS", "Off")
+        enable_tests = os.environ.get("DLIO_PROFILER_ENABLE_TESTS", "On")
         cmake_args += [f"-DDLIO_PROFILER_ENABLE_TESTS={enable_tests}"]
-        enable_dlio_tests = os.environ.get("ENABLE_DLIO_BENCHMARK_TESTS", "Off")
-        cmake_args += [f"-DENABLE_DLIO_BENCHMARK_TESTS={enable_tests}"]
+        enable_dlio_tests = os.environ.get("ENABLE_DLIO_BENCHMARK_TESTS", "On")
+        cmake_args += [f"-DENABLE_DLIO_BENCHMARK_TESTS={enable_dlio_tests}"]
 
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.

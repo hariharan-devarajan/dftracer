@@ -20,10 +20,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_BINARY_DIR}/lib/cmake)
 link_directories(${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_MACOSX_RPATH 1)
 set(CMAKE_CXX_STANDARD 17)
-set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cmake)
-message(STATUS "-- ${DLIO_PROFILER_CMAKE_DIR}")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${DLIO_PROFILER_CMAKE_DIR})
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_BINARY_DIR})
 #------------------------------------------------------------------------------
 # Build options
 #------------------------------------------------------------------------------
@@ -33,6 +29,29 @@ option(ENABLE_DLIO_BENCHMARK_TESTS "Enable dlio_benchmark tests" Off)
 #------------------------------------------------------------------------------
 # Setup install and output Directories
 #------------------------------------------------------------------------------
+
+if (BUILD_PYTHON_BINDINGS)
+    if (DLIO_PYTHON_SITE)
+        set(PYTHON_SITE_PACKAGES "${DLIO_PYTHON_SITE}")
+    else()
+        set(PYTHON_SITE_PACKAGES ${CMAKE_INSTALL_PREFIX})
+#        if (USER_INSTALL)
+#            execute_process (COMMAND python3 -c "import site; print(site.USER_SITE)" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
+#        else()
+#            execute_process (COMMAND python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
+#        endif()
+    endif()
+    set(PYTHON_SITE_PACKAGES ${PYTHON_SITE_PACKAGES})
+    include_directories(${PYTHON_SITE_PACKAGES}/dlio_profiler/include)
+    link_directories(${PYTHON_SITE_PACKAGES}/dlio_profiler/lib)
+    message("-- " "[Python] ${PYTHON_SITE_PACKAGES} found for installing python binding")
+endif()
+
+set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cmake ${PYTHON_SITE_PACKAGES}/dlio_profiler/lib/cmake)
+message("-- " "[DLIO Profiler] DLIO_PROFILER_CMAKE_DIR ${DLIO_PROFILER_CMAKE_DIR}")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${DLIO_PROFILER_CMAKE_DIR})
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PYTHON_SITE_PACKAGES}/dlio_profiler/lib/cmake)
+
 if (NOT DLIO_PROFILER_INSTALL_BIN_DIR)
     set(DLIO_PROFILER_INSTALL_BIN_DIR ${CMAKE_INSTALL_PREFIX}/bin)
     message(STATUS ${DLIO_PROFILER_INSTALL_BIN_DIR})
@@ -48,7 +67,7 @@ if (NOT DLIO_PROFILER_INSTALL_DATA_DIR)
 endif ()
 
 if (NOT CMAKE_INSTALL_RPATH)
-    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${PYTHON_SITE_PACKAGES}/lib:${PYTHON_SITE_PACKAGES}/lib64")
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif ()
 
@@ -72,6 +91,7 @@ endif ()
 
 
 if(DLIO_PROFILER_ENABLE_TESTS)
+    message("-- " "[DLIO Profiler] Enabling Testing")
     if(CMAKE_BUILD_TYPE STREQUAL "PROFILE")
         message("-- " "[DLIO Profiler] building with CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE}")
         set(CMAKE_C_FLAGS_PROFILE --coverage)
@@ -85,6 +105,8 @@ if(DLIO_PROFILER_ENABLE_TESTS)
         add_custom_target(merged_coverage DEPENDS default.profdata)
     endif()
 endif()
+
+
 
 if (BUILD_PYTHON_BINDINGS)
     find_package(pybind11 REQUIRED)
@@ -110,18 +132,6 @@ export(EXPORT gotcha-targets
 link_directories(${CMAKE_BINARY_DIR}/lib)
 link_directories(${CMAKE_BINARY_DIR})
 set(DEPENDENCY_LIB stdc++fs -lhwloc)
-if (BUILD_PYTHON_BINDINGS)
-  if (DLIO_PYTHON_SITE)
-    set(PYTHON_SITE_PACKAGES "${DLIO_PYTHON_SITE}")
-  else() 	  
-  if (USER_INSTALL) 
-    execute_process (COMMAND python3 -c "import site; print(site.USER_SITE)" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)    
-  else()	
-    execute_process (COMMAND python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
-  endif()
-  endif()
-  message("-- " "[Python] ${PYTHON_SITE_PACKAGES} found for installing python binding")
-endif()
 
 if (${CPP_LOGGER_FOUND})
     include_directories(${CPP_LOGGER_INCLUDE_DIRS})

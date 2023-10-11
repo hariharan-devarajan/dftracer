@@ -39,6 +39,11 @@ From Github
   DLP_VERSION=dev
   pip install git+https://github.com/hariharan-devarajan/dlio-profiler.git@${DLP_VERSION}
 
+.. attention::
+
+    For pip installations, all libraries will be present within the site-packages/dlio_profiler/lib.
+    This enables clean management of pip installation and uninstallations.
+
 -----------------------------------------
 Build DLIO Profiler with Spack
 -----------------------------------------
