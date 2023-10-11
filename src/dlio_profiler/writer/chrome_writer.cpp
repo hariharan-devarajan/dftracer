@@ -21,7 +21,7 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
   if (fd == -1) {
     fd = dlp_open(filename, O_WRONLY | O_APPEND | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd == -1) {
-      ERROR(fd == -1, "unable to create log file %s", filename);
+      ERROR(fd == -1, "unable to create log file %s", filename); // GCOVR_EXCL_LINE
     } else {
       DLIO_PROFILER_LOGINFO("created log file %s with fd %d", filename, fd);
     }
@@ -31,14 +31,14 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
 void
 dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category, TimeResolution &start_time,
                                  TimeResolution &duration,
-                                 std::unordered_map<std::string, std::any> &metadata, int process_id) {
+                                 std::unordered_map<std::string, std::any> &metadata, int process_id, int tid) {
   if (fd != -1) {
-    std::string json = convert_json(event_name, category, start_time, duration, metadata, process_id);
+    std::string json = convert_json(event_name, category, start_time, duration, metadata, process_id, tid);
     auto written_elements = dlp_write(fd, json.c_str(), json.size());
-    if (written_elements != json.size()) {
+    if (written_elements != json.size()) {  // GCOVR_EXCL_START
       ERROR(written_elements != json.size(), "unable to log write %s fd %d for a+ written only %d of %d with error %s",
             filename.c_str(), fd, written_elements, json.size(), strerror(errno));
-    }
+    }  // GCOVR_EXCL_STOP
   }
   is_first_write = false;
 }
@@ -48,21 +48,21 @@ void dlio_profiler::ChromeWriter::finalize() {
     DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s\n", filename.c_str());
     int status = dlp_close(fd);
     if (status != 0) {
-      ERROR(status != 0, "unable to close log file %d for a+", filename.c_str());
+      ERROR(status != 0, "unable to close log file %d for a+", filename.c_str());  // GCOVR_EXCL_LINE
     }
     fd = dlp_open(this->filename.c_str(), O_WRONLY);
     if (fd == -1) {
-      ERROR(fd == -1, "unable to open log file %s with O_WRONLY", this->filename.c_str());
+      ERROR(fd == -1, "unable to open log file %s with O_WRONLY", this->filename.c_str());  // GCOVR_EXCL_LINE
     }
     std::string data = "[\n";
     auto written_elements = dlp_write(fd, data.c_str(), data.size());
-    if (written_elements != data.size()) {
+    if (written_elements != data.size()) {  // GCOVR_EXCL_START
       ERROR(written_elements != data.size(), "unable to finalize log write %s for r+ written only %d of %d",
             filename.c_str(), data.size(), written_elements);
-    }
+    } // GCOVR_EXCL_STOP
     status = dlp_close(fd);
     if (status != 0) {
-      ERROR(status != 0, "unable to close log file %d for r+", filename.c_str());
+      ERROR(status != 0, "unable to close log file %d for r+", filename.c_str());  // GCOVR_EXCL_LINE
     }
   }
   if (enable_core_affinity) {
@@ -74,7 +74,7 @@ void dlio_profiler::ChromeWriter::finalize() {
 std::string
 dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &category, TimeResolution start_time,
                                           TimeResolution duration, std::unordered_map<std::string, std::any> &metadata,
-                                          int process_id) {
+                                          int process_id, int thread_id) {
   std::stringstream all_stream;
   int tid, pid;
   if (process_id == -1) {

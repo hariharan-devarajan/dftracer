@@ -24,7 +24,7 @@ private:
     bool throw_error, include_metadata;
     std::shared_ptr<dlio_profiler::BaseWriter> writer;
     bool is_init;
-    int process_id;
+    int pid, tid;
 public:
     DLIOLogger(bool init_log = false) : is_init(false), include_metadata(false) {
       char *dlio_profiler_meta = getenv(DLIO_PROFILER_INC_METADATA);
@@ -64,8 +64,9 @@ public:
               std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     }
 
-    inline void update_log_file(std::string log_file, int process_id = -1) {
-      this->process_id = process_id;
+    inline void update_log_file(std::string log_file, int process_id = -1, int tid = -1) {
+      this->pid = process_id;
+      this->tid = tid;
       writer = std::make_shared<dlio_profiler::ChromeWriter>(-1);
       writer->initialize(log_file.data(), this->throw_error);
       this->is_init = true;
@@ -81,7 +82,7 @@ public:
     inline void log(std::string event_name, std::string category,
                     TimeResolution start_time, TimeResolution duration,
                     std::unordered_map<std::string, std::any> &metadata) {
-      writer->log(event_name, category, start_time, duration, metadata, process_id);
+      writer->log(event_name, category, start_time, duration, metadata, pid, tid);
     }
 
     inline bool has_metadata() {

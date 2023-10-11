@@ -29,7 +29,7 @@ namespace dlio_profiler {
         cpplogger::LoggerType logger_level;
         std::string log_file;
         std::string data_dirs;
-        int process_id;
+        int process_id, thread_id;
         bool is_initialized;
         bool bind;
         bool enable_posix;

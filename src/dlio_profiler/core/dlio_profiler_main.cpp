@@ -100,10 +100,12 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
       }
       if (_process_id == nullptr || *_process_id == -1) {
         this->process_id = dlp_getpid();
+        this->thread_id = dlp_gettid();
       } else {
         this->process_id = *_process_id;
+        this->thread_id = dlp_getpid() + dlp_gettid();
       }
-      DLIO_PROFILER_LOGDEBUG("Setting process_id to %d", this->process_id);
+      DLIO_PROFILER_LOGDEBUG("Setting process_id to %d and thread id to %d", this->process_id, this->thread_id);
       if (_log_file == nullptr) {
         char *dlio_profiler_log = getenv(DLIO_PROFILER_LOG_FILE);
         char proc_name[PATH_MAX], cmd[128];
@@ -157,7 +159,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
         this->data_dirs = _data_dirs;
       }
       DLIO_PROFILER_LOGDEBUG("Setting data_dirs to %s", this->data_dirs.c_str());
-      dlio_profiler::Singleton<DLIOLogger>::get_instance()->update_log_file(this->log_file, this->process_id);
+      dlio_profiler::Singleton<DLIOLogger>::get_instance()->update_log_file(this->log_file, this->process_id, this->thread_id);
       if (bind) {
         char *disable_io = getenv(DLIO_PROFILER_DISABLE_IO);
         char *disable_posix = getenv(DLIO_PROFILER_DISABLE_POSIX);
