@@ -19,7 +19,7 @@ then
   echo "Installing ${DEPENDENCY_DIR}"
   mkdir build
   cmake . -B build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DCMAKE_PREFIX_PATH=${INSTALL_DIR}
-  cmake --build build
+  cmake --build build -- -j
   cmake --install build
   popd
   echo "Clean source dir ${DEPENDENCY_DIR}"
