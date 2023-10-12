@@ -13,13 +13,15 @@
 #include <unistd.h>
 #include <hwloc.h>
 #include <dlio_profiler/core/constants.h>
+#include <atomic>
 
 namespace dlio_profiler {
     class ChromeWriter : public BaseWriter {
     private:
-        bool enable_core_affinity, include_metadata;
+        bool enable_core_affinity, include_metadata, enable_compression;
         hwloc_topology_t topology;
         int fd;
+        std::atomic_int index;
 
         std::string
         convert_json(std::string &event_name, std::string &category, TimeResolution start_time, TimeResolution duration,
@@ -51,7 +53,8 @@ namespace dlio_profiler {
 
     public:
         ChromeWriter(int fd = -1)
-                : BaseWriter(), is_first_write(true), mtx_map(), enable_core_affinity(false), include_metadata(false) {
+                : BaseWriter(), is_first_write(true), mtx_map(), enable_core_affinity(false), include_metadata(false),
+                  enable_compression(false){
           char *dlio_profiler_meta = getenv(DLIO_PROFILER_INC_METADATA);
           if (dlio_profiler_meta != nullptr && strcmp(dlio_profiler_meta, "1") == 0) {
             include_metadata = true;
@@ -59,6 +62,10 @@ namespace dlio_profiler {
           char *enable_core_affinity_str = getenv(DLIO_PROFILER_SET_CORE_AFFINITY);
           if (enable_core_affinity_str != nullptr && strcmp(enable_core_affinity_str, "1") == 0) {
             enable_core_affinity = true;
+          }
+          char *enable_compression_str = getenv(DLIO_PROFILER_TRACE_COMPRESSION);
+          if (enable_compression_str != nullptr && strcmp(enable_compression_str, "1") == 0) {
+            enable_compression = true;
           }
           process_id = dlp_getpid();
           this->fd = fd;
