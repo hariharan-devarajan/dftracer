@@ -64,6 +64,19 @@ void dlio_profiler::ChromeWriter::finalize() {
     if (status != 0) {
       ERROR(status != 0, "unable to close log file %d for r+", filename.c_str());  // GCOVR_EXCL_LINE
     }
+    if (enable_compression) {
+      if (system("which gzip > /dev/null 2>&1")) {
+        DLIO_PROFILER_LOGERROR("Gzip compression does not exists", "");  // GCOVR_EXCL_LINE
+      } else {
+        DLIO_PROFILER_LOGINFO("Applying Gzip compression on file", filename.c_str());
+        char cmd[2048];
+        sprintf(cmd, "gzip %s", filename.c_str());
+        int ret = system(cmd);
+        if (ret == 0) {
+          DLIO_PROFILER_LOGINFO("Successfully compressed file %s.gz", filename.c_str());
+        } else DLIO_PROFILER_LOGERROR("Unable to compress file %s", filename.c_str());
+      }
+    }
   }
   if (enable_core_affinity) {
     hwloc_topology_destroy(topology);
@@ -79,7 +92,8 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
   auto start_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(start_time);
   auto duration_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(duration);
   if (is_first_write) all_stream << "   ";
-  all_stream << R"({"name":")" << event_name << "\","
+  all_stream << R"({"id":")" << index++ << "\","
+             << R"({"name":")" << event_name << "\","
              << R"("cat":")" << category << "\","
              << "\"pid\":" << process_id << ","
              << "\"tid\":" << thread_id << ","

@@ -40,6 +40,7 @@ Configurations of DLIO Profiler
    DLIO_PROFILER_DISABLE_IO         STRING  Disable automatic binding of all I/O calls.
    DLIO_PROFILER_DISABLE_POSIX      STRING  Disable automatic binding of POSIX I/O calls.
    DLIO_PROFILER_DISABLE_STDIO      STRING  Disable automatic binding of STDIO I/O calls.
+   DLIO_PROFILER_TRACE_COMPRESSION  INT     Enable trace compression (default 0)
    ================================ ======  ===========================================================================
 
 ----------------------------------------
