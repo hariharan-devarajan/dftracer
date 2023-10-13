@@ -93,7 +93,7 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
   auto duration_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(duration);
   if (is_first_write) all_stream << "   ";
   all_stream << R"({"id":")" << index++ << "\","
-             << R"({"name":")" << event_name << "\","
+             << R"("name":")" << event_name << "\","
              << R"("cat":")" << category << "\","
              << "\"pid\":" << process_id << ","
              << "\"tid\":" << thread_id << ","
