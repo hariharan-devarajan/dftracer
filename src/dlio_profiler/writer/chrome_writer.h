@@ -54,7 +54,7 @@ namespace dlio_profiler {
     public:
         ChromeWriter(int fd = -1)
                 : BaseWriter(), is_first_write(true), mtx_map(), enable_core_affinity(false), include_metadata(false),
-                  enable_compression(false){
+                  enable_compression(false), index(0){
           char *dlio_profiler_meta = getenv(DLIO_PROFILER_INC_METADATA);
           if (dlio_profiler_meta != nullptr && strcmp(dlio_profiler_meta, "1") == 0) {
             include_metadata = true;
