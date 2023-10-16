@@ -103,15 +103,16 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
              << R"("args":{)";
   if (include_metadata) {
     all_stream << "\"hostname\":\"" << hostname() << "\",";
-    all_stream << "\"core_affinity\": [";
     auto cores = core_affinity();
     auto cores_size = cores.size();
-    for (int i = 0; i < cores_size; ++i) {
-      all_stream << cores[i];
-      if (i < cores_size - 1) all_stream << ",";
+    if (cores_size > 0) {
+      all_stream << "\"core_affinity\": [";
+      for (int i = 0; i < cores_size; ++i) {
+        all_stream << cores[i];
+        if (i < cores_size - 1) all_stream << ",";
+      }
+      all_stream << "]";
     }
-
-    all_stream << "]";
     auto meta_size = metadata.size();
     if (meta_size > 0) all_stream << ",";
     int i = 0;

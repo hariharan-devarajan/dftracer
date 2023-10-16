@@ -12,7 +12,6 @@ std::shared_ptr<brahma::STDIODLIOProfiler> brahma::STDIODLIOProfiler::instance =
 FILE *brahma::STDIODLIOProfiler::fopen64(const char *path, const char *mode) {
   BRAHMA_MAP_OR_FAIL(fopen64);
   DLIO_LOGGER_START(path);
-  DLIO_LOGGER_UPDATE(path);
   DLIO_LOGGER_UPDATE(mode);
   FILE *ret = __real_fopen64(path, mode);
   DLIO_LOGGER_END();
@@ -23,7 +22,6 @@ FILE *brahma::STDIODLIOProfiler::fopen64(const char *path, const char *mode) {
 FILE *brahma::STDIODLIOProfiler::fopen(const char *path, const char *mode) {
   BRAHMA_MAP_OR_FAIL(fopen);
   DLIO_LOGGER_START(path);
-  DLIO_LOGGER_UPDATE(path);
   DLIO_LOGGER_UPDATE(mode);
   FILE *ret = __real_fopen(path, mode);
   DLIO_LOGGER_END();
