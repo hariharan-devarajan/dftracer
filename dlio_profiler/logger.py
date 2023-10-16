@@ -101,7 +101,7 @@ class fn_interceptor(object):
             if step is not None: self._arguments["step"] = step
             if image_idx is not None: self._arguments["image_idx"] = image_idx
             if image_size is not None: self._arguments["image_size"] = image_size
-            self._arguments = self._arguments.update(args)
+            self._arguments.update(args)
         return self
 
     def flush(self):
