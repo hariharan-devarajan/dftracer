@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <dlio_profiler/core/macro.h>
 #include <dlio_profiler/utils/utils.h>
+#include <sys/time.h>
 
 typedef std::chrono::high_resolution_clock chrono;
 
@@ -75,8 +76,9 @@ public:
     }
 
     inline TimeResolution get_time() {
-      auto t = get_current_time() - library_start;
-      return t;
+      struct timeval tv;
+      gettimeofday(&tv,NULL);
+      return 1000000 * tv.tv_sec + tv.tv_usec;
     }
 
     inline void log(std::string event_name, std::string category,
