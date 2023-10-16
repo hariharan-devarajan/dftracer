@@ -95,12 +95,13 @@ class fn_interceptor(object):
             self._t1 = dlio_logger.get_instance().get_time()
         return self
 
-    def update(self, epoch=None, step=None, image_idx=None, image_size=None):
+    def update(self, epoch=None, step=None, image_idx=None, image_size=None, args={}):
         if DLIO_PROFILER_ENABLE:
             if epoch is not None: self._arguments["epoch"] = epoch
             if step is not None: self._arguments["step"] = step
             if image_idx is not None: self._arguments["image_idx"] = image_idx
             if image_size is not None: self._arguments["image_size"] = image_size
+            self._arguments = self._arguments.update(args)
         return self
 
     def flush(self):
