@@ -8,12 +8,18 @@
 #include <dlio_profiler/brahma/stdio.h>
 #include <dlio_profiler/dlio_logger.h>
 
+void dlio_finalize() {
+  DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_FINI,
+                               ProfileType::PROFILER_ANY)->finalize();
+}
+
 dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileType type, const char *log_file,
                                                   const char *data_dirs, const int *process_id) : is_enabled(
         false), gotcha_priority(1), logger_level(cpplogger::LoggerType::LOG_ERROR), log_file(), data_dirs(),
         is_initialized(false), bind(false), enable_io(false), enable_stdio(false), enable_posix(false) {
   const char *user_init_type = getenv(DLIO_PROFILER_INIT);
   switch (type) {
+    case ProfileType::PROFILER_ANY:
     case ProfileType::PROFILER_PRELOAD: {
       if (stage == ProfilerStage::PROFILER_INIT) {
         if (user_init_type != nullptr && strcmp(user_init_type, "PRELOAD") == 0) {

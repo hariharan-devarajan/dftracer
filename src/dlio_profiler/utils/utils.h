@@ -60,6 +60,8 @@ inline void print_backtrace(void) {
   free(bt_syms);
 }
 
+void dlio_finalize();
+
 inline void signal_handler(int sig) {
   switch (sig) {
     case SIGHUP: {
@@ -68,8 +70,8 @@ inline void signal_handler(int sig) {
     }
     case SIGTERM: {
       DLIO_PROFILER_LOGDEBUG("terminate signal caught", 0);
-      //MPI_Finalize();
-      exit(0);
+      dlio_finalize();
+      exit(1);
       break;
     }
     default: {
