@@ -8,7 +8,7 @@ set(COMMON_ARGS workload=unet3d ++workload.train.computation_time=0.05
         ++workload.dataset.record_length=4096 ++workload.dataset.record_length_stdev=0
         ++workload.framework=tensorflow ++workload.reader.data_loader=tensorflow)
 set(formats npz hdf5 tfrecord png jpeg)
-set(lines 54 192 416 544 640)
+set(lines 40 192 416 544 640)
 list(LENGTH formats formats_length)
 math(EXPR formats_length "${formats_length} - 1")
 message(STATUS "Number of formats: ${formats_length}")
