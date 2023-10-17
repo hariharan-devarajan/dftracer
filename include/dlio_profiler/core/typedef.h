@@ -4,5 +4,5 @@
 
 #ifndef DLIO_PROFILER_TYPEDEF_H
 #define DLIO_PROFILER_TYPEDEF_H
-typedef unsigned long int TimeResolution;
+typedef unsigned long long int TimeResolution;
 #endif //DLIO_PROFILER_TYPEDEF_H
