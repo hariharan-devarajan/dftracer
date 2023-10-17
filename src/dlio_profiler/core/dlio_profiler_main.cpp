@@ -124,23 +124,26 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
           dlp_close(fd);
           unsigned long index = 0, prev = 0;
           if (strstr(proc_name, "python") != nullptr) {
-            index = strlen(proc_name);
+            index = strlen(proc_name) + 1;
             prev = index;
-          }
-          char exec_name[DLP_PATH_MAX];
-          while (index < read_bytes) {
-            if (proc_name[index] == '\0') {
-              strcpy(exec_name, proc_name + prev);
-              exec_file_name = basename(exec_name);
-              DLIO_PROFILER_LOGINFO("proc name %s", exec_file_name);
-              if (strstr(exec_file_name, "python") == nullptr) {
-                break;
-              }
-              prev = index + 1;
+            char exec_name[DLP_PATH_MAX];
+            while (index < read_bytes) {
+              if (proc_name[index] == '\0') {
+                strcpy(exec_name, proc_name + prev);
+                exec_file_name = basename(exec_name);
+                DLIO_PROFILER_LOGINFO("proc name %s", exec_file_name);
+                if (strstr(exec_file_name, "python") == nullptr) {
+                  break;
+                }
+                prev = index + 1;
 
+              }
+              index++;
             }
-            index++;
+          } else {
+            exec_file_name = basename(proc_name);
           }
+
         }
         DLIO_PROFILER_LOGDEBUG("Extracted process_name %s", exec_file_name);
         if (dlio_profiler_log != nullptr) {
