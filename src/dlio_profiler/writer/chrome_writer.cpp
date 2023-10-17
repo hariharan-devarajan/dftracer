@@ -74,7 +74,7 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
     pid = getpid();
   } else {
     pid = process_id;
-    tid = getpid();
+    tid = getpid() + std::hash<std::thread::id>{}(std::this_thread::get_id()) % 100000;
   }
   auto start_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(start_time);
   auto duration_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(duration);
