@@ -21,5 +21,6 @@
 #define CPP_LOG_CATEGORY "CPP_APP"
 #define C_LOG_CATEGORY "C_APP"
 const unsigned int DLP_PATH_MAX = 1024 * 4;
+const char SEPARATOR = ';';
 
 #endif //DLIO_PROFILER_CONSTANTS_H

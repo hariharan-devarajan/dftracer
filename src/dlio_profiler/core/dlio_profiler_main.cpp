@@ -114,45 +114,34 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
       DLIO_PROFILER_LOGDEBUG("Setting process_id to %d and thread id to %d", this->process_id, this->thread_id);
       if (_log_file == nullptr) {
         char *dlio_profiler_log = getenv(DLIO_PROFILER_LOG_FILE);
-        char proc_name[DLP_PATH_MAX], cmd[128];
+        char cmd[128];
         sprintf(cmd, "/proc/%d/cmdline", dlp_getpid());
         int fd = dlp_open(cmd, O_RDONLY);
-        const char *exec_file_name = nullptr;
-        if (fd != -1) {
-          ssize_t read_bytes = dlp_read(fd, proc_name, DLP_PATH_MAX);
-          DLIO_PROFILER_LOGINFO("Exec command line %s", proc_name);
-          dlp_close(fd);
-          unsigned long index = 0, prev = 0;
-          if (strstr(proc_name, "python") != nullptr) {
-            index = strlen(proc_name) + 1;
-            prev = index;
-            char exec_name[DLP_PATH_MAX];
-            while (index < read_bytes) {
-              if (proc_name[index] == '\0') {
-                strcpy(exec_name, proc_name + prev);
-                exec_file_name = basename(exec_name);
-                DLIO_PROFILER_LOGINFO("proc name %s", exec_file_name);
-                if (strstr(exec_file_name, "python") == nullptr) {
-                  break;
-                }
-                prev = index + 1;
+        std::string exec_name = "DEFAULT";
 
-              }
-              index++;
+        if (fd != -1) {
+          char exec_file_name[DLP_PATH_MAX];
+          ssize_t read_bytes = dlp_read(fd, exec_file_name, DLP_PATH_MAX);
+          dlp_close(fd);
+          ssize_t index = 0;
+          while (index < read_bytes - 1) {
+            if (exec_file_name[index] == '\0') {
+              exec_file_name[index] = SEPARATOR;
             }
-          } else {
-            exec_file_name = basename(proc_name);
+            index++;
+          }
+          DLIO_PROFILER_LOGINFO("Exec command line %s", exec_file_name);
+          auto items = split(exec_file_name, SEPARATOR);
+          for (const auto item : items) {
+            if (strstr(item.c_str(), "python") == nullptr) {
+              exec_name = basename(item.c_str());
+              break;
+            }
           }
         }
-        DLIO_PROFILER_LOGDEBUG("Extracted process_name %s", exec_file_name);
+        DLIO_PROFILER_LOGINFO("Extracted process_name %s", exec_name.c_str());
         if (dlio_profiler_log != nullptr) {
-          if (exec_file_name != nullptr) {
-            char filename[DLP_PATH_MAX];
-            sprintf(filename, "%s-%s-%ul.pfw", dlio_profiler_log, exec_file_name, this->process_id);
-            this->log_file = std::string(filename);
-          } else {
-            this->log_file = std::string(dlio_profiler_log) + "-" + std::to_string(this->process_id) + ".pfw";
-          }
+            this->log_file = std::string(dlio_profiler_log) + "-" + exec_name + "-" + std::to_string(this->process_id);
         } else {  // GCOV_EXCL_START
           DLIO_PROFILER_LOGERROR(UNDEFINED_LOG_FILE.message, "");
           throw std::runtime_error(UNDEFINED_LOG_FILE.code);
