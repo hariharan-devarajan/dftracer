@@ -31,9 +31,9 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
 void
 dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category, TimeResolution &start_time,
                                  TimeResolution &duration,
-                                 std::unordered_map<std::string, std::any> &metadata, int process_id, int tid) {
+                                 std::unordered_map<std::string, std::any> &metadata, ProcessID process_id, ThreadID thread_id) {
   if (fd != -1) {
-    std::string json = convert_json(event_name, category, start_time, duration, metadata, process_id, tid);
+    std::string json = convert_json(event_name, category, start_time, duration, metadata, process_id, thread_id);
     auto written_elements = dlp_write(fd, json.c_str(), json.size());
     if (written_elements != json.size()) {  // GCOVR_EXCL_START
       ERROR(written_elements != json.size(), "unable to log write %s fd %d for a+ written only %d of %d with error %s",
@@ -87,7 +87,7 @@ void dlio_profiler::ChromeWriter::finalize() {
 std::string
 dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &category, TimeResolution start_time,
                                           TimeResolution duration, std::unordered_map<std::string, std::any> &metadata,
-                                          int process_id, int thread_id) {
+                                          ProcessID process_id, ThreadID thread_id) {
   std::stringstream all_stream;
   if (is_first_write) all_stream << "   ";
   all_stream << R"({"id":")" << index++ << "\","

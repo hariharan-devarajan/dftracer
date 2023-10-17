@@ -3,6 +3,7 @@
 //
 
 #include <dlio_profiler/utils/posix_internal.h>
+#include <thread>
 
 int dlp_open(const char *pathname, int flags, ...) {
   mode_t mode;
@@ -47,10 +48,10 @@ ssize_t dlp_readlink(const char *path, char *buf, size_t bufsize) {
   return syscall(SYS_readlink, path, buf, bufsize);
 }
 
-pid_t dlp_gettid(){
+ThreadID dlp_gettid(){
   return syscall(SYS_gettid);
 }
 
-pid_t dlp_getpid(){
+ProcessID dlp_getpid(){
   return syscall(SYS_getpid);
 }
