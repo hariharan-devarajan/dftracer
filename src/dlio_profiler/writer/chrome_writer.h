@@ -25,10 +25,9 @@ namespace dlio_profiler {
 
         std::string
         convert_json(std::string &event_name, std::string &category, TimeResolution start_time, TimeResolution duration,
-                     std::unordered_map<std::string, std::any> &metadata, int process_id, int thread_id);
+                     std::unordered_map<std::string, std::any> &metadata, ProcessID process_id, ThreadID thread_id);
 
         bool is_first_write;
-        int process_id;
         std::unordered_map<int, std::mutex> mtx_map;
 
         std::vector<unsigned> core_affinity() {
@@ -67,7 +66,6 @@ namespace dlio_profiler {
           if (enable_compression_str != nullptr && strcmp(enable_compression_str, "1") == 0) {
             enable_compression = true;
           }
-          process_id = dlp_getpid();
           this->fd = fd;
           if (enable_core_affinity) {
             hwloc_topology_init(&topology);  // initialization
@@ -78,7 +76,7 @@ namespace dlio_profiler {
         void initialize(char *filename, bool throw_error) override;
 
         void log(std::string &event_name, std::string &category, TimeResolution &start_time, TimeResolution &duration,
-                 std::unordered_map<std::string, std::any> &metadata, int process_id, int tid) override;
+                 std::unordered_map<std::string, std::any> &metadata, ProcessID process_id, ThreadID tid) override;
 
         void finalize() override;
     };
