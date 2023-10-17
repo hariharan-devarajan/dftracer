@@ -143,7 +143,6 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
           } else {
             exec_file_name = basename(proc_name);
           }
-
         }
         DLIO_PROFILER_LOGDEBUG("Extracted process_name %s", exec_file_name);
         if (dlio_profiler_log != nullptr) {
