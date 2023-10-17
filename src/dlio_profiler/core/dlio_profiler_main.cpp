@@ -114,16 +114,16 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
       DLIO_PROFILER_LOGDEBUG("Setting process_id to %d and thread id to %d", this->process_id, this->thread_id);
       if (_log_file == nullptr) {
         char *dlio_profiler_log = getenv(DLIO_PROFILER_LOG_FILE);
-        char proc_name[PATH_MAX], cmd[128];
+        char proc_name[DLP_PATH_MAX], cmd[128];
         sprintf(cmd, "/proc/%d/cmdline", dlp_getpid());
         int fd = dlp_open(cmd, O_RDONLY);
         const char *exec_file_name = nullptr;
         if (fd != -1) {
-          ssize_t read_bytes = dlp_read(fd, proc_name, PATH_MAX);
+          ssize_t read_bytes = dlp_read(fd, proc_name, DLP_PATH_MAX);
           DLIO_PROFILER_LOGINFO("Exec command line %s", proc_name);
           dlp_close(fd);
           int index = 0, prev = 0;
-          char exec_name[PATH_MAX];
+          char exec_name[DLP_PATH_MAX];
           while (index < read_bytes) {
             if (proc_name[index] == '\0') {
               strcpy(exec_name, proc_name + prev);
