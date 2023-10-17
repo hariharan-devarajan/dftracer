@@ -136,6 +136,7 @@ inline void set_signal() {
   sigaction(SIGABRT, &sa, NULL);
   sigaction(SIGHUP, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
+  sigaction(SIGINT, &sa, NULL);
 }  // GCOVR_EXCL_STOP
 
 const std::string ignore_filenames[5] = {".pfw", "/pipe", "/socket", "/proc/self", ".py"};
