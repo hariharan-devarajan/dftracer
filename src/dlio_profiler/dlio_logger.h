@@ -21,7 +21,6 @@ typedef std::chrono::high_resolution_clock chrono;
 
 class DLIOLogger {
 private:
-    TimeResolution library_start;
     bool throw_error, include_metadata;
     std::shared_ptr<dlio_profiler::BaseWriter> writer;
     bool is_init;
@@ -66,12 +65,11 @@ public:
       writer = std::make_shared<dlio_profiler::ChromeWriter>(-1);
       writer->initialize(log_file.data(), this->throw_error);
       this->is_init = true;
-      library_start = get_time();
       DLIO_PROFILER_LOGINFO("Writing trace to %s with time %f", log_file.c_str(), library_start);
     }
 
     inline TimeResolution get_time() {
-      struct timeval tv;
+      struct timeval tv{};
       gettimeofday(&tv,NULL);
       return 1000000 * tv.tv_sec + tv.tv_usec;
     }
