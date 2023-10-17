@@ -105,8 +105,8 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
              << R"("cat":")" << category << "\","
              << "\"pid\":" << process_id << ","
              << "\"tid\":" << thread_id << ","
-             << "\"ts\":" << std::chrono::duration_cast<std::chrono::microseconds>(start_sec).count() << ","
-             << "\"dur\":" << std::chrono::duration_cast<std::chrono::microseconds>(duration_sec).count() << ","
+             << "\"ts\":" << start_time << ","
+             << "\"dur\":" << duration << ","
              << R"("ph":"X",)"
              << R"("args":{)";
   if (include_metadata) {

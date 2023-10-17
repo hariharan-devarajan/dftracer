@@ -21,7 +21,6 @@ typedef std::chrono::high_resolution_clock chrono;
 
 class DLIOLogger {
 private:
-    TimeResolution library_start;
     bool throw_error, include_metadata;
     std::shared_ptr<dlio_profiler::BaseWriter> writer;
     bool is_init;
@@ -60,23 +59,17 @@ public:
       update_log_file(log_file);
     }
 
-    inline TimeResolution get_current_time() {
-      return std::chrono::duration<TimeResolution>(
-              std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    }
-
     inline void update_log_file(std::string log_file, int process_id = -1, int tid = -1) {
       this->pid = process_id;
       this->tid = tid;
       writer = std::make_shared<dlio_profiler::ChromeWriter>(-1);
       writer->initialize(log_file.data(), this->throw_error);
       this->is_init = true;
-      library_start = get_current_time();
-      DLIO_PROFILER_LOGINFO("Writing trace to %s with time %f", log_file.c_str(), library_start);
+      DLIO_PROFILER_LOGINFO("Writing trace to %s", log_file.c_str());
     }
 
     inline TimeResolution get_time() {
-      struct timeval tv;
+      struct timeval tv{};
       gettimeofday(&tv,NULL);
       return 1000000 * tv.tv_sec + tv.tv_usec;
     }
