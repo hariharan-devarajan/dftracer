@@ -123,8 +123,8 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
           DLIO_PROFILER_LOGINFO("Exec command line %s", proc_name);
           dlp_close(fd);
           unsigned long index = 0, prev = 0;
-          if (strstr(exec_file_name, "python") != nullptr) {
-            index = strlen(exec_file_name);
+          if (strstr(proc_name, "python") != nullptr) {
+            index = strlen(proc_name);
             prev = index;
           }
           char exec_name[DLP_PATH_MAX];
@@ -132,6 +132,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
             if (proc_name[index] == '\0') {
               strcpy(exec_name, proc_name + prev);
               exec_file_name = basename(exec_name);
+              DLIO_PROFILER_LOGINFO("proc name %s", exec_file_name);
               if (strstr(exec_file_name, "python") == nullptr) {
                 break;
               }
