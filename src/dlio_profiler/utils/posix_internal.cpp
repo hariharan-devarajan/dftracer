@@ -49,7 +49,7 @@ ssize_t dlp_readlink(const char *path, char *buf, size_t bufsize) {
 }
 
 ThreadID dlp_gettid(){
-  return std::hash<std::thread::id>{}(std::this_thread::get_id());
+  return syscall(SYS_gettid);
 }
 
 ProcessID dlp_getpid(){

@@ -24,7 +24,7 @@ private:
     bool throw_error, include_metadata;
     std::shared_ptr<dlio_profiler::BaseWriter> writer;
     bool is_init;
-    int pid, tid;
+    ProcessID process_id;
 public:
     DLIOLogger(bool init_log = false) : is_init(false), include_metadata(false) {
       char *dlio_profiler_meta = getenv(DLIO_PROFILER_INC_METADATA);
@@ -36,32 +36,14 @@ public:
         throw_error = true; // GCOVR_EXCL_LINE
       }
       this->is_init = true;
-      int fd = -1;
       std::string log_file;
-      if (log_file.empty()) {
-        char *dlio_profiler_log_dir = getenv("DLIO_PROFILER_LOG_DIR");
-        if (dlio_profiler_log_dir == nullptr) {
-          fd = fileno(stderr);
-          log_file = "STDERR";
-        } else {
-          if (strcmp(dlio_profiler_log_dir, "STDERR") == 0) { // GCOV_EXCL_START
-            fd = fileno(stderr);
-            log_file = "STDERR";
-          } else if (strcmp(dlio_profiler_log_dir, "STDOUT") == 0) {
-            fd = fileno(stdout);
-            log_file = "STDOUT";
-          } else {
-            int pid = dlp_getpid();
-            log_file = std::string(dlio_profiler_log_dir) + "/" + "trace_ll_" + std::to_string(pid) + ".pfw";
-          } // GCOV_EXCL_STOP
-        }
+      if (!log_file.empty()) {
+        update_log_file(log_file);
       }
-      update_log_file(log_file);
     }
 
-    inline void update_log_file(std::string log_file, int process_id = -1, int tid = -1) {
-      this->pid = process_id;
-      this->tid = tid;
+    inline void update_log_file(std::string log_file, ProcessID process_id = -1) {
+      this->process_id = process_id;
       writer = std::make_shared<dlio_profiler::ChromeWriter>(-1);
       writer->initialize(log_file.data(), this->throw_error);
       this->is_init = true;
@@ -77,7 +59,8 @@ public:
     inline void log(std::string event_name, std::string category,
                     TimeResolution start_time, TimeResolution duration,
                     std::unordered_map<std::string, std::any> &metadata) {
-      writer->log(event_name, category, start_time, duration, metadata, pid, tid);
+      ThreadID tid = dlp_gettid() + this->process_id;
+      writer->log(event_name, category, start_time, duration, metadata, this->process_id, tid);
     }
 
     inline bool has_metadata() {

@@ -31,7 +31,6 @@ namespace dlio_profiler {
         std::string log_file;
         std::string data_dirs;
         ProcessID process_id;
-        ThreadID thread_id;
         bool is_initialized;
         bool bind;
         bool enable_posix;
