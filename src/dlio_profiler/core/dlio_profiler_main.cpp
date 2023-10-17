@@ -141,7 +141,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
         }
         DLIO_PROFILER_LOGINFO("Extracted process_name %s", exec_name.c_str());
         if (dlio_profiler_log != nullptr) {
-            this->log_file = std::string(dlio_profiler_log) + "-" + exec_name + "-" + std::to_string(this->process_id);
+            this->log_file = std::string(dlio_profiler_log) + "-" + exec_name + "-" + std::to_string(this->process_id) + ".pfw" ;
         } else {  // GCOV_EXCL_START
           DLIO_PROFILER_LOGERROR(UNDEFINED_LOG_FILE.message, "");
           throw std::runtime_error(UNDEFINED_LOG_FILE.code);
