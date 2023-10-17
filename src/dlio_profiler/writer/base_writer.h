@@ -5,9 +5,11 @@
 #ifndef DLIO_PROFILER_BASE_WRITER_H
 #define DLIO_PROFILER_BASE_WRITER_H
 
-#include <unordered_map>
 #include <any>
-#include <dlio_profiler/core/common.h>
+#include <dlio_profiler/utils/utils.h>
+#include <unordered_map>
+#include <dlio_profiler/utils/posix_internal.h>
+#include <dlio_profiler/core/typedef.h>
 
 namespace dlio_profiler {
     class BaseWriter {
@@ -21,7 +23,7 @@ namespace dlio_profiler {
 
         virtual void log(std::string &event_name, std::string &category,
                          TimeResolution &start_time, TimeResolution &duration,
-                         std::unordered_map<std::string, std::any> &metadata, int process_id) = 0;
+                         std::unordered_map<std::string, std::any> &metadata, int process_id, int tid) = 0;
 
         virtual void finalize() = 0;
 

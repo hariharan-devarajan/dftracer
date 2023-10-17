@@ -4,6 +4,7 @@
 
 #ifndef DLIO_PROFILER_SINGLETON_H
 #define DLIO_PROFILER_SINGLETON_H
+
 #include <iostream>
 #include <memory>
 #include <utility>
@@ -13,7 +14,7 @@
  * @tparam T
  */
 namespace dlio_profiler {
-    template <typename T>
+    template<typename T>
     class Singleton {
     public:
         /**
@@ -24,7 +25,7 @@ namespace dlio_profiler {
          * @tparam T
          * @return instance of T
          */
-        template <typename... Args>
+        template<typename... Args>
         static std::shared_ptr<T> get_instance(Args... args) {
           if (instance == nullptr)
             instance = std::shared_ptr<T>(new T(std::forward<Args>(args)...));
@@ -34,19 +35,20 @@ namespace dlio_profiler {
         /**
          * Operators
          */
-        Singleton& operator=(const Singleton) = delete; /* deleting = operatos*/
+        Singleton &operator=(const Singleton) = delete; /* deleting = operatos*/
         /**
          * Constructor
          */
     public:
-        Singleton(const Singleton&) = delete; /* deleting copy constructor. */
+        Singleton(const Singleton &) = delete; /* deleting copy constructor. */
 
     protected:
         static std::shared_ptr<T> instance;
+
         Singleton() {} /* hidden default constructor. */
     };
 
-    template <typename T>
+    template<typename T>
     std::shared_ptr<T> Singleton<T>::instance = nullptr;
 }  // namespace dlio_profiler
 #endif //DLIO_PROFILER_SINGLETON_H
