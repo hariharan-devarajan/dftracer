@@ -120,6 +120,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
         const char *exec_file_name = nullptr;
         if (fd != -1) {
           ssize_t read_bytes = dlp_read(fd, proc_name, PATH_MAX);
+          DLIO_PROFILER_LOGINFO("Exec command line %s", proc_name);
           dlp_close(fd);
           int index = 0, prev = 0;
           char exec_name[PATH_MAX];
