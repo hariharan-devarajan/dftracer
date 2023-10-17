@@ -147,12 +147,12 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
         DLIO_PROFILER_LOGDEBUG("Extracted process_name %s", exec_file_name);
         if (dlio_profiler_log != nullptr) {
           if (exec_file_name != nullptr) {
-            this->log_file = std::string(dlio_profiler_log) + "-" + std::string(exec_file_name) + "-" +
-                             std::to_string(this->process_id) + ".pfw";
+            char filename[DLP_PATH_MAX];
+            sprintf(filename, "%s-%s-%ul.pfw", dlio_profiler_log, exec_file_name, this->process_id);
+            this->log_file = std::string(filename);
           } else {
             this->log_file = std::string(dlio_profiler_log) + "-" + std::to_string(this->process_id) + ".pfw";
           }
-
         } else {  // GCOV_EXCL_START
           DLIO_PROFILER_LOGERROR(UNDEFINED_LOG_FILE.message, "");
           throw std::runtime_error(UNDEFINED_LOG_FILE.code);
