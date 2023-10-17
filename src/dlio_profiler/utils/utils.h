@@ -74,8 +74,15 @@ inline void signal_handler(int sig) {
       exit(1);
       break;
     }
+    case SIGINT: {
+      DLIO_PROFILER_LOGDEBUG("terminate signal caught", 0);
+      dlio_finalize();
+      exit(sig);
+      break;
+    }
     default: {
       DLIO_PROFILER_LOGINFO("signal caught %d", sig);
+      dlio_finalize();
       //print_backtrace();
       void *array[20];
       size_t size;
