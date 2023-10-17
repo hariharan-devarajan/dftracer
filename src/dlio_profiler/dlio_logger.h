@@ -60,18 +60,13 @@ public:
       update_log_file(log_file);
     }
 
-    inline TimeResolution get_current_time() {
-      return std::chrono::duration<TimeResolution>(
-              std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    }
-
     inline void update_log_file(std::string log_file, int process_id = -1, int tid = -1) {
       this->pid = process_id;
       this->tid = tid;
       writer = std::make_shared<dlio_profiler::ChromeWriter>(-1);
       writer->initialize(log_file.data(), this->throw_error);
       this->is_init = true;
-      library_start = get_current_time();
+      library_start = get_time();
       DLIO_PROFILER_LOGINFO("Writing trace to %s with time %f", log_file.c_str(), library_start);
     }
 
