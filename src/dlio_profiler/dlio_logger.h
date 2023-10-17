@@ -65,7 +65,7 @@ public:
       writer = std::make_shared<dlio_profiler::ChromeWriter>(-1);
       writer->initialize(log_file.data(), this->throw_error);
       this->is_init = true;
-      DLIO_PROFILER_LOGINFO("Writing trace to %s with time %f", log_file.c_str(), library_start);
+      DLIO_PROFILER_LOGINFO("Writing trace to %s", log_file.c_str());
     }
 
     inline TimeResolution get_time() {
