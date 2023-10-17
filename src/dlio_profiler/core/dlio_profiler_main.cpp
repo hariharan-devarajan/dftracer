@@ -122,7 +122,11 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
           ssize_t read_bytes = dlp_read(fd, proc_name, DLP_PATH_MAX);
           DLIO_PROFILER_LOGINFO("Exec command line %s", proc_name);
           dlp_close(fd);
-          int index = 0, prev = 0;
+          unsigned long index = 0, prev = 0;
+          if (strstr(exec_file_name, "python") != nullptr) {
+            index = strlen(exec_file_name);
+            prev = index;
+          }
           char exec_name[DLP_PATH_MAX];
           while (index < read_bytes) {
             if (proc_name[index] == '\0') {
