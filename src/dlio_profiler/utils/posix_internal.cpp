@@ -41,7 +41,11 @@ int dlp_close(int fd) {
 }
 
 int dlp_unlink(const char* filename) {
+#if defined(SYS_unlink)
   return syscall(SYS_unlink, filename);
+#else
+  return syscall(SYS_unlinkat, filename);
+#endif  
 }
 
 int dlp_fsync(int fd) { // GCOV_EXCL_START
@@ -49,7 +53,11 @@ int dlp_fsync(int fd) { // GCOV_EXCL_START
 } // GCOV_EXCL_STOP
 
 ssize_t dlp_readlink(const char *path, char *buf, size_t bufsize) {
+#ifdef SYS_readlink
   return syscall(SYS_readlink, path, buf, bufsize);
+#else
+  return syscall(SYS_readlinkat, path, buf, bufsize);
+#endif
 }
 
 ThreadID dlp_gettid(){
