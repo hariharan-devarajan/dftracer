@@ -21,6 +21,7 @@
 #include <csignal>
 #include "typedef.h"
 #include <dlio_profiler/core/typedef.h>
+#include <dlio_profiler/dlio_logger.h>
 
 namespace dlio_profiler {
     class DLIOProfilerCore {
@@ -36,6 +37,7 @@ namespace dlio_profiler {
         bool enable_posix;
         bool enable_stdio;
         bool enable_io;
+        std::shared_ptr<DLIOLogger> logger;
 
         void initlialize(bool is_init, bool _bind, const char *_log_file = nullptr, const char *_data_dirs = nullptr,
                          const int *_process_id = nullptr);

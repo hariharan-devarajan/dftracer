@@ -55,7 +55,7 @@ void dlio_profiler::DLIOProfilerCore::log(const char *event_name, const char *ca
                                           TimeResolution duration,
                                           std::unordered_map<std::string, std::any> &metadata) {
   if (this->is_initialized && is_enabled) {
-    dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->
+    this->logger->
             log(event_name, category, start_time, duration, metadata);
   }
 }
@@ -63,7 +63,7 @@ void dlio_profiler::DLIOProfilerCore::log(const char *event_name, const char *ca
 bool dlio_profiler::DLIOProfilerCore::finalize() {
   if (this->is_initialized && is_enabled) {
     DLIO_PROFILER_LOGINFO("Calling finalize on pid %d", this->process_id);
-    dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->finalize();
+    this->logger->finalize();
     if (bind && enable_io) {
       free_bindings();
     }
@@ -79,6 +79,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
   this->bind = _bind;
   set_signal();
   if (is_init) {
+    this->logger = dlio_profiler::Singleton<DLIOLogger>::get_instance();
     char *dlio_profiler_log_level = getenv(DLIO_PROFILER_LOG_LEVEL);
     if (dlio_profiler_log_level == nullptr) {  // GCOV_EXCL_START
       logger_level = cpplogger::LoggerType::LOG_ERROR;
@@ -160,7 +161,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
         this->data_dirs = _data_dirs;
       }
       DLIO_PROFILER_LOGDEBUG("Setting data_dirs to %s", this->data_dirs.c_str());
-      dlio_profiler::Singleton<DLIOLogger>::get_instance()->update_log_file(this->log_file, this->process_id);
+      this->logger->update_log_file(this->log_file, this->process_id);
       if (bind) {
         char *disable_io = getenv(DLIO_PROFILER_DISABLE_IO);
         char *disable_posix = getenv(DLIO_PROFILER_DISABLE_POSIX);
@@ -195,7 +196,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
 
 TimeResolution dlio_profiler::DLIOProfilerCore::get_time() {
   if (this->is_initialized && is_enabled) {
-    return dlio_profiler::Singleton<DLIOLogger>::get_instance(false)->get_time();
+    return this->logger->get_time();
   }
   return -1;
 }
