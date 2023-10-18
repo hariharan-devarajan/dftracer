@@ -26,6 +26,8 @@ int dlp_fsync(int fd);
 
 ssize_t dlp_readlink(const char *path, char *buf, size_t bufsize);
 
+int dlp_unlink(const char* filename);
+
 ThreadID dlp_gettid();
 
 ProcessID dlp_getpid();
