@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <syscall.h>
+#include <dlio_profiler/core/typedef.h>
 
 int dlp_open(const char *pathname, int flags, ...);
 
@@ -25,8 +26,10 @@ int dlp_fsync(int fd);
 
 ssize_t dlp_readlink(const char *path, char *buf, size_t bufsize);
 
-pid_t dlp_gettid();
+int dlp_unlink(const char* filename);
 
-pid_t dlp_getpid();
+ThreadID dlp_gettid();
+
+ProcessID dlp_getpid();
 
 #endif // DLIO_PROFILER_POSIX_INTERNAL_H

@@ -20,6 +20,7 @@
 #include <any>
 #include <csignal>
 #include "typedef.h"
+#include <dlio_profiler/core/typedef.h>
 
 namespace dlio_profiler {
     class DLIOProfilerCore {
@@ -29,7 +30,7 @@ namespace dlio_profiler {
         cpplogger::LoggerType logger_level;
         std::string log_file;
         std::string data_dirs;
-        int process_id, thread_id;
+        ProcessID process_id;
         bool is_initialized;
         bool bind;
         bool enable_posix;

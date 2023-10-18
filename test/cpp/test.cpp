@@ -73,7 +73,6 @@ int main(int argc, char *argv[]) {
   fd = openat(dd, "demofile2.txt", O_WRONLY | O_CREAT, 777);
   if (fd != -1) close(fd);
   close(dd);
-  char filename2[1024];
   sprintf(filename, "%s/demofile2.txt", argv[1]);
   fd = creat64(filename, O_RDWR);
   if (fd != -1) close(fd);
@@ -89,7 +88,6 @@ int main(int argc, char *argv[]) {
   readlinkat(fd, filename, buf, 1);
   ftruncate(fd, 0);
   close(fd);
-  remove(filename2);
   remove(filename);
   remove(filename_link);
   remove("demofile_link2.txt");

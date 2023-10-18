@@ -19,7 +19,7 @@
 
 void dlio_finalize();
 
-inline void signal_handler(int sig) {
+inline void signal_handler(int sig) {  // GCOVR_EXCL_START
   switch (sig) {
     case SIGTERM: {
       DLIO_PROFILER_LOGDEBUG("terminate signal caught", 0);
@@ -46,7 +46,7 @@ inline void signal_handler(int sig) {
     }
 
   }
-}
+} // GCOVR_EXCL_STOP
 
 inline void set_signal() {
   struct sigaction sa;
