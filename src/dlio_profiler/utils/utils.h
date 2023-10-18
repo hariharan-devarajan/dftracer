@@ -106,7 +106,7 @@ inline std::pair<bool, std::string> is_traced_common(const char *filename, const
   (void) data;
   if (ignore_files(resolved_path) || ignore_files(filename)) {
     DLIO_PROFILER_LOGDEBUG("Profiler ignoring file %s for func %s", resolved_path, func);
-    return std::pair<bool, std::string>(false, filename);
+    return std::pair<bool, std::string>(false, resolved_path);
   }
   for (const auto file : ignore_filename) {
     if (strstr(resolved_path, file.c_str()) != NULL) {
@@ -128,7 +128,7 @@ inline std::pair<bool, std::string> is_traced_common(const char *filename, const
   else {
     DLIO_PROFILER_LOGWARN("Profiler Intercepted POSIX tracing file %s for func %s", resolved_path, func);
   }
-  return std::pair<bool, std::string>(found, filename);
+  return std::pair<bool, std::string>(found, resolved_path);
 }
 
 #endif // DLIO_PROFILER_UTILS_H
