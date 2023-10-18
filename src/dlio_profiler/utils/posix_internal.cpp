@@ -41,7 +41,11 @@ int dlp_close(int fd) {
 }
 
 int dlp_unlink(const char* filename) {
+#if defined(SYS_unlink)
   return syscall(SYS_unlink, filename);
+#else
+  return syscall(SYS_unlinkat, filename);
+#endif  
 }
 
 int dlp_fsync(int fd) { // GCOV_EXCL_START
