@@ -113,7 +113,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
       if (_log_file == nullptr) {
         char *dlio_profiler_log = getenv(DLIO_PROFILER_LOG_FILE);
         char cmd[128];
-        sprintf(cmd, "/proc/%d/cmdline", dlp_getpid());
+        sprintf(cmd, "/proc/%lu/cmdline", dlp_getpid());
         int fd = dlp_open(cmd, O_RDONLY);
         std::string exec_name = "DEFAULT";
 
@@ -128,7 +128,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const cha
             }
             index++;
           }
-          DLIO_PROFILER_LOGINFO("Exec command line %s", exec_file_name);
+          DLIO_PROFILER_LOGDEBUG("Exec command line %s", exec_file_name);
           auto items = split(exec_file_name, SEPARATOR);
           for (const auto item : items) {
             if (strstr(item.c_str(), "python") == nullptr) {
