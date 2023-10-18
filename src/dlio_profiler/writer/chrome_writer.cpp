@@ -95,16 +95,6 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
                                           TimeResolution duration, std::unordered_map<std::string, std::any> &metadata,
                                           ProcessID process_id, ThreadID thread_id) {
   std::stringstream all_stream;
-  int tid, pid;
-  if (process_id == -1) {
-    tid = std::hash<std::thread::id>{}(std::this_thread::get_id()) % 100000;
-    pid = getpid();
-  } else {
-    pid = process_id;
-    tid = getpid() + std::hash<std::thread::id>{}(std::this_thread::get_id()) % 100000;
-  }
-  auto start_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(start_time);
-  auto duration_sec = std::chrono::duration<TimeResolution, std::ratio<1>>(duration);
   if (is_first_write) all_stream << "   ";
   all_stream << R"({"id":")" << index++ << "\","
              << R"("name":")" << event_name << "\","
