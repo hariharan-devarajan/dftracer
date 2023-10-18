@@ -13,6 +13,7 @@ else
     echo "Parsed JSON successfully and got something other than false/null";
   else
     echo "Failed to parse JSON, or got false/null";
+    jq --slurp -e <<< `cat $1 | grep -v "\["   | awk '{$1=$1;print}'`
     cat $1
     exit 1
   fi
