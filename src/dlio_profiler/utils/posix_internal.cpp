@@ -40,6 +40,10 @@ int dlp_close(int fd) {
   return syscall(SYS_close, fd);
 }
 
+int dlp_unlink(const char* filename) {
+  return syscall(SYS_unlink, filename);
+}
+
 int dlp_fsync(int fd) { // GCOV_EXCL_START
   return syscall(SYS_fsync, fd);
 } // GCOV_EXCL_STOP
