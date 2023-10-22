@@ -69,7 +69,8 @@ def init():
 
 
 def main():
-    t1 = threading.Thread(target=posix_calls, args=(10, False))
+    posix_calls((20,False))
+    t1 = threading.Thread(target=posix_calls, args=((10, False),))
     custom_events()
     t2 = threading.Thread(target=npz_calls, args=(1,))
     t3 = threading.Thread(target=jpeg_calls, args=(2,))

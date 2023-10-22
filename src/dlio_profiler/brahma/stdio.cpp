@@ -5,9 +5,10 @@
 #include <dlio_profiler/brahma/stdio.h>
 #include <dlio_profiler/dlio_logger.h>
 
-#define CATEGORY "STDIO"
+static ConstEventType CATEGORY = "STDIO";
 
 std::shared_ptr<brahma::STDIODLIOProfiler> brahma::STDIODLIOProfiler::instance = nullptr;
+bool brahma::STDIODLIOProfiler::stop_trace = false;
 
 FILE *brahma::STDIODLIOProfiler::fopen64(const char *path, const char *mode) {
   BRAHMA_MAP_OR_FAIL(fopen64);
@@ -15,7 +16,7 @@ FILE *brahma::STDIODLIOProfiler::fopen64(const char *path, const char *mode) {
   DLIO_LOGGER_UPDATE(mode);
   FILE *ret = __real_fopen64(path, mode);
   DLIO_LOGGER_END();
-  if (trace) this->trace(ret);
+  if (trace) this->trace(ret, path);
   return ret;
 }
 
@@ -25,7 +26,7 @@ FILE *brahma::STDIODLIOProfiler::fopen(const char *path, const char *mode) {
   DLIO_LOGGER_UPDATE(mode);
   FILE *ret = __real_fopen(path, mode);
   DLIO_LOGGER_END();
-  if (trace) this->trace(ret);
+  if (trace) this->trace(ret, path);
   return ret;
 }
 

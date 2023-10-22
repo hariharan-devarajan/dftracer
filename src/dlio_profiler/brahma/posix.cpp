@@ -4,10 +4,10 @@
 #include <cpp-logger/logger.h>
 #include <dlio_profiler/brahma/posix.h>
 
-#define CATEGORY "POSIX"
+static ConstEventType CATEGORY = "POSIX";
 
 std::shared_ptr<brahma::POSIXDLIOProfiler> brahma::POSIXDLIOProfiler::instance = nullptr;
-
+bool brahma::POSIXDLIOProfiler::stop_trace = false;
 int brahma::POSIXDLIOProfiler::open(const char *pathname, int flags, ...) {
   BRAHMA_MAP_OR_FAIL(open);
   DLIO_LOGGER_START(pathname);
@@ -25,7 +25,7 @@ int brahma::POSIXDLIOProfiler::open(const char *pathname, int flags, ...) {
   DLIO_LOGGER_UPDATE(flags)
   DLIO_LOGGER_UPDATE(ret);
   DLIO_LOGGER_END();
-  if (trace) this->trace(ret);
+  if (trace) this->trace(ret, pathname);
   return ret;
 }
 
@@ -81,7 +81,7 @@ int brahma::POSIXDLIOProfiler::creat64(const char *path, mode_t mode) {
   int ret = __real_creat64(path, mode);
   DLIO_LOGGER_UPDATE(ret);
   DLIO_LOGGER_END();
-  if (trace) this->trace(path);
+  if (trace) this->trace(ret, path);
   return ret;
 }
 
@@ -102,7 +102,7 @@ int brahma::POSIXDLIOProfiler::open64(const char *path, int flags, ...) {
   DLIO_LOGGER_UPDATE(flags)
   DLIO_LOGGER_UPDATE(ret);
   DLIO_LOGGER_END();
-  if (trace) this->trace(path);
+  if (trace) this->trace(ret, path);
   return ret;
 }
 

@@ -20,32 +20,47 @@ namespace dlio_profiler {
 
 
     void initialize(const char *log_file, const char *data_dirs, int process_id) {
+      DLIO_PROFILER_LOGDEBUG("py.initialize","");
       dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_INIT,
                                                                               ProfileType::PROFILER_PY_APP, log_file,
                                                                               data_dirs, &process_id);
     }
 
     TimeResolution get_time() {
-      return dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_OTHER,
-                                                                                     ProfileType::PROFILER_PY_APP)->get_time();
+      DLIO_PROFILER_LOGDEBUG("py.get_time","");
+      auto dlio_profiler_inst = dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_OTHER,
+                                                                                   ProfileType::PROFILER_PY_APP);
+      if (dlio_profiler_inst != nullptr) return dlio_profiler_inst->get_time();
+      return 0;
     }
 
-    void log_event(std::string &name, std::string &cat, TimeResolution start_time, TimeResolution duration,
+    void log_event(std::string name, std::string cat, TimeResolution start_time, TimeResolution duration,
                    std::unordered_map<std::string, int> &int_args,
                    std::unordered_map<std::string, std::string> &string_args,
                    std::unordered_map<std::string, float> &float_args) {
+      DLIO_PROFILER_LOGDEBUG("py.log_event","");
       auto args = std::unordered_map<std::string, std::any>();
       for (auto item:int_args) args.insert_or_assign(item.first, item.second);
       for (auto item:string_args) args.insert_or_assign(item.first, item.second);
       for (auto item:float_args) args.insert_or_assign(item.first, item.second);
-      dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_OTHER,
-                                                                              ProfileType::PROFILER_PY_APP)->log(
-              name.c_str(), cat.c_str(), start_time, duration, args);
+      auto dlio_profiler_inst = dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_OTHER,
+                                                                              ProfileType::PROFILER_PY_APP);
+      if (dlio_profiler_inst != nullptr) dlio_profiler_inst->log(name.c_str(), cat.c_str(), start_time, duration, &args);
     }
 
     void finalize() {
-      dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_FINI,
-                                                                              ProfileType::PROFILER_PY_APP)->finalize();
+      DLIO_PROFILER_LOGDEBUG("py.finalize","");
+      const char *user_init_type = getenv(DLIO_PROFILER_INIT);
+      if (user_init_type == nullptr || strcmp(user_init_type, "FUNCTION") == 0) {
+        auto dlio_profiler_inst = dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(
+                ProfilerStage::PROFILER_FINI,
+                ProfileType::PROFILER_PY_APP);
+        if (dlio_profiler_inst != nullptr) {
+          dlio_profiler_inst->finalize();
+          dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::finalize();
+        }
+      }
+      DLIO_PROFILER_LOGINFO("Finalized Py Binding","");
     }
 } // dlio_profiler
 PYBIND11_MODULE(dlio_profiler_py, m) {

@@ -19,56 +19,56 @@ namespace fs = std::filesystem;
 namespace brahma {
     class STDIODLIOProfiler : public STDIO {
     private:
+        static bool stop_trace;
         static std::shared_ptr<STDIODLIOProfiler> instance;
-        std::unordered_set<FILE *> tracked_fh;
-        std::vector<std::string> track_filename;
-        std::vector<std::string> ignore_filename;
+        std::unordered_map<FILE *, std::string> tracked_fh;
         std::shared_ptr<DLIOLogger> logger;
+        bool trace_all_files;
 
-        inline std::pair<bool, std::string> is_traced(FILE *fh, const char *func) {
-          if (fh == NULL) return std::pair<bool, std::string>(false, "");
+        inline const char* is_traced(FILE *fh, const char *func) {
+          DLIO_PROFILER_LOGDEBUG("Calling STDIODLIOProfiler.is_traced for %s",func);
+          if (fh == NULL) return nullptr;
           auto iter = tracked_fh.find(fh);
-          if (iter != tracked_fh.end()) return std::pair<bool, std::string>(true, "");
-          return is_traced(get_filename(fileno(fh)).c_str(), func);
+          if (iter != tracked_fh.end()) {
+            return iter->second.c_str();
+          }
+          return nullptr;
         }
 
-        inline std::pair<bool, std::string> is_traced(const char *filename, const char *func) {
-          return is_traced_common(filename, func, ignore_filename, track_filename);
+        inline const char* is_traced(const char *filename, const char *func) {
+          DLIO_PROFILER_LOGDEBUG("Calling STDIODLIOProfiler.is_traced with filename for %s",func);
+          if (stop_trace) return nullptr;
+          if (trace_all_files) return filename;
+          else return is_traced_common(filename, func);
         }
 
-        inline void trace(FILE *fh) {
-          tracked_fh.insert(fh);
+        inline void trace(FILE *fh, const char* filename) {
+          DLIO_PROFILER_LOGDEBUG("Calling STDIODLIOProfiler.trace with filename", "");
+          tracked_fh.insert_or_assign(fh, filename);
         }
 
         inline void remove_trace(FILE *fh) {
+          DLIO_PROFILER_LOGDEBUG("Calling STDIODLIOProfiler.remove_trace with filename", "");
           tracked_fh.erase(fh);
         }
 
     public:
-        STDIODLIOProfiler() : STDIO(), tracked_fh(), track_filename() {
-          DLIO_PROFILER_LOGINFO("STDIO class intercepted", "");
+        STDIODLIOProfiler(bool trace_all) : STDIO(), tracked_fh(), trace_all_files(trace_all)  {
+          DLIO_PROFILER_LOGDEBUG("STDIO class intercepted", "");
           logger = DLIO_LOGGER_INIT();
         }
-
-        inline void trace(const char *filename) {
-          char resolved_path[PATH_MAX];
-          char *data = realpath(filename, resolved_path);
-          (void) data;
-          track_filename.push_back(resolved_path);
+        void finalize() {
+          DLIO_PROFILER_LOGDEBUG("Finalizing STDIODLIOProfiler","");
+          stop_trace = true;
         }
+        ~STDIODLIOProfiler() {
+          DLIO_PROFILER_LOGDEBUG("Destructing STDIODLIOProfiler","");
+        };
 
-        inline void untrace(const char *filename) {
-          char resolved_path[PATH_MAX];
-          char *data = realpath(filename, resolved_path);
-          (void) data;
-          ignore_filename.push_back(resolved_path);
-        }
-
-        ~STDIODLIOProfiler() = default;
-
-        static std::shared_ptr<STDIODLIOProfiler> get_instance() {
-          if (instance == nullptr) {
-            instance = std::make_shared<STDIODLIOProfiler>();
+        static std::shared_ptr<STDIODLIOProfiler> get_instance(bool trace_all = false) {
+          DLIO_PROFILER_LOGDEBUG("STDIO class get_instance", "");
+          if (!stop_trace && instance == nullptr) {
+            instance = std::make_shared<STDIODLIOProfiler>(trace_all);
             STDIO::set_instance(instance);
           }
           return instance;

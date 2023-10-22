@@ -13,6 +13,9 @@
 #include <dlio_profiler/core/constants.h>
 #include <dlio_profiler/core/macro.h>
 #include <brahma/brahma.h>
+#include <dlio_profiler/brahma/posix.h>
+#include <dlio_profiler/brahma/stdio.h>
+#include <dlio_profiler/dlio_logger.h>
 #include <execinfo.h>
 #include <dlio_profiler/core/singleton.h>
 #include <dlio_profiler/core/enumeration.h>
@@ -37,26 +40,30 @@ namespace dlio_profiler {
         bool enable_posix;
         bool enable_stdio;
         bool enable_io;
-        std::shared_ptr<DLIOLogger> logger;
-
+        bool trace_all_files;
         void initlialize(bool is_init, bool _bind, const char *_log_file = nullptr, const char *_data_dirs = nullptr,
                          const int *_process_id = nullptr);
 
     public:
+        bool include_metadata;
         DLIOProfilerCore(ProfilerStage stage, ProfileType type, const char *log_file = nullptr,
                          const char *data_dirs = nullptr, const int *process_id = nullptr);
 
         inline bool is_active() {
+          DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore.is_active","");
           return is_enabled;
         }
 
         TimeResolution get_time();
 
-        void log(const char *event_name, const char *category,
+        void log(ConstEventType event_name, ConstEventType category,
                  TimeResolution start_time, TimeResolution duration,
-                 std::unordered_map<std::string, std::any> &metadata);
+                 std::unordered_map<std::string, std::any> *metadata);
 
         bool finalize();
+        ~DLIOProfilerCore(){
+          DLIO_PROFILER_LOGDEBUG("Destructing DLIOProfilerCore","");
+        }
     };
 }  // namespace dlio_profiler
 
