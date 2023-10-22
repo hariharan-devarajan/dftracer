@@ -11,11 +11,10 @@
 #include <sstream>
 #include <cmath>
 
-#define ERROR(cond, format, ...) \
-  DLIO_PROFILER_LOGERROR(format, __VA_ARGS__); \
-  if (this->throw_error) assert(cond);
+
 
 void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
+  DLIO_PROFILER_LOGDEBUG("ChromeWriter.initialize","");
   this->throw_error = throw_error;
   this->filename = filename;
   if (fd == -1) {
@@ -29,23 +28,25 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
 }
 
 void
-dlio_profiler::ChromeWriter::log(std::string &event_name, std::string &category, TimeResolution &start_time,
+dlio_profiler::ChromeWriter::log(ConstEventType event_name, ConstEventType category, TimeResolution &start_time,
                                  TimeResolution &duration,
-                                 std::unordered_map<std::string, std::any> &metadata, ProcessID process_id, ThreadID thread_id) {
+                                 std::unordered_map<std::string, std::any> *metadata, ProcessID process_id, ThreadID thread_id) {
+  DLIO_PROFILER_LOGDEBUG("ChromeWriter.log","");
   if (fd != -1) {
-    std::string json = convert_json(event_name, category, start_time, duration, metadata, process_id, thread_id);
-    auto written_elements = dlp_write(fd, json.c_str(), json.size());
-    if (written_elements != json.size()) {  // GCOVR_EXCL_START
-      ERROR(written_elements != json.size(), "unable to log write %s fd %d for a+ written only %d of %d with error %s",
-            filename.c_str(), fd, written_elements, json.size(), strerror(errno));
-    }  // GCOVR_EXCL_STOP
+    int size;
+    char data[MAX_LINE_SIZE];
+    convert_json(event_name, category, start_time, duration, metadata, process_id, thread_id, &size, data);
+    merge_buffer(data, size);
   }
   is_first_write = false;
 }
 
 void dlio_profiler::ChromeWriter::finalize() {
+  DLIO_PROFILER_LOGDEBUG("ChromeWriter.finalize","");
   if (fd != -1) {
-    DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s\n", filename.c_str());
+    DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s", filename.c_str());
+    write_buffer_op();
+    free(write_buffer);
     int status = dlp_close(fd);
     if (status != 0) {
       ERROR(status != 0, "unable to close log file %d for a+", filename.c_str());  // GCOVR_EXCL_LINE
@@ -54,6 +55,7 @@ void dlio_profiler::ChromeWriter::finalize() {
       DLIO_PROFILER_LOGINFO("No trace data written. Deleting file %s", filename.c_str());
       dlp_unlink(filename.c_str());
     } else {
+      DLIO_PROFILER_LOGINFO("Profiler writing the final symbol", "");
       fd = dlp_open(this->filename.c_str(), O_WRONLY);
       if (fd == -1) {
         ERROR(fd == -1, "unable to open log file %s with O_WRONLY", this->filename.c_str());  // GCOVR_EXCL_LINE
@@ -61,12 +63,12 @@ void dlio_profiler::ChromeWriter::finalize() {
       std::string data = "[\n";
       auto written_elements = dlp_write(fd, data.c_str(), data.size());
       if (written_elements != data.size()) {  // GCOVR_EXCL_START
-        ERROR(written_elements != data.size(), "unable to finalize log write %s for r+ written only %d of %d",
+        ERROR(written_elements != data.size(), "unable to finalize log write %s for O_WRONLY written only %d of %d",
               filename.c_str(), data.size(), written_elements);
       } // GCOVR_EXCL_STOP
       status = dlp_close(fd);
       if (status != 0) {
-        ERROR(status != 0, "unable to close log file %d for r+", filename.c_str());  // GCOVR_EXCL_LINE
+        ERROR(status != 0, "unable to close log file %d for O_WRONLY", filename.c_str());  // GCOVR_EXCL_LINE
       }
       if (enable_compression) {
         if (system("which gzip > /dev/null 2>&1")) {
@@ -74,7 +76,7 @@ void dlio_profiler::ChromeWriter::finalize() {
         } else {
           DLIO_PROFILER_LOGINFO("Applying Gzip compression on file %s", filename.c_str());
           char cmd[2048];
-          sprintf(cmd, "gzip %s", filename.c_str());
+          sprintf(cmd, "gzip -f %s", filename.c_str());
           int ret = system(cmd);
           if (ret == 0) {
             DLIO_PROFILER_LOGINFO("Successfully compressed file %s.gz", filename.c_str());
@@ -87,26 +89,21 @@ void dlio_profiler::ChromeWriter::finalize() {
   if (enable_core_affinity) {
     hwloc_topology_destroy(topology);
   }
+  DLIO_PROFILER_LOGDEBUG("Finished writer finalization", "");
 }
 
 
-std::string
-dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &category, TimeResolution start_time,
-                                          TimeResolution duration, std::unordered_map<std::string, std::any> &metadata,
-                                          ProcessID process_id, ThreadID thread_id) {
-  std::stringstream all_stream;
-  if (is_first_write) all_stream << "   ";
-  all_stream << R"({"id":")" << index++ << "\","
-             << R"("name":")" << event_name << "\","
-             << R"("cat":")" << category << "\","
-             << "\"pid\":" << process_id << ","
-             << "\"tid\":" << thread_id << ","
-             << "\"ts\":" << start_time << ","
-             << "\"dur\":" << duration << ","
-             << R"("ph":"X",)"
-             << R"("args":{)";
+void
+dlio_profiler::ChromeWriter::convert_json(ConstEventType event_name, ConstEventType category, TimeResolution start_time,
+                                          TimeResolution duration, std::unordered_map<std::string, std::any> *metadata,
+                                          ProcessID process_id, ThreadID thread_id, int* size, char* data) {
+  DLIO_PROFILER_LOGDEBUG("ChromeWriter.convert_json","");
+
+  std::string is_first_char = "";
+  if (is_first_write) is_first_char = "   ";
   if (include_metadata) {
-    all_stream << "\"hostname\":\"" << hostname() << "\"";
+    char metadata_line[MAX_META_LINE_SIZE];
+    std::stringstream all_stream;
     auto cores = core_affinity();
     auto cores_size = cores.size();
     if (cores_size > 0) {
@@ -119,9 +116,9 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
     }
     bool has_meta = false;
     std::stringstream meta_stream;
-    auto meta_size = metadata.size();
+    auto meta_size = metadata->size();
     int i = 0;
-    for (auto item : metadata) {
+    for (auto item : *metadata) {
       has_meta = true;
       if (item.second.type() == typeid(unsigned int)) {
         meta_stream << "\"" << item.first << "\":" << std::any_cast<unsigned int>(item.second);
@@ -156,11 +153,18 @@ dlio_profiler::ChromeWriter::convert_json(std::string &event_name, std::string &
       i++;
     }
     if (has_meta) {
-      all_stream << ", " << meta_stream.str();
+      all_stream << "," << meta_stream.str();
     }
+    sprintf(metadata_line, R"("hostname":"%s"%s)", this->hostname, all_stream.str().c_str());
+    *size = snprintf(data, MAX_LINE_SIZE, "%s{\"id\":\"%d\",\"name\":\"%s\",\"cat\":\"%s\",\"pid\":\"%lu\","
+                                          "\"tid\":\"%lu\",\"ts\":\"%llu\",\"dur\":\"%llu\",\"ph\":\"X\",\"args\":{%s}}\n",
+                     is_first_char.c_str(), index.load(), event_name, category,
+                     process_id, thread_id, start_time, duration, metadata_line);
+  } else {
+    *size = snprintf(data, MAX_LINE_SIZE, "%s{\"id\":\"%d\",\"name\":\"%s\",\"cat\":\"%s\",\"pid\":\"%lu\","
+                                          "\"tid\":\"%lu\",\"ts\":\"%llu\",\"dur\":\"%llu\",\"ph\":\"X\",\"args\":{}}\n",
+                     is_first_char.c_str(), index.load(), event_name, category,
+                     process_id, thread_id, start_time, duration);
   }
-  all_stream << "}";
-  all_stream << "}\n";
-  DLIO_PROFILER_LOGINFO("event logged %s into %s", all_stream.str().c_str(), this->filename.c_str());
-  return all_stream.str();
+  index++;
 }

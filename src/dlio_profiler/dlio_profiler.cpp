@@ -6,20 +6,30 @@
 #include <dlio_profiler/core/dlio_profiler_main.h>
 
 void initialize(const char *log_file, const char *data_dirs, int *process_id) {
+  DLIO_PROFILER_LOGDEBUG("dlio_profiler.cpp.initialize","");
   DLIO_PROFILER_MAIN_SINGLETON_INIT(ProfilerStage::PROFILER_INIT, ProfileType::PROFILER_C_APP, log_file, data_dirs,
                                     process_id);
 }
 
 TimeResolution get_time() {
-  return DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_OTHER, ProfileType::PROFILER_C_APP)->get_time();
+  DLIO_PROFILER_LOGDEBUG("dlio_profiler.cpp.get_time","");
+  auto dlio_profiler = DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_OTHER, ProfileType::PROFILER_C_APP);
+  if (dlio_profiler != nullptr)
+    return dlio_profiler->get_time();
+  return 0;
 }
 
-void log_event(const char *name, const char *cat, TimeResolution start_time, TimeResolution duration) {
-  auto args = std::unordered_map<std::string, std::any>();
-  DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_OTHER, ProfileType::PROFILER_C_APP)->log(name, cat, start_time,
-                                                                                                duration, args);
+void log_event(ConstEventType name,ConstEventType cat, TimeResolution start_time, TimeResolution duration) {
+  DLIO_PROFILER_LOGDEBUG("dlio_profiler.cpp.log_event","");
+  auto dlio_profiler = DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_OTHER, ProfileType::PROFILER_C_APP);
+  if (dlio_profiler != nullptr) dlio_profiler->log(name, cat, start_time, duration, nullptr);
 }
 
 void finalize() {
-  DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_FINI, ProfileType::PROFILER_C_APP)->finalize();
+  DLIO_PROFILER_LOGDEBUG("dlio_profiler.cpp.finalize","");
+  auto dlio_profiler = DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_FINI, ProfileType::PROFILER_C_APP);
+  if (dlio_profiler != nullptr) {
+    dlio_profiler->finalize();
+    dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::finalize();
+  }
 }

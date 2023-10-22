@@ -17,6 +17,7 @@ namespace dlio_profiler {
     template<typename T>
     class Singleton {
     public:
+        static bool stop_creating_instances;
         /**
          * Members of Singleton Class
          */
@@ -27,8 +28,9 @@ namespace dlio_profiler {
          */
         template<typename... Args>
         static std::shared_ptr<T> get_instance(Args... args) {
+          if (stop_creating_instances) return nullptr;
           if (instance == nullptr)
-            instance = std::shared_ptr<T>(new T(std::forward<Args>(args)...));
+            instance = std::make_shared<T>(std::forward<Args>(args)...);
           return instance;
         }
 
@@ -41,7 +43,9 @@ namespace dlio_profiler {
          */
     public:
         Singleton(const Singleton &) = delete; /* deleting copy constructor. */
-
+        static void finalize() {
+          stop_creating_instances = true;
+        }
     protected:
         static std::shared_ptr<T> instance;
 
@@ -50,5 +54,7 @@ namespace dlio_profiler {
 
     template<typename T>
     std::shared_ptr<T> Singleton<T>::instance = nullptr;
+    template<typename T>
+    bool Singleton<T>::stop_creating_instances = false;
 }  // namespace dlio_profiler
 #endif //DLIO_PROFILER_SINGLETON_H

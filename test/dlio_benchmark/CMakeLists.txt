@@ -1,6 +1,6 @@
-find_program(DLIO_BENCHMARK_EXE dlio_benchmark)
+set(DLIO_BENCHMARK_EXE ${MAIN_PYTHON_SITE_PACKAGES}/dlio_benchmark/main.py)
 message("-- Found dlio_benchmark at location " ${DLIO_BENCHMARK_EXE})
-
+find_program(PYTHON_EXE python)
 set(COMMON_ARGS workload=unet3d ++workload.train.computation_time=0.05
         ++workload.evaluation.eval_time=0.01 ++workload.train.epochs=2 ++workload.workflow.train=True
         ++workload.workflow.generate_data=True ++workload.dataset.num_files_train=16
@@ -13,15 +13,16 @@ list(LENGTH formats formats_length)
 math(EXPR formats_length "${formats_length} - 1")
 message(STATUS "Number of formats: ${formats_length}")
 foreach (index RANGE ${formats_length})
-    list(GET formats index format)
-    list(GET lines index line)
-    set(test_name test_dlio_${format})
-    dlp_add_test(${test_name} ${DLIO_BENCHMARK_EXE} ${COMMON_ARGS} ++workload.dataset.format=${format}
+    list(GET formats ${index} format)
+    list(GET lines ${index} line)
+    set(test_name dlio_${format})
+    dlp_add_test(${test_name} ${PYTHON_EXE} ${DLIO_BENCHMARK_EXE} ${COMMON_ARGS} ++workload.dataset.format=${format}
             ++workload.output.folder=${CMAKE_CURRENT_BINARY_DIR}/output_${format})
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_ENABLE=1)
-    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_LEVEL=ERROR)
-    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_TRACE_COMPRESSION=1)
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_INC_METADATA=1)
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_LEVEL=DEBUG)
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_TRACE_COMPRESSION=0)
 
-    dlp_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_SOURCE_DIR}/test/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/output_${format}/.trace*.pfw* ${line})
-    set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
+    dlp_add_test(${test_name}_check_file_exists ${BASH_PROGRAM} ${CMAKE_SOURCE_DIR}/test/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/output_${format}/.trace*.pfw* ${line})
+    set_tests_properties(${test_name}_check_file_exists PROPERTIES DEPENDS ${test_name})
 endforeach ()

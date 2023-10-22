@@ -20,55 +20,55 @@ namespace fs = std::filesystem;
 namespace brahma {
     class POSIXDLIOProfiler : public POSIX {
     private:
+        static bool stop_trace;
         static std::shared_ptr<POSIXDLIOProfiler> instance;
-        std::unordered_set<int> tracked_fd;
-        std::vector<std::string> track_filename;
-        std::vector<std::string> ignore_filename;
+        static const int MAX_FD = 1024;
+        std::string tracked_fd[MAX_FD];
         std::shared_ptr<DLIOLogger> logger;
+        bool trace_all_files;
 
-        inline std::pair<bool, std::string> is_traced(int fd, const char *func) {
-          if (fd == -1) return std::pair<bool, std::string>(false, "");
-          auto iter = tracked_fd.find(fd);
-          if (iter != tracked_fd.end()) return std::pair<bool, std::string>(true, "");
-          return is_traced(get_filename(fd).c_str(), func);
+        inline const char* is_traced(int fd, const char *func) {
+          DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.is_traced for %s",func);
+          if (fd == -1) return nullptr;
+          return tracked_fd[fd%MAX_FD].empty() ? nullptr: tracked_fd[fd%MAX_FD].c_str();
         }
 
-        inline std::pair<bool, std::string> is_traced(const char *filename, const char *func) {
-          return is_traced_common(filename, func, ignore_filename, track_filename);
+        inline const char* is_traced(const char* filename, const char *func) {
+          DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.is_traced with filename for %s",func);
+          if (stop_trace) return nullptr;
+          if (trace_all_files) return filename;
+          else return is_traced_common(filename, func);
         }
 
-        inline void trace(int fd) {
-          tracked_fd.insert(fd);
+        inline void trace(int fd, const char* filename) {
+          DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.trace for %d",fd);
+          if (fd == -1) return;
+          tracked_fd[fd%MAX_FD] = filename;
         }
 
         inline void remove_trace(int fd) {
-          tracked_fd.erase(fd);
+          DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.remove_trace for %d",fd);
+          if (fd == -1) return;
+          tracked_fd[fd%MAX_FD] = std::string();
         }
 
     public:
-        POSIXDLIOProfiler() : POSIX() {
-          DLIO_PROFILER_LOGINFO("POSIX class intercepted", "");
+        POSIXDLIOProfiler(bool trace_all) : POSIX(), trace_all_files(trace_all){
+          DLIO_PROFILER_LOGDEBUG("POSIX class intercepted", "");
+          for(int i=0;i<MAX_FD;++i) tracked_fd[i] = std::string();
           logger = DLIO_LOGGER_INIT();
         }
-
-        inline void trace(const char *filename) {
-          char resolved_path[PATH_MAX];
-          char *data = realpath(filename, resolved_path);
-          (void) data;
-          track_filename.push_back(resolved_path);
+        void finalize() {
+          DLIO_PROFILER_LOGDEBUG("Finalizing POSIXDLIOProfiler","");
+          stop_trace = true;
         }
-
-        inline void untrace(const char *filename) {
-          char resolved_path[PATH_MAX];
-          char *data = realpath(filename, resolved_path);
-          (void) data;
-          ignore_filename.push_back(resolved_path);
+        ~POSIXDLIOProfiler() {
+          DLIO_PROFILER_LOGDEBUG("Destructing POSIXDLIOProfiler","");
         }
-
-        ~POSIXDLIOProfiler() override = default;   // GCOVR_EXCL_LINE
-        static std::shared_ptr<POSIXDLIOProfiler> get_instance() {
-          if (instance == nullptr) {
-            instance = std::make_shared<POSIXDLIOProfiler>();
+        static std::shared_ptr<POSIXDLIOProfiler> get_instance(bool trace_all = false) {
+          DLIO_PROFILER_LOGDEBUG("POSIX class get_instance", "");
+          if (!stop_trace && instance == nullptr) {
+            instance = std::make_shared<POSIXDLIOProfiler>(trace_all);
             POSIX::set_instance(instance);
           }
           return instance;
