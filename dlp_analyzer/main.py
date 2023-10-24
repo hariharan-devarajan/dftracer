@@ -218,19 +218,32 @@ class DLPAnalyzer:
                 all_files.append(file)
             else:
                 logging.warn(f"Ignoring unsuported file {file}")
+        if len(all_files) == 0:
+            logging.error(f"No files selected for .pfw and .pfw.gz")
+            exit(1)
         logging.debug(f"Processing files {all_files}")
-        create_bag = dask.bag.from_sequence(file_pattern).map(create_index).compute()
+        if pfw_gz_pattern:
+            create_bag = dask.bag.from_sequence(file_pattern).map(create_index).compute()
         total_size = dask.bag.from_sequence(all_files).map(get_size).sum().compute()
-        file_meta_bag = dask.bag.from_delayed([dask.delayed(get_linenumber)(file)
-                                               for file in file_pattern])
-        line_batch_bag = dask.bag.from_delayed([dask.delayed(generate_line_batches)(file_meta_task)
-                                                for file_meta_task in file_meta_bag.to_delayed()])
-        json_line_bag = dask.bag.from_delayed([dask.delayed(load_indexed_gzip_files)(line_batch_task)
-                                               for line_batch_task in line_batch_bag.to_delayed()])
-        gz_bag = json_line_bag.map(load_objects, fn=load_fn, time_granularity=time_granularity).filter(
-            lambda x: "name" in x)
-        pfw_bag = dask.bag.read_text(pfw_pattern).map(load_objects, fn=load_fn, time_granularity=time_granularity).filter(lambda x: "name" in x)
-        main_bag = dask.bag.concat([pfw_bag, gz_bag])
+        gz_bag = None
+        pfw_bag = None
+        if len(pfw_gz_pattern) > 0:
+            file_meta_bag = dask.bag.from_delayed([dask.delayed(get_linenumber)(file)
+                                                   for file in file_pattern])
+            line_batch_bag = dask.bag.from_delayed([dask.delayed(generate_line_batches)(file_meta_task)
+                                                    for file_meta_task in file_meta_bag.to_delayed()])
+            json_line_bag = dask.bag.from_delayed([dask.delayed(load_indexed_gzip_files)(line_batch_task)
+                                                   for line_batch_task in line_batch_bag.to_delayed()])
+            gz_bag = json_line_bag.map(load_objects, fn=load_fn, time_granularity=time_granularity).filter(
+                lambda x: "name" in x)
+        if len(pfw_pattern) > 0:
+            pfw_bag = dask.bag.read_text(pfw_pattern).map(load_objects, fn=load_fn, time_granularity=time_granularity).filter(lambda x: "name" in x)
+        if len(pfw_gz_pattern) > 0 and len(pfw_pattern) > 0:
+            main_bag = dask.bag.concat([pfw_bag, gz_bag])
+        elif len(pfw_gz_pattern) > 0:
+            main_bag = gz_bag
+        elif len(pfw_pattern) > 0:
+            main_bag = pfw_bag
         columns = {'index': "uint64[pyarrow]",
                    'name': "string[pyarrow]", 'cat': "string[pyarrow]",
                    'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]",
