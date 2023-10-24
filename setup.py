@@ -161,7 +161,7 @@ setup(
     extras_require={"test": ["pytest>=6.0"],
                     "dlp_analyzer": [
                         "zindex_py @ git+https://github.com/hariharan-devarajan/zindex.git@feature/dlio_profiler",
-                        "pandas>=2.1.1",
+                        "pandas>=2.0.3",
                         "dask>=2023.6.0",
                         "distributed",
                         "numpy>=1.24.3",
