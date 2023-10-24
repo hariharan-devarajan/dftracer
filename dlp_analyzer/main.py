@@ -46,8 +46,11 @@ def get_linenumber(filename):
 
 def get_size(filename):
     directory = os.path.dirname(filename)
-    index_file = os.path.join(directory, "index", f"{filename}.zindex")
-    size = zindex.get_total_size(filename, index_file=index_file)
+    if filename.endswith('.pfw'):
+        size = os.stat(filename).st_size
+    elif filename.endswith('.pfw.gz'):
+        index_file = os.path.join(directory, "index", f"{filename}.zindex")
+        size = zindex.get_total_size(filename, index_file=index_file)
     logging.debug(f" The {filename} has {size/1024**3} GB size")
     return int(size)
 
@@ -203,20 +206,31 @@ class DLPAnalyzer:
 
     def __init__(self, file_pattern, time_granularity=10e3, load_fn=None, load_cols={}):
         file_pattern = glob(file_pattern)
+        all_files = []
+        pfw_pattern = []
+        pfw_gz_pattern = []
         for file in file_pattern:
             if file.endswith('.pfw'):
-                raise Exception(f"Compress the files using gzip using gzip {file}.")
-        logging.debug(f"Processing files {file_pattern}")
-        create_bag = dask.bag.from_sequence(file_pattern).map(create_index)
-        total_size = create_bag.map(get_size).sum().compute()
+                pfw_pattern.append(file)
+                all_files.append(file)
+            elif file.endswith('.pfw.gz'):
+                pfw_gz_pattern.append(file)
+                all_files.append(file)
+            else:
+                logging.warn(f"Ignoring unsuported file {file}")
+        logging.debug(f"Processing files {all_files}")
+        create_bag = dask.bag.from_sequence(file_pattern).map(create_index).compute()
+        total_size = dask.bag.from_sequence(all_files).map(get_size).sum().compute()
         file_meta_bag = dask.bag.from_delayed([dask.delayed(get_linenumber)(file)
                                                for file in file_pattern])
         line_batch_bag = dask.bag.from_delayed([dask.delayed(generate_line_batches)(file_meta_task)
                                                 for file_meta_task in file_meta_bag.to_delayed()])
         json_line_bag = dask.bag.from_delayed([dask.delayed(load_indexed_gzip_files)(line_batch_task)
                                                for line_batch_task in line_batch_bag.to_delayed()])
-        my_bag = json_line_bag.map(load_objects, fn=load_fn, time_granularity=time_granularity).filter(
+        gz_bag = json_line_bag.map(load_objects, fn=load_fn, time_granularity=time_granularity).filter(
             lambda x: "name" in x)
+        pfw_bag = dask.bag.read_text(pfw_pattern).map(load_objects, fn=load_fn, time_granularity=time_granularity).filter(lambda x: "name" in x)
+        main_bag = dask.bag.concat([pfw_bag, gz_bag])
         columns = {'index': "uint64[pyarrow]",
                    'name': "string[pyarrow]", 'cat': "string[pyarrow]",
                    'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]",
@@ -224,7 +238,7 @@ class DLPAnalyzer:
                    'tinterval': "string[pyarrow]", 'trange': "uint64[pyarrow]"}
         columns.update(io_columns())
         columns.update(load_cols)
-        events = my_bag.to_dataframe(meta=columns)
+        events = main_bag.to_dataframe(meta=columns)
         n_partition = math.ceil(total_size / (32 * 1024 ** 3))
         logging.debug(f"Number of partitions used are {n_partition}")
         self.events = events.repartition(npartitions=n_partition).persist()
@@ -261,8 +275,8 @@ class DLPAnalyzer:
             grouped_df[["only_app_compute"]].apply(size_portion, col="only_app_compute", axis=1).sum(),
 
         )
-        logging.debug(total_time, total_io_time, total_compute_time, total_app_io_time,
-                      only_io, only_compute, only_app_io, only_app_compute)
+        logging.debug(f"{total_time}, {total_io_time}, {total_compute_time}, {total_app_io_time}, \
+               {only_io}, {only_compute}, {only_app_io}, {only_app_compute}")
         return total_time, total_io_time, total_compute_time, total_app_io_time, \
                only_io, only_compute, only_app_io, only_app_compute
 
