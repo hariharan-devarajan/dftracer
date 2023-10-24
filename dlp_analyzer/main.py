@@ -222,20 +222,21 @@ class DLPAnalyzer:
             logging.error(f"No files selected for .pfw and .pfw.gz")
             exit(1)
         logging.debug(f"Processing files {all_files}")
-        if pfw_gz_pattern:
+        if len(pfw_gz_pattern) > 0:
             create_bag = dask.bag.from_sequence(file_pattern).map(create_index).compute()
         total_size = dask.bag.from_sequence(all_files).map(get_size).sum().compute()
         gz_bag = None
         pfw_bag = None
         if len(pfw_gz_pattern) > 0:
             file_meta_bag = dask.bag.from_delayed([dask.delayed(get_linenumber)(file)
-                                                   for file in file_pattern])
+                                                   for file in pfw_gz_pattern])
             line_batch_bag = dask.bag.from_delayed([dask.delayed(generate_line_batches)(file_meta_task)
                                                     for file_meta_task in file_meta_bag.to_delayed()])
             json_line_bag = dask.bag.from_delayed([dask.delayed(load_indexed_gzip_files)(line_batch_task)
                                                    for line_batch_task in line_batch_bag.to_delayed()])
             gz_bag = json_line_bag.map(load_objects, fn=load_fn, time_granularity=time_granularity).filter(
                 lambda x: "name" in x)
+        main_bag = None
         if len(pfw_pattern) > 0:
             pfw_bag = dask.bag.read_text(pfw_pattern).map(load_objects, fn=load_fn, time_granularity=time_granularity).filter(lambda x: "name" in x)
         if len(pfw_gz_pattern) > 0 and len(pfw_pattern) > 0:
@@ -244,18 +245,22 @@ class DLPAnalyzer:
             main_bag = gz_bag
         elif len(pfw_pattern) > 0:
             main_bag = pfw_bag
-        columns = {'index': "uint64[pyarrow]",
-                   'name': "string[pyarrow]", 'cat': "string[pyarrow]",
-                   'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]",
-                   'dur': "uint64[pyarrow]",
-                   'tinterval': "string[pyarrow]", 'trange': "uint64[pyarrow]"}
-        columns.update(io_columns())
-        columns.update(load_cols)
-        events = main_bag.to_dataframe(meta=columns)
-        n_partition = math.ceil(total_size / (32 * 1024 ** 3))
-        logging.debug(f"Number of partitions used are {n_partition}")
-        self.events = events.repartition(npartitions=n_partition).persist()
-        _ = wait(self.events)
+        if main_bag:
+            columns = {'index': "uint64[pyarrow]",
+                       'name': "string[pyarrow]", 'cat': "string[pyarrow]",
+                       'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]",
+                       'dur': "uint64[pyarrow]",
+                       'tinterval': "string[pyarrow]", 'trange': "uint64[pyarrow]"}
+            columns.update(io_columns())
+            columns.update(load_cols)
+            events = main_bag.to_dataframe(meta=columns)
+            n_partition = math.ceil(total_size / (32 * 1024 ** 3))
+            logging.debug(f"Number of partitions used are {n_partition}")
+            self.events = events.repartition(npartitions=n_partition).persist()
+            _ = wait(self.events)
+        else:
+            logging.error(f"Unable to load Traces")
+            exit(1)
         logging.info(f"Loaded events")
 
     def _calculate_time(self):
