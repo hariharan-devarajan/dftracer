@@ -39,6 +39,7 @@ jobs:
           sudo apt-get install gcc g++ libtool-bin openmpi-bin libopenmpi-dev
           sudo apt-get install python3.10 python3-pip
           sudo apt-get install gcovr clang-format
+          sudo pip install --upgrade pip
           if [[ $PERM == 'venv' ]]; then
             python -m venv ../venv
           fi
@@ -56,6 +57,7 @@ jobs:
             pip install -v ${LOC}[dlp_analyzer]
           elif [[ $PERM == 'venv' ]]; then
             source ../venv/bin/activate
+            pip install --upgrade pip
             echo pip install -v ${LOC}
             pip install -v ${LOC}
           else
