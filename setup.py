@@ -162,7 +162,7 @@ setup(
                     "dlp_analyzer": [
                         "zindex_py @ git+https://github.com/hariharan-devarajan/zindex.git@feature/dlio_profiler",
                         "pandas>=2.0.3",
-                        "dask>=2023.6.0",
+                        "dask>=2023.5.0",
                         "distributed",
                         "numpy>=1.24.3",
                         "pyarrow>=12.0.1",
