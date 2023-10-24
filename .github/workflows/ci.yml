@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-20.04,  ubuntu-22.04]
-        dir: ["clone", "github"]
+        dir: ["clone"]
         perm: ["root", "user", "venv"]
         exclude:
           - dir: "clone"
@@ -39,8 +39,11 @@ jobs:
           sudo apt-get install gcc g++ libtool-bin openmpi-bin libopenmpi-dev
           sudo apt-get install python3.10 python3-pip
           sudo apt-get install gcovr clang-format
+          sudo pip install --upgrade pip
+
           if [[ $PERM == 'venv' ]]; then
             python -m venv ../venv
+            source ../venv/bin/activate
           fi
       - name: Build from ${{ matrix.dir }} on ${{ matrix.perm }}
         run: |
@@ -49,16 +52,14 @@ jobs:
           if [ $OS == 'ubuntu-22.04' ] && [ $DIR == 'clone' ] && [ $PERM == 'venv' ]; then
             export ENABLE_DLIO_BENCHMARK_TESTS=On
           fi
-          LOC=.
-          if [[ $DIR == 'github' ]]; then
-            LOC=git+https://github.com/hariharan-devarajan/dlio-profiler.git@dev
-          fi
+          LOC=.[dlp_analyzer]
           if [[ $PERM == 'user' ]]; then
             export DLIO_LOGGER_USER=1
             echo pip install --user -v ${LOC}
-            pip install -v ${LOC}
+            pip install -v ${LOC}[dlp_analyzer]
           elif [[ $PERM == 'venv' ]]; then
             source ../venv/bin/activate
+            pip install --upgrade pip
             echo pip install -v ${LOC}
             pip install -v ${LOC}
           else

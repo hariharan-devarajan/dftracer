@@ -30,7 +30,7 @@ dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileTy
     case ProfileType::PROFILER_PRELOAD: {
       if (stage == ProfilerStage::PROFILER_INIT) {
         if (user_init_type != nullptr && strcmp(user_init_type, "PRELOAD") == 0) {
-          initlialize(true, true, log_file, data_dirs, process_id);
+          initlialize(true, log_file, data_dirs, process_id);
         }
         DLIO_PROFILER_LOGINFO("Preloading DLIO Profiler with log_file %s data_dir %s and process %d",
                               this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
@@ -45,8 +45,8 @@ dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileTy
         if (user_init_type == nullptr || strcmp(user_init_type, "FUNCTION") == 0) {
           bind = true;
         }
-        initlialize(true, bind, log_file, data_dirs, process_id);
-        DLIO_PROFILER_LOGINFO("Initializing DLIO Profiler with log_file %s data_dir %s and process %d",
+        initlialize(bind, log_file, data_dirs, process_id);
+        DLIO_PROFILER_LOGINFO("App Initializing DLIO Profiler with log_file %s data_dir %s and process %d",
                               this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
       }
       break;
@@ -105,14 +105,14 @@ bool dlio_profiler::DLIOProfilerCore::finalize() {
 }
 
 void
-dlio_profiler::DLIOProfilerCore::initlialize(bool is_init, bool _bind, const char *_log_file, const char *_data_dirs,
+dlio_profiler::DLIOProfilerCore::initlialize(bool _bind, const char *_log_file, const char *_data_dirs,
                                              const int *_process_id) {
   DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::initlialize","");
   char *dlio_profiler_signal = getenv(DLIO_PROFILER_BIND_SIGNALS);
   if (dlio_profiler_signal == nullptr || strcmp(dlio_profiler_signal, "1") == 0) {
     set_signal();
   }
-  if (is_init) {
+  if (!is_initialized) {
     this->bind = _bind;
     char *dlio_profiler_meta = getenv(DLIO_PROFILER_INC_METADATA);
     if (dlio_profiler_meta != nullptr && strcmp(dlio_profiler_meta, "1") == 0) {
