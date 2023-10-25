@@ -15,8 +15,8 @@
 #include <dlio_profiler/core/macro.h>
 #include <dlio_profiler/utils/utils.h>
 #include <sys/time.h>
-
 typedef std::chrono::high_resolution_clock chrono;
+
 
 class DLIOLogger {
 private:
@@ -65,29 +65,11 @@ public:
       return t;
     }
 
-    inline void log(ConstEventType event_name, ConstEventType category,
+    void log(ConstEventType event_name, ConstEventType category,
                     TimeResolution start_time, TimeResolution duration,
-                    std::unordered_map<std::string, std::any> *metadata) {
-      DLIO_PROFILER_LOGDEBUG("DLIOLogger.log","");
-      ThreadID tid = 0;
-      if (dlio_profiler_tid) {
-        tid = dlp_gettid() + this->process_id;
-      }
-      auto writer = dlio_profiler::Singleton<dlio_profiler::ChromeWriter>::get_instance(-1);
-      if (writer != nullptr) {
-        writer->log(event_name, category, start_time, duration, metadata, this->process_id, tid);
-      }
-    }
+                    std::unordered_map<std::string, std::any> *metadata);
 
-    inline void finalize() {
-      DLIO_PROFILER_LOGDEBUG("DLIOLogger.finalize","");
-      auto writer = dlio_profiler::Singleton<dlio_profiler::ChromeWriter>::get_instance(-1);
-      if (writer != nullptr) {
-        writer->finalize();
-        dlio_profiler::Singleton<dlio_profiler::ChromeWriter>::finalize();
-        DLIO_PROFILER_LOGINFO("Released Logger","");
-      }
-    }
+    void finalize();
 };
 
 #define DLIO_LOGGER_INIT() \
@@ -112,7 +94,7 @@ public:
   if (trace) {                                                          \
     TimeResolution end_time = this->logger->get_time();   \
     this->logger->log((char*)__FUNCTION__, CATEGORY, start_time, end_time - start_time, metadata); \
-    if (this->logger->include_metadata) delete(metadata);                                                        \
+    if (this->logger->include_metadata) delete(metadata);                    \
   }
 
 #endif //DLIO_PROFILER_GENERIC_LOGGER_H

@@ -11,6 +11,8 @@
 #include <sstream>
 #include <cmath>
 
+#include <uv.h>
+uv_rwlock_t numlock;
 
 
 void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
@@ -167,4 +169,16 @@ dlio_profiler::ChromeWriter::convert_json(ConstEventType event_name, ConstEventT
                      process_id, thread_id, start_time, duration);
   }
   index++;
+}
+int dlio_profiler::ChromeWriter::merge_buffer(const char *data, int size) {
+  DLIO_PROFILER_LOGDEBUG("ChromeWriter.merge_buffer","");
+  uv_rwlock_wrlock(&numlock);
+  memcpy(write_buffer + write_size, data, size);
+  write_size += size;
+  if (write_size >= WRITE_BUFFER_SIZE) {
+    write_buffer_op();
+    write_size = 0;
+  }
+  uv_rwlock_wrunlock(&numlock);
+  return size;
 }

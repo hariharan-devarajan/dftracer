@@ -5,19 +5,19 @@
 #ifndef DLIO_PROFILER_CHROME_WRITER_H
 #define DLIO_PROFILER_CHROME_WRITER_H
 
-#include <string>
-#include <unordered_map>
-#include <thread>
-#include <mutex>
-#include <unistd.h>
-#include <hwloc.h>
 #include <dlio_profiler/core/constants.h>
-#include <atomic>
-#include <any>
-#include <dlio_profiler/utils/utils.h>
-#include <unordered_map>
-#include <dlio_profiler/utils/posix_internal.h>
 #include <dlio_profiler/core/typedef.h>
+#include <dlio_profiler/utils/posix_internal.h>
+#include <dlio_profiler/utils/utils.h>
+#include <hwloc.h>
+#include <unistd.h>
+
+#include <any>
+#include <atomic>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <unordered_map>
 #define ERROR(cond, format, ...) \
   DLIO_PROFILER_LOGERROR(format, __VA_ARGS__); \
   if (this->throw_error) assert(cond);
@@ -41,7 +41,6 @@ namespace dlio_profiler {
                                                   ProcessID process_id, ThreadID thread_id, int* size, char* data);
 
         bool is_first_write;
-        std::mutex write_mtx;
         static const int WRITE_BUFFER_SIZE=1024*1024;
         size_t write_size;
         char* write_buffer;
@@ -54,17 +53,7 @@ namespace dlio_profiler {
           }  // GCOVR_EXCL_STOP
           return write_size;
         }
-        inline int merge_buffer(const char* data, int size) {
-          DLIO_PROFILER_LOGDEBUG("ChromeWriter.merge_buffer","");
-          std::lock_guard<std::mutex> lockGuard(write_mtx);
-          memcpy(write_buffer + write_size, data, size);
-          write_size += size;
-          if (write_size >= WRITE_BUFFER_SIZE) {
-            write_buffer_op();
-            write_size = 0;
-          }
-          return size;
-        }
+        inline int merge_buffer(const char* data, int size);
 
         std::vector<unsigned> core_affinity() {
           DLIO_PROFILER_LOGDEBUG("ChromeWriter.core_affinity","");
@@ -86,7 +75,7 @@ namespace dlio_profiler {
         }
 
     public:
-        ChromeWriter(int fd = -1): is_first_write(true), write_mtx(), enable_core_affinity(false), include_metadata(false),
+        ChromeWriter(int fd = -1): is_first_write(true), enable_core_affinity(false), include_metadata(false),
                   enable_compression(false), index(0), write_size(0){
           DLIO_PROFILER_LOGDEBUG("ChromeWriter.ChromeWriter","");
           write_buffer = static_cast<char *>(malloc(WRITE_BUFFER_SIZE + MAX_LINE_SIZE));

@@ -5,62 +5,17 @@
 #ifndef DLIO_PROFILER_UTILS_H
 #define DLIO_PROFILER_UTILS_H
 
-#include <string>
-#include <limits.h>
-#include <dlio_profiler/utils/posix_internal.h>
-#include <vector>
-#include <vector>
-#include <cstring>
 #include <dlio_profiler/core/macro.h>
-#include <iostream>
-#include <execinfo.h>
-#include <sstream>
-#include <regex>
 #include <dlio_profiler/core/singleton.h>
-
-void dlio_finalize();
-
-inline void signal_handler(int sig) {  // GCOVR_EXCL_START
-  DLIO_PROFILER_LOGDEBUG("signal_handler","");
-  switch (sig) {
-    case SIGTERM: {
-      DLIO_PROFILER_LOGDEBUG("terminate signal caught", 0);
-      dlio_finalize();
-      exit(0);
-      break;
-    }
-    default: {
-      DLIO_PROFILER_LOGINFO("signal caught %d", sig);
-      dlio_finalize();
-      int j, nptrs;
-      void *buffer[20];
-      char **strings;
-      nptrs = backtrace(buffer, 20);
-      strings = backtrace_symbols(buffer, nptrs);
-      if (strings != NULL) {
-        for (j = 0; j < nptrs; j++)
-          printf("%s\n", strings[j]);
-        free(strings);
-      }
-      exit(0);
-    }
-
-  }
-} // GCOVR_EXCL_STOP
-
-inline void set_signal() {
-  DLIO_PROFILER_LOGDEBUG("set_signal","");
-  struct sigaction sa;
-  sa.sa_handler = signal_handler;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = SA_RESTART;
-  sigaction(SIGSEGV, &sa, NULL);
-  sigaction(SIGUSR1, &sa, NULL);
-  sigaction(SIGABRT, &sa, NULL);
-  sigaction(SIGHUP, &sa, NULL);
-  sigaction(SIGTERM, &sa, NULL);
-  sigaction(SIGINT, &sa, NULL);
-}  // GCOVR_EXCL_STOP
+#include <dlio_profiler/utils/posix_internal.h>
+#include <execinfo.h>
+#include <limits.h>
+#include <cstring>
+#include <iostream>
+#include <regex>
+#include <sstream>
+#include <string>
+#include <vector>
 
 class Trie {
 private:

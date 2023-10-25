@@ -143,7 +143,6 @@ if (${BRAHMA_FOUND})
     message(STATUS "[DLIO_PROFILER] found brahma at ${BRAHMA_INCLUDE_DIRS}")
     include_directories(${BRAHMA_INCLUDE_DIRS})
     set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${BRAHMA_LIBRARIES})
-    message(STATUS "[DLIO_PROFILER] found brahma at ${BRAHMA_INCLUDE_DIRS}")
 else ()
     message(FATAL_ERROR "-- [DLIO_PROFILER] brahma is needed for ${PROJECT_NAME} build")
 endif ()
@@ -156,7 +155,14 @@ if (${gotcha_FOUND})
 else ()
     message(FATAL_ERROR "-- [DLIO_PROFILER] gotcha is needed for ${PROJECT_NAME} build")
 endif ()
-
+find_package(libuv REQUIRED)
+if (${LIBUV_FOUND})
+    message(STATUS "[DLIO_PROFILER] found libuv at ${LIBUV_INCLUDE_DIRS}")
+    include_directories(${LIBUV_INCLUDE_DIRS})
+    set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${LIBUV_LIBRARIES})
+else ()
+    message(FATAL_ERROR "-- [DLIO_PROFILER] libuv is needed for ${PROJECT_NAME} build")
+endif ()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(DLIO_PROFILER_PRELOAD_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler_preload.cpp)
@@ -167,6 +173,7 @@ set(DLIO_PROFILER_CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/writer/chrome_writer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/posix_internal.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_logger.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/dlio_profiler_main.cpp)
 set(DLIO_PROFILER_CORE_PUBLIC_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler.h)
