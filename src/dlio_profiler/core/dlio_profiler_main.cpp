@@ -2,10 +2,8 @@
 // Created by haridev on 10/8/23.
 //
 #include <dlio_profiler/core/dlio_profiler_main.h>
-
-
-
-void dlio_finalize() {
+#include <uv.h>
+inline void dlio_finalize() {
   DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore.dlio_finalize","");
   const char *user_init_type = getenv(DLIO_PROFILER_INIT);
   if (user_init_type == nullptr || strcmp(user_init_type, "FUNCTION") == 0) {
@@ -17,6 +15,63 @@ void dlio_finalize() {
     }
   }
 }
+
+inline void print_bt(){
+  int j, nptrs;
+  void *buffer[20];
+  char **strings;
+  nptrs = backtrace(buffer, 20);
+  strings = backtrace_symbols(buffer, nptrs);
+  if (strings != NULL) {
+    for (j = 0; j < nptrs; j++)
+      printf("%s\n", strings[j]);
+    free(strings);
+  }
+}
+inline void signal_handler(int sig) {  // GCOVR_EXCL_START
+  DLIO_PROFILER_LOGDEBUG("signal_handler","");
+  dlio_finalize();
+  switch (sig) {
+    case SIGINT:
+    case SIGTERM: {
+      break;
+    }
+    default: {
+      print_bt();
+    }
+  }
+  exit(0);
+}
+
+inline void uv_signal_handler(uv_signal_t *req, int sig)
+{
+  printf("Signal received!\n");
+  DLIO_PROFILER_LOGWARN("signal caught %d", sig);
+  uv_signal_stop(req);
+} // GCOVR_EXCL_STOP
+
+inline void set_uv_signal() {
+  DLIO_PROFILER_LOGDEBUG("set_signal","");
+  uv_signal_t sig;
+  uv_signal_init(uv_default_loop(), &sig);
+  uv_signal_start(&sig, uv_signal_handler, SIGINT);
+}
+inline void set_signal() {
+struct sigaction sa;
+  sa.sa_handler = signal_handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_RESTART;
+  sigaction(SIGSEGV, &sa, NULL);
+  sigaction(SIGUSR1, &sa, NULL);
+  sigaction(SIGABRT, &sa, NULL);
+  sigaction(SIGHUP, &sa, NULL);
+  sigaction(SIGTERM, &sa, NULL);
+  sigaction(SIGINT, &sa, NULL);
+}
+
+// GCOVR_EXCL_STOP
+
+
 
 dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileType type, const char *log_file,
                                                   const char *data_dirs, const int *process_id) : is_enabled(
@@ -110,7 +165,7 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool _bind, const char *_log_file, 
   DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::initlialize","");
   char *dlio_profiler_signal = getenv(DLIO_PROFILER_BIND_SIGNALS);
   if (dlio_profiler_signal == nullptr || strcmp(dlio_profiler_signal, "1") == 0) {
-    set_signal();
+    //set_uv_signal();
   }
   if (!is_initialized) {
     this->bind = _bind;
