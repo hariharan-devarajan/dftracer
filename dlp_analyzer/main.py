@@ -186,7 +186,7 @@ def io_function(json_object, current_dict, time_approximate):
             d["io_time"] = I.to_string(I.empty())
     if "args" in json_object:
         if "fname" in json_object["args"]:
-            d["fname"] = json_object["args"]["fname"]
+            d["filename"] = json_object["args"]["fname"]
         if "hostname" in json_object["args"]:
             d["hostname"] = json_object["args"]["hostname"]
 
