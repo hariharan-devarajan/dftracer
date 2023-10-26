@@ -26,67 +26,56 @@ import zindex_py as zindex
 HOST_PATTERN=r'corona(\d+)'
 ZINDEX_BIN="/usr/WS2/iopp/software/zindex/build/Release"
 REBUILD_INDEX=False
-BATCH=1024**2
+BATCH=1024*16
 DELIMITER=";"
+debug = False
+verbose = False
+
 def create_index(filename):
-    directory = os.path.dirname(filename)
-    index_file = os.path.join(directory, "index", f"{filename}.zindex")
+    index_file = f"{filename}.zindex"
     if not os.path.exists(index_file):
         status = zindex.create_index(filename, index_file=f"file:{index_file}",
-                                     regex="id:\b([0-9]+)", numeric=True, unique=True, debug=True)
+                                     regex="id:\b([0-9]+)", numeric=True, unique=True, debug=debug)
         logging.debug(f"Creating Index for {filename} returned {status}")
     return filename
 
 def get_linenumber(filename):
-    directory = os.path.dirname(filename)
-    index_file = os.path.join(directory, "index", f"{filename}.zindex")
+    index_file = f"{filename}.zindex"
     line_number = zindex.get_max_line(filename, index_file=index_file)
     logging.debug(f" The {filename} has {line_number} lines")
-    return DELIMITER.join([filename, str(line_number)])
+    return filename, line_number
 
 def get_size(filename):
-    directory = os.path.dirname(filename)
     if filename.endswith('.pfw'):
         size = os.stat(filename).st_size
     elif filename.endswith('.pfw.gz'):
-        index_file = os.path.join(directory, "index", f"{filename}.zindex")
+        index_file = f"{filename}.zindex"
         size = zindex.get_total_size(filename, index_file=index_file)
     logging.debug(f" The {filename} has {size/1024**3} GB size")
     return int(size)
 
 
-def generate_line_batches(args):
-    filename, max_line = args.split(DELIMITER)
-    max_line = int(max_line)
-    #print(args)
+def generate_line_batches(filename, max_line):
     for start in range(0, max_line, BATCH):
-        logging.debug(f"Created a batch for {filename} from [{start}, {start + BATCH}] lines")
-        yield DELIMITER.join([filename, str(start)])
+        end =  min((start + BATCH - 1) , (max_line - 1))
+        logging.debug(f"Created a batch for {filename} from [{start}, {end}] lines")
+        yield filename, start, end
 
-def load_indexed_gzip_files(args):
-    for arg in args:
-        filename, start = arg.split(DELIMITER)
-        directory = os.path.dirname(filename)
-        index_file = os.path.join(directory, "index", f"{filename}.zindex")
-        start = int(start)
-        json_lines = zindex.zquery(filename, index_file=index_file,
-                              raw=f"select a.line from LineOffsets a where a.line >= {start} AND a.line < {start+BATCH};", debug=True)
-        for json_line in json_lines:
-            logging.debug(f"Found an {json_line} line for {filename} range [{start}, {start + BATCH}] lines")
-            yield json_line
+def load_indexed_gzip_files(filename, start, end):
+    index_file = f"{filename}.zindex"
+    json_lines = zindex.zquery(filename, index_file=index_file,
+                          raw=f"select a.line from LineOffsets a where a.line >= {start} AND a.line <= {end};", debug=debug)
+    logging.debug(f"Read {len(json_lines)} json lines for [{start}, {end}]")
+    return json_lines
 
 def load_objects(line, fn, time_granularity):
     d = {}
-    if line is not None and line !="" and "[" != line[0] and line != "\n" :
+    if line is not None and line !="" and len(line) > 0 and "[" != line[0] and line != "\n" :
         val = {}
         try:
             val = json.loads(line)
             logging.debug(f"Loading dict {val}")
             if "name" in val:
-                if "id" in val:
-                    d["index"] = val["id"]
-                else:
-                    d["index"] = 0
                 d["name"] = val["name"]
                 d["cat"] = val["cat"]
                 d["pid"] = val["pid"]
@@ -222,20 +211,28 @@ class DLPAnalyzer:
             logging.error(f"No files selected for .pfw and .pfw.gz")
             exit(1)
         logging.debug(f"Processing files {all_files}")
+        delayed_indices = []
         if len(pfw_gz_pattern) > 0:
-            create_bag = dask.bag.from_sequence(file_pattern).map(create_index).compute()
+            dask.bag.from_sequence(pfw_gz_pattern).map(create_index).compute()
+        logging.info(f"Created index for {len(pfw_gz_pattern)} files")
         total_size = dask.bag.from_sequence(all_files).map(get_size).sum().compute()
+        logging.info(f"Total size of all files are {total_size} bytes")
         gz_bag = None
         pfw_bag = None
         if len(pfw_gz_pattern) > 0:
-            file_meta_bag = dask.bag.from_delayed([dask.delayed(get_linenumber)(file)
-                                                   for file in pfw_gz_pattern])
-            line_batch_bag = dask.bag.from_delayed([dask.delayed(generate_line_batches)(file_meta_task)
-                                                    for file_meta_task in file_meta_bag.to_delayed()])
-            json_line_bag = dask.bag.from_delayed([dask.delayed(load_indexed_gzip_files)(line_batch_task)
-                                                   for line_batch_task in line_batch_bag.to_delayed()])
-            gz_bag = json_line_bag.map(load_objects, fn=load_fn, time_granularity=time_granularity).filter(
-                lambda x: "name" in x)
+            max_line_numbers = dask.bag.from_sequence(pfw_gz_pattern).map(get_linenumber).compute()
+            json_line_delayed = []
+            for filename, max_line in max_line_numbers:
+                for _, start, end in generate_line_batches(filename, max_line):
+                    json_line_delayed.append((filename, start, end))
+
+            logging.info(f"Loading {len(json_line_delayed)} batches out of {len(pfw_gz_pattern)} files")
+            json_line_bags = []
+            for filename, start, end in json_line_delayed:
+                num_lines = end - start + 1
+                json_line_bags.append(dask.delayed(load_indexed_gzip_files, nout=num_lines)(filename, start, end))
+            json_lines = dask.bag.concat(json_line_bags)
+            gz_bag = json_lines.map(load_objects, fn=load_fn, time_granularity=time_granularity).filter(lambda x: "name" in x)
         main_bag = None
         if len(pfw_pattern) > 0:
             pfw_bag = dask.bag.read_text(pfw_pattern).map(load_objects, fn=load_fn, time_granularity=time_granularity).filter(lambda x: "name" in x)
@@ -246,8 +243,7 @@ class DLPAnalyzer:
         elif len(pfw_pattern) > 0:
             main_bag = pfw_bag
         if main_bag:
-            columns = {'index': "uint64[pyarrow]",
-                       'name': "string[pyarrow]", 'cat': "string[pyarrow]",
+            columns = {'name': "string[pyarrow]", 'cat': "string[pyarrow]",
                        'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]",
                        'dur': "uint64[pyarrow]",
                        'tinterval': "string[pyarrow]", 'trange': "uint64[pyarrow]"}
@@ -257,6 +253,7 @@ class DLPAnalyzer:
             n_partition = math.ceil(total_size / (32 * 1024 ** 3))
             logging.debug(f"Number of partitions used are {n_partition}")
             self.events = events.repartition(npartitions=n_partition).persist()
+            progress(self.events)
             _ = wait(self.events)
         else:
             logging.error(f"Unable to load Traces")
@@ -283,14 +280,14 @@ class DLPAnalyzer:
                                                                                    meta=("string[pyarrow]"))
         total_time, total_io_time, total_compute_time, total_app_io_time,\
         only_io, only_compute, only_app_io, only_app_compute = dask.compute(
-            grouped_df[["tinterval"]].apply(size_portion, col="tinterval", axis=1).sum(),
-            grouped_df[["io_time"]].apply(size_portion, col="io_time", axis=1).sum(),
-            grouped_df[["compute_time"]].apply(size_portion, col="compute_time", axis=1).sum(),
-            grouped_df[["app_io_time"]].apply(size_portion, col="app_io_time", axis=1).sum(),
-            grouped_df[["only_io"]].apply(size_portion, col="only_io", axis=1).sum(),
-            grouped_df[["only_compute"]].apply(size_portion, col="only_compute", axis=1).sum(),
-            grouped_df[["only_app_io"]].apply(size_portion, col="only_app_io", axis=1).sum(),
-            grouped_df[["only_app_compute"]].apply(size_portion, col="only_app_compute", axis=1).sum(),
+            grouped_df[["tinterval"]].apply(size_portion, col="tinterval", axis=1, meta=("uint64[pyarrow]")).sum(),
+            grouped_df[["io_time"]].apply(size_portion, col="io_time", axis=1, meta=("uint64[pyarrow]")).sum(),
+            grouped_df[["compute_time"]].apply(size_portion, col="compute_time", axis=1, meta=("uint64[pyarrow]")).sum(),
+            grouped_df[["app_io_time"]].apply(size_portion, col="app_io_time", axis=1, meta=("uint64[pyarrow]")).sum(),
+            grouped_df[["only_io"]].apply(size_portion, col="only_io", axis=1, meta=("uint64[pyarrow]")).sum(),
+            grouped_df[["only_compute"]].apply(size_portion, col="only_compute", axis=1, meta=("uint64[pyarrow]")).sum(),
+            grouped_df[["only_app_io"]].apply(size_portion, col="only_app_io", axis=1, meta=("uint64[pyarrow]")).sum(),
+            grouped_df[["only_app_compute"]].apply(size_portion, col="only_app_compute", axis=1, meta=("uint64[pyarrow]")).sum(),
 
         )
         logging.debug(f"{total_time}, {total_io_time}, {total_compute_time}, {total_app_io_time}, \
@@ -427,6 +424,12 @@ def print_versions():
 
 
 def setup_logging(args):
+    if args.loglevel == logging.INFO:
+        verbose = True
+
+    if args.loglevel == logging.DEBUG:
+        debug = True
+
     logging.basicConfig(level=args.loglevel,
         handlers=[
             logging.FileHandler(args.log_file, mode="a", encoding='utf-8'),
@@ -438,7 +441,7 @@ def setup_logging(args):
 def setup_dask_cluster(args):
     cluster = LocalCluster(n_workers=args.workers)  # Launches a scheduler and workers locally
     client = Client(cluster)  # Connect to distributed cluster and override default
-    logging.info(f"Initialized Client with {args.workers} workers")
+    logging.info(f"Initialized Client with {args.workers} workerss with client {client.dashboard_link}")
 
 def main():
     args = parse_args()
