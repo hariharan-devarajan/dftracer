@@ -23,14 +23,15 @@ void dlio_finalize();
 inline void signal_handler(int sig) {  // GCOVR_EXCL_START
   DLIO_PROFILER_LOGDEBUG("signal_handler","");
   switch (sig) {
+    case SIGINT:
     case SIGTERM: {
-      DLIO_PROFILER_LOGDEBUG("terminate signal caught", 0);
+      DLIO_PROFILER_LOGERROR("signal caught %d", sig);
       dlio_finalize();
       exit(0);
       break;
     }
     default: {
-      DLIO_PROFILER_LOGINFO("signal caught %d", sig);
+      DLIO_PROFILER_LOGERROR("signal caught %d", sig);
       dlio_finalize();
       int j, nptrs;
       void *buffer[20];
@@ -81,7 +82,7 @@ private:
     TrieNode *exclusion_prefix;
 
     void insert(TrieNode * root, const char* word, unsigned long n, bool reverse = false) {
-      DLIO_PROFILER_LOGDEBUG("Trie.insert inserting string %s for func %d", word, n);
+      DLIO_PROFILER_LOGDEBUG("Trie.insert inserting string %s with size %d", word, n);
       TrieNode *curr = root;
       unsigned long start = 0, end=n, inc=1;
       if (reverse) start = n-1, end=-1, inc=-1;
@@ -117,7 +118,7 @@ public:
     }
 
     inline int get_id(char c) {
-      DLIO_PROFILER_LOGDEBUG("Trie.get_id","");
+      DLIO_PROFILER_LOGDEBUG("Trie.get_id for %d",c);
       return c % MAX_INDEX;
     }
 
