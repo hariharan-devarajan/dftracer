@@ -251,7 +251,7 @@ class DLPAnalyzer:
             columns.update(io_columns())
             columns.update(load_cols)
             events = main_bag.to_dataframe(meta=columns)
-            n_partition = WORKERS #math.ceil(total_size / (32 * 1024 ** 2))
+            n_partition = WORKERS * 4 #math.ceil(total_size / (32 * 1024 ** 2))
             logging.debug(f"Number of partitions used are {n_partition}")
             self.events = events.repartition(npartitions=n_partition).persist()
             progress(self.events)
