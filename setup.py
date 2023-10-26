@@ -160,6 +160,7 @@ setup(
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"],
                     "dlp_analyzer": [
+                        "bokeh>=2.4.2",
                         "pybind11",
                         "zindex_py @ git+https://github.com/hariharan-devarajan/zindex.git@feature/dlio_profiler",
                         "pandas>=2.0.3",
