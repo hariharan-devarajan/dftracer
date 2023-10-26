@@ -223,11 +223,13 @@ class DLPAnalyzer:
         if len(pfw_gz_pattern) > 0:
             max_line_numbers = dask.bag.from_sequence(pfw_gz_pattern).map(get_linenumber).compute()
             json_line_delayed = []
+            total_lines = 0
             for filename, max_line in max_line_numbers:
+                total_lines += max_line
                 for _, start, end in generate_line_batches(filename, max_line):
                     json_line_delayed.append((filename, start, end))
 
-            logging.info(f"Loading {len(json_line_delayed)} batches out of {len(pfw_gz_pattern)} files")
+            logging.info(f"Loading {len(json_line_delayed)} batches out of {len(pfw_gz_pattern)} files and has {total_lines} lines overall")
             json_line_bags = []
             for filename, start, end in json_line_delayed:
                 num_lines = end - start + 1
@@ -281,14 +283,14 @@ class DLPAnalyzer:
                                                                                    meta=("string[pyarrow]"))
         total_time, total_io_time, total_compute_time, total_app_io_time,\
         only_io, only_compute, only_app_io, only_app_compute = dask.compute(
-            grouped_df[["tinterval"]].apply(size_portion, col="tinterval", axis=1, meta=("uint64[pyarrow]")).sum(),
-            grouped_df[["io_time"]].apply(size_portion, col="io_time", axis=1, meta=("uint64[pyarrow]")).sum(),
-            grouped_df[["compute_time"]].apply(size_portion, col="compute_time", axis=1, meta=("uint64[pyarrow]")).sum(),
-            grouped_df[["app_io_time"]].apply(size_portion, col="app_io_time", axis=1, meta=("uint64[pyarrow]")).sum(),
-            grouped_df[["only_io"]].apply(size_portion, col="only_io", axis=1, meta=("uint64[pyarrow]")).sum(),
-            grouped_df[["only_compute"]].apply(size_portion, col="only_compute", axis=1, meta=("uint64[pyarrow]")).sum(),
-            grouped_df[["only_app_io"]].apply(size_portion, col="only_app_io", axis=1, meta=("uint64[pyarrow]")).sum(),
-            grouped_df[["only_app_compute"]].apply(size_portion, col="only_app_compute", axis=1, meta=("uint64[pyarrow]")).sum(),
+            grouped_df[["tinterval"]].apply(size_portion, col="tinterval", axis=1).sum(),
+            grouped_df[["io_time"]].apply(size_portion, col="io_time", axis=1).sum(),
+            grouped_df[["compute_time"]].apply(size_portion, col="compute_time", axis=1).sum(),
+            grouped_df[["app_io_time"]].apply(size_portion, col="app_io_time", axis=1).sum(),
+            grouped_df[["only_io"]].apply(size_portion, col="only_io", axis=1).sum(),
+            grouped_df[["only_compute"]].apply(size_portion, col="only_compute", axis=1).sum(),
+            grouped_df[["only_app_io"]].apply(size_portion, col="only_app_io", axis=1).sum(),
+            grouped_df[["only_app_compute"]].apply(size_portion, col="only_app_compute", axis=1).sum(),
 
         )
         logging.debug(f"{total_time}, {total_io_time}, {total_compute_time}, {total_app_io_time}, \
