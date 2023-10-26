@@ -1,5 +1,5 @@
-CONFIG:
-  ROOT_DIR:  /usr/WS2/haridev/dlio-profiler/dlp_analyzer/dask
+config:
+  root_dir:  /usr/WS2/haridev/dlio-profiler/dlp_analyzer/dask
   SCRIPT_DIR: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/scripts
   CONF_DIR: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/conf
   RUN_DIR: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/run_dir
