@@ -34,9 +34,10 @@ inline void signal_handler(int sig) {  // GCOVR_EXCL_START
       DLIO_PROFILER_LOGERROR("signal caught %d", sig);
       dlio_finalize();
       int j, nptrs;
-      void *buffer[20];
+      const int STACK_SIZE = 40;
+      void *buffer[STACK_SIZE];
       char **strings;
-      nptrs = backtrace(buffer, 20);
+      nptrs = backtrace(buffer, STACK_SIZE);
       strings = backtrace_symbols(buffer, nptrs);
       if (strings != NULL) {
         for (j = 0; j < nptrs; j++)
