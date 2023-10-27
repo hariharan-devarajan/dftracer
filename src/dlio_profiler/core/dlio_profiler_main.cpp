@@ -226,14 +226,9 @@ dlio_profiler::DLIOProfilerCore::initlialize(bool _bind, const char *_log_file, 
 
           auto paths = split(this->data_dirs, ':');
           brahma_gotcha_wrap("dlio_profiler", this->gotcha_priority);
-          auto cwd = fs::current_path();
           for (const auto &path:paths) {
-            auto fs_path = fs::path(path);
             DLIO_PROFILER_LOGDEBUG("Profiler will trace %s\n", path.c_str());
-            trie->include(fs_path.c_str(), strlen(fs_path.c_str()));
-            auto relative_dir = fs::relative(fs_path, cwd);
-            DLIO_PROFILER_LOGDEBUG("Profiler will trace %s\n", relative_dir.c_str());
-            trie->include(relative_dir.c_str(), strlen(relative_dir.c_str()));
+            trie->include(path.c_str(), path.size());
           }
           if (disable_posix == nullptr || strcmp(disable_posix, "1") != 0) {
             enable_posix = true;
