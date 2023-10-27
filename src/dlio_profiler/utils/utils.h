@@ -70,21 +70,17 @@ private:
     static const int MAX_INDEX = 256;
     struct TrieNode {
         bool end;
-        std::unordered_map<char, TrieNode *> child;
-        TrieNode():child() {
+        TrieNode *child[MAX_INDEX];
+        TrieNode() {
           DLIO_PROFILER_LOGDEBUG("TrieNode.TrieNode","");
           end = false;
-        }
-        TrieNode * get_child(char idx) {
-          auto iter = child.find(idx);
-          if (iter != child.end()) return iter->second;
-          else return nullptr;
+          for (int i = 0; i < MAX_INDEX; i++) {
+            child[i] = nullptr;
+          }
         }
     };
     TrieNode *inclusion_prefix;
     TrieNode *exclusion_prefix;
-
-
 
     void insert(TrieNode * root, const char* word, unsigned long n, bool reverse = false) {
       DLIO_PROFILER_LOGDEBUG("Trie.insert inserting string %s with size %d", word, n);
@@ -92,8 +88,8 @@ private:
       unsigned long start = 0, end=n, inc=1;
       if (reverse) start = n-1, end=-1, inc=-1;
       for (unsigned long i = start; i != end; i+=inc) {
-        char idx = get_id(word[i]);
-        if (curr->get_child(idx) == nullptr) {
+        int idx = get_id(word[i]);
+        if (curr->child[idx] == nullptr) {
           curr->child[idx] = new TrieNode();
         }
         curr = curr->child[idx];
@@ -107,8 +103,8 @@ private:
       unsigned long start = 0, end=n, inc=1;
       if (reverse) start = n-1, end=-1, inc=-1;
       for (unsigned long i = start; i != end; i+=inc) {
-        char idx = get_id(prefix[i]);
-        if (curr->get_child(idx) == nullptr)
+        int idx = get_id(prefix[i]);
+        if (curr->child[idx] == nullptr)
           return curr->end;
         curr = curr->child[idx];
       }
@@ -122,9 +118,9 @@ public:
       exclusion_prefix = new TrieNode();
     }
 
-    inline char get_id(char c) {
+    inline int get_id(char c) {
       DLIO_PROFILER_LOGDEBUG("Trie.get_id for %d",c);
-      return c;
+      return c % MAX_INDEX;
     }
 
     void include(const char* word, unsigned long n) {
