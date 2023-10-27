@@ -504,7 +504,7 @@ class DLPAnalyzer:
 
 
 def parse_args():
-    global WORKERS
+    conf = get_dlp_configuration()
     parser = argparse.ArgumentParser(description='DLIO Profiler Analyzer')
     parser.add_argument("trace", type=str,
                         help="Path to trace file from DLIO Profiler. Can contain * for multiple files.")
@@ -512,7 +512,7 @@ def parse_args():
                         action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.WARNING)
     parser.add_argument('-v', '--verbose', help="Be verbose", action="store_const", dest="loglevel", const=logging.INFO)
     parser.add_argument("-l","--log-file", default="dlp_analyzer_main.log", type=str, help="Logging log file")
-    parser.add_argument("-w","--workers", default=WORKERS, type=int, help="Number of dask workers to use")
+    parser.add_argument("-w","--workers", default=conf.workers, type=int, help="Number of dask workers to use")
     parser.add_argument("--dask-scheduler", default=None, type=str, help="Scheduler to use for Dask")
     parser.add_argument("--index-dir", default=None, type=str, help="Scheduler to use for Dask")
     args = parser.parse_args()
