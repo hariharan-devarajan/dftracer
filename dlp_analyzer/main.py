@@ -23,6 +23,9 @@ import json
 import logging
 
 import zindex_py as zindex
+
+from plots import DLPAnalyzerPlots
+
 HOST_PATTERN=r'corona(\d+)'
 ZINDEX_BIN="/usr/WS2/iopp/software/zindex/build/Release"
 REBUILD_INDEX=False
@@ -262,6 +265,8 @@ class DLPAnalyzer:
             logging.error(f"Unable to load Traces")
             exit(1)
         logging.info(f"Loaded events")
+        self.plots = DLPAnalyzerPlots(events=self.events)
+        logging.info(f"Loaded plots")
 
     def _calculate_time(self):
         agg = {"compute_time": union_portions(),

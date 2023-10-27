@@ -169,7 +169,8 @@ setup(
                         "numpy>=1.24.3",
                         "pyarrow>=12.0.1",
                         "rich>=13.6.0",
-                        "python-intervals>=1.10.0.post1"
+                        "python-intervals>=1.10.0.post1",
+                        "matplotlib>=3.8.0",
                     ]},
     python_requires=">=3.7",
 )
