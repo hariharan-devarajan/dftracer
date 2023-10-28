@@ -538,7 +538,7 @@ def parse_args():
     elif args.loglevel == logging.INFO:
         verbose = True
     update_dlp_configuration(debug=debug, verbose=verbose, log_file=args.log_file, workers=args.workers, dask_scheduler=args.dask_scheduler,
-                             index_dir=args.index_dir)
+                             index_dir=args.index_dir, slope_threshold=args.slope_threshold, time_granularity=args.time_granularity)
     return args
 
 def print_versions():
