@@ -29,19 +29,13 @@
 namespace dlio_profiler {
     class DLIOProfilerCore {
     private:
-        bool is_enabled;
-        int gotcha_priority;
-        cpplogger::LoggerType logger_level;
         std::string log_file;
-        std::string data_dirs;
+      std::string data_dirs;
+        std::shared_ptr<dlio_profiler::ConfigurationManager> conf;
         ProcessID process_id;
         bool is_initialized;
         bool bind;
-        bool enable_posix;
-        bool enable_stdio;
-        bool enable_io;
-        bool trace_all_files;
-        void initlialize(bool _bind, const char *_log_file = nullptr, const char *_data_dirs = nullptr,
+        void initialize(bool _bind, const char *_log_file = nullptr, const char *_data_dirs = nullptr,
                          const int *_process_id = nullptr);
 
     public:
@@ -51,7 +45,7 @@ namespace dlio_profiler {
 
         inline bool is_active() {
           DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore.is_active","");
-          return is_enabled;
+          return conf->enable;
         }
 
         TimeResolution get_time();
