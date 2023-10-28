@@ -170,7 +170,7 @@ setup(
                         "pyarrow>=12.0.1",
                         "rich>=13.6.0",
                         "python-intervals>=1.10.0.post1",
-                        "matplotlib>=3.8.0",
+                        "matplotlib>=3.7.3",
                     ]},
     python_requires=">=3.7",
 )
