@@ -24,6 +24,7 @@ import logging
 
 import zindex_py as zindex
 
+from plots import DLPAnalyzerPlots
 
 class DLPConfiguration:
     def __init__(self):
@@ -37,6 +38,8 @@ class DLPConfiguration:
         self.dask_scheduler = None
         self.index_dir = None
         self.time_approximate = False
+        self.slope_threshold = 45
+        self.time_granularity = 10e3
 
 dlp_configuration = DLPConfiguration()
 
@@ -44,16 +47,20 @@ def get_dlp_configuration():
     global dlp_configuration
     return dlp_configuration
 
-def update_dlp_configuration(host_pattern=None,
-                             rebuild_index=None,
-                             batch_size=None,
-                             debug=None,
-                             verbose=None,
-                             workers=None,
-                             log_file=None,
-                             dask_scheduler=None,
-                             index_dir=None,
-                             time_approximate=None):
+def update_dlp_configuration(
+    host_pattern=None,
+    rebuild_index=None,
+    batch_size=None,
+    debug=None,
+    verbose=None,
+    workers=None,
+    log_file=None,
+    dask_scheduler=None,
+    index_dir=None,
+    time_approximate=None,
+    slope_threshold=None,
+    time_granularity=None,
+):
     global dlp_configuration
     if host_pattern:
         dlp_configuration.host_pattern = host_pattern
@@ -75,6 +82,10 @@ def update_dlp_configuration(host_pattern=None,
         dlp_configuration.index_dir = index_dir
     if time_approximate:
         dlp_configuration.time_approximate = time_approximate
+    if slope_threshold:
+        dlp_configuration.slope_threshold = slope_threshold
+    if time_granularity:
+        dlp_configuration.time_granularity = time_granularity
     return dlp_configuration
 
 
@@ -271,7 +282,7 @@ def human_format(num):
 
 class DLPAnalyzer:
 
-    def __init__(self, file_pattern, time_granularity=10e3, load_fn=None, load_cols={}):
+    def __init__(self, file_pattern, load_fn=None, load_cols={}):
         self.conf = get_dlp_configuration()
         file_pattern = glob(file_pattern)
         all_files = []
@@ -314,10 +325,10 @@ class DLPAnalyzer:
                 num_lines = end - start + 1
                 json_line_bags.append(dask.delayed(load_indexed_gzip_files, nout=num_lines)(filename, start, end))
             json_lines = dask.bag.concat(json_line_bags)
-            gz_bag = json_lines.map(load_objects, fn=load_fn, time_granularity=time_granularity, time_approximate=self.conf.time_approximate).filter(lambda x: "name" in x)
+            gz_bag = json_lines.map(load_objects, fn=load_fn, time_granularity=self.conf.time_granularity, time_approximate=self.conf.time_approximate).filter(lambda x: "name" in x)
         main_bag = None
         if len(pfw_pattern) > 0:
-            pfw_bag = dask.bag.read_text(pfw_pattern).map(load_objects, fn=load_fn, time_granularity=time_granularity, time_approximate=self.conf.time_approximate).filter(lambda x: "name" in x)
+            pfw_bag = dask.bag.read_text(pfw_pattern).map(load_objects, fn=load_fn, time_granularity=self.conf.time_granularity, time_approximate=self.conf.time_approximate).filter(lambda x: "name" in x)
         if len(pfw_gz_pattern) > 0 and len(pfw_pattern) > 0:
             main_bag = dask.bag.concat([pfw_bag, gz_bag])
         elif len(pfw_gz_pattern) > 0:
@@ -340,6 +351,8 @@ class DLPAnalyzer:
             logging.error(f"Unable to load Traces")
             exit(1)
         logging.info(f"Loaded events")
+        self.plots = DLPAnalyzerPlots(events=self.events, slope_threshold=self.conf.slope_threshold)
+        logging.info(f"Loaded plots with slope threshold: {self.conf.slope_threshold}")
 
     def _calculate_time(self):
         if self.conf.time_approximate:
@@ -515,6 +528,8 @@ def parse_args():
     parser.add_argument("-w","--workers", default=conf.workers, type=int, help="Number of dask workers to use")
     parser.add_argument("--dask-scheduler", default=None, type=str, help="Scheduler to use for Dask")
     parser.add_argument("--index-dir", default=None, type=str, help="Scheduler to use for Dask")
+    parser.add_argument('-s', '--slope-threshold', default=45, type=int, help='Threshold to determine problematic I/O accesses')
+    parser.add_argument('-t', '--time-granularity', default=10e3, type=int, help='Time granularity')
     args = parser.parse_args()
     debug = False
     verbose = False
@@ -523,7 +538,7 @@ def parse_args():
     elif args.loglevel == logging.INFO:
         verbose = True
     update_dlp_configuration(debug=debug, verbose=verbose, log_file=args.log_file, workers=args.workers, dask_scheduler=args.dask_scheduler,
-                             index_dir=args.index_dir)
+                             index_dir=args.index_dir, slope_threshold=args.slope_threshold, time_granularity=args.time_granularity)
     return args
 
 def print_versions():
@@ -570,8 +585,11 @@ def main():
     args = parse_args()
     setup_logging()
     setup_dask_cluster()
-    analyzer = DLPAnalyzer(args.trace, time_granularity=10e6)
+    analyzer = DLPAnalyzer(args.trace)
     analyzer.summary()
+    analyzer.plots.bottleneck_timeline(figsize=(8, 4))
+    analyzer.plots.bw_timeline(figsize=(4, 4), unit='kb')
+    analyzer.plots.xfer_size_distribution(figsize=(4, 4))
 
 if __name__ == '__main__':
     main()
