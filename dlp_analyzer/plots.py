@@ -43,7 +43,7 @@ XFER_SIZE_BIN_NAMES = [
 
 class DLPAnalyzerPlots(object):
 
-    def __init__(self, events: dd.DataFrame, slope_threshold=45) -> None:
+    def __init__(self, events: dd.DataFrame, slope_threshold: int) -> None:
         self.events = events
         self.slope_threshold = slope_threshold
 
