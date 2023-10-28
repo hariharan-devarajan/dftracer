@@ -43,8 +43,9 @@ XFER_SIZE_BIN_NAMES = [
 
 class DLPAnalyzerPlots(object):
 
-    def __init__(self, events: dd.DataFrame) -> None:
+    def __init__(self, events: dd.DataFrame, slope_threshold=45) -> None:
         self.events = events
+        self.slope_threshold = slope_threshold
 
     def bottleneck_timeline(
         self,
@@ -97,7 +98,7 @@ class DLPAnalyzerPlots(object):
             .reset_index() \
             .compute()
 
-        problematic = timeline.query(f"{slope_col} > 0 and {slope_col} < 45")
+        problematic = timeline.query(f"{slope_col} > 0 and {slope_col} < {self.slope_threshold}")
 
         fig, ax = plt.subplots(figsize=figsize)
 
