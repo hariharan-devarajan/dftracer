@@ -24,7 +24,7 @@ import logging
 
 import zindex_py as zindex
 
-from plots import DLPAnalyzerPlots
+from dlp_analyzer.plots import DLPAnalyzerPlots
 
 class DLPConfiguration:
     def __init__(self):
@@ -39,7 +39,7 @@ class DLPConfiguration:
         self.index_dir = None
         self.time_approximate = False
         self.slope_threshold = 45
-        self.time_granularity = 10e3
+        self.time_granularity = 1e3
 
 dlp_configuration = DLPConfiguration()
 
@@ -158,6 +158,7 @@ def load_objects(line, fn, time_granularity, time_approximate):
                 d["tid"] = val["tid"]
                 val["dur"] = int(val["dur"])
                 val["ts"] = int(val["ts"])
+                d["ts"] = val["ts"]
                 d["dur"] = val["dur"]
                 if not time_approximate:
                     d["tinterval"] = I.to_string(I.closed(val["ts"] , val["ts"] + val["dur"]))
@@ -172,28 +173,37 @@ def load_objects(line, fn, time_granularity, time_approximate):
 def io_function(json_object, current_dict, time_approximate):
     d = {}
     if time_approximate:
+        d["total_time"] = 0
         if "compute" in json_object["name"]:
             d["compute_time"] = current_dict["dur"]
+            d["total_time"] = current_dict["dur"]
             d["phase"] = 1
         if "POSIX" in json_object["cat"]:
             d["io_time"] = current_dict["dur"]
+            d["total_time"] = current_dict["dur"]
             d["phase"] = 2
-        elif "reader" in json_object["cat"]:
-            d["io_time"] = current_dict["dur"]
+        elif "NPZReader.read_index" in json_object["name"]:
+            d["total_time"] = current_dict["dur"]
+            d["app_io_time"] = current_dict["dur"]
             d["phase"] = 3
+
     else:
         if "compute" in json_object["name"]:
             d["compute_time"] = current_dict["tinterval"]
+            d["total_time"] = current_dict["tinterval"]
             d["phase"] = 1
         else:
             d["compute_time"] = I.to_string(I.empty())
         if "POSIX" in json_object["cat"]:
             d["io_time"] = current_dict["tinterval"]
+            d["total_time"] = current_dict["tinterval"]
             d["phase"] = 2
-        elif "reader" in json_object["cat"]:
-            d["io_time"] = current_dict["tinterval"]
+        elif "NPZReader.read_index" in json_object["name"]:
+            d["app_io_time"] = current_dict["tinterval"]
+            d["total_time"] = current_dict["tinterval"]
             d["phase"] = 3
         else:
+            d["total_time"] = I.to_string(I.empty())
             d["io_time"] = I.to_string(I.empty())
     if "args" in json_object:
         if "fname" in json_object["args"]:
@@ -218,6 +228,7 @@ def io_columns():
         'compute_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'app_io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
+        'total_time': "uint64[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'filename': "string[pyarrow]",
         'phase': "uint16[pyarrow]",
         'size': "uint64[pyarrow]"
@@ -338,7 +349,7 @@ class DLPAnalyzer:
         if main_bag:
             columns = {'name': "string[pyarrow]", 'cat': "string[pyarrow]",
                        'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]",
-                       'dur': "uint64[pyarrow]",
+                       'ts': "uint64[pyarrow]", 'dur': "uint64[pyarrow]",
                        'tinterval': "string[pyarrow]" if not self.conf.time_approximate else "uint64[pyarrow]", 'trange': "uint64[pyarrow]"}
             columns.update(io_columns())
             columns.update(load_cols)
@@ -359,7 +370,7 @@ class DLPAnalyzer:
             agg = {"compute_time": max,
                    "io_time": max,
                    "app_io_time": max,
-                   "dur": max}
+                   "total_time": max}
             grouped_df = self.events.groupby("trange").agg(agg)
             grouped_df["io_time"] = grouped_df["io_time"].fillna(0)
             grouped_df["compute_time"] = grouped_df["compute_time"].fillna(0)
@@ -370,7 +381,7 @@ class DLPAnalyzer:
             grouped_df["only_app_compute"] =  grouped_df[["compute_time","app_io_time"]].apply(lambda s: s["compute_time"] - s["app_io_time"] if s["compute_time"] > s["app_io_time"] else 0, axis=1)
             final_df = grouped_df.sum().compute()
             total_time, total_io_time, total_compute_time, total_app_io_time, \
-            only_io, only_compute, only_app_io, only_app_compute = final_df["dur"], final_df["io_time"], final_df["compute_time"], final_df["app_io_time"], \
+            only_io, only_compute, only_app_io, only_app_compute = final_df["total_time"], final_df["io_time"], final_df["compute_time"], final_df["app_io_time"], \
                                                                    final_df["only_io"], final_df["only_compute"], final_df["only_app_io"], final_df["only_app_compute"]
         else:
             agg = {"compute_time": union_portions(),
@@ -416,7 +427,7 @@ class DLPAnalyzer:
 
     def _create_host_intervals(self, hosts_list):
         conf = get_dlp_configuration()
-        logging.debug(f"Creating regex for {hosts_list}")
+        logging.debug(f"Creating regex for {hosts_list} {conf.host_pattern}")
         is_first = True
         value = I.empty()
         for host in hosts_list:
@@ -489,6 +500,10 @@ class DLPAnalyzer:
 
         io_tree = Tree("Behavior of Application")
         io_time = Tree("Split of Time in application")
+        io_time.add(f"Total Time: {total_time / 1e6:.3f} sec")
+        io_time.add(f"Overall App Level sI/O: {total_app_io_time / 1e6:.3f} sec")
+        io_time.add(f"Unoverlapped App I/O: {only_app_io / 1e6:.3f} sec")
+        io_time.add(f"Unoverlapped App Compute: {only_app_compute / 1e6:.3f} sec")
         io_time.add(f"Compute: {total_compute_time / 1e6:.3f} sec")
         io_time.add(f"Overall I/O: {total_io_time / 1e6:.3f} sec")
         io_time.add(f"Unoverlapped I/O: {only_io / 1e6:.3f} sec")
@@ -529,7 +544,7 @@ def parse_args():
     parser.add_argument("--dask-scheduler", default=None, type=str, help="Scheduler to use for Dask")
     parser.add_argument("--index-dir", default=None, type=str, help="Scheduler to use for Dask")
     parser.add_argument('-s', '--slope-threshold', default=45, type=int, help='Threshold to determine problematic I/O accesses')
-    parser.add_argument('-t', '--time-granularity', default=10e3, type=int, help='Time granularity')
+    parser.add_argument('-t', '--time-granularity', default=1e3, type=int, help='Time granularity')
     args = parser.parse_args()
     debug = False
     verbose = False

@@ -41,21 +41,20 @@ XFER_SIZE_BIN_NAMES = [
 ]
 
 
+import logging
 class DLPAnalyzerPlots(object):
 
     def __init__(self, events: dd.DataFrame, slope_threshold: int) -> None:
         self.events = events
         self.slope_threshold = slope_threshold
-
     def bottleneck_timeline(
         self,
         figsize: Tuple[int, int],
         xlabel: str = 'Timeline (sec)',
-        ylabel: str = 'I/O Time',
+        ylabel: str = 'I/O Time (sec)',
     ):
-        metric = 'dur'
+        metric = 'total_time'
         slope_col = f"{metric}_slope"
-
         def _set_slope_and_score(df: pd.DataFrame, metric_max: dd.core.Scalar):
             bin_col, pero_col, per_rev_col, per_rev_cs_col, per_rev_cs_diff_col, score_col, sum_col, th_col = (
                 f"{metric}_bin",
@@ -67,7 +66,7 @@ class DLPAnalyzerPlots(object):
                 f"{metric}_sum",
                 f"{metric}_th",
             )
-
+            logging.info(df.head())
             df[pero_col] = df[metric] / metric_max
             df[bin_col] = np.digitize(df[pero_col], bins=DELTA_BINS, right=True)
             df[th_col] = np.choose(df[bin_col] - 1, choices=DELTA_BINS, mode='clip')
@@ -87,27 +86,29 @@ class DLPAnalyzerPlots(object):
             df[slope_col] = np.rad2deg(np.arctan2(df['index_cs_per_rev_diff'], df[per_rev_cs_diff_col]))
             df[slope_col] = df[slope_col].fillna(0)
 
-            return df[[metric, pero_col, slope_col, th_col]]
+            return df[[metric, pero_col, slope_col, th_col, "io_time"]]
 
         timeline = self._create_timeline(events=self.events)
 
         metric_max = timeline[metric].max()
-
+        logging.info(timeline.head())
         timeline = timeline \
             .map_partitions(_set_slope_and_score, metric_max=metric_max) \
-            .reset_index() \
-            .compute()
-
-        problematic = timeline.query(f"{slope_col} > 0 and {slope_col} < {self.slope_threshold}")
+            .reset_index().compute()
+        min_trange = timeline[f"trange"].min()
+        timeline[f"trange"] =  timeline[f"trange"] - min_trange
+        timeline["trange_sec"] = timeline["trange"] / 1e6
+        timeline[f"{metric}_sec"] = timeline[f"{metric}"] / 1e6
+        problematic = timeline.query(f"io_time > 0 and {slope_col} > 0 and {slope_col} < 90")
 
         fig, ax = plt.subplots(figsize=figsize)
 
-        timeline.plot.line(ax=ax, x='trange', y=metric, alpha=0.8, color='C0')
+        timeline.plot.line(ax=ax, x='trange_sec', y=f"{metric}_sec", alpha=0.8, color='C0')
 
         overlap = problematic[problematic['trange'].isin(timeline['trange'])]
-        colors = np.vectorize(self._color_map)(problematic['dur_th'])
+        colors = np.vectorize(self._color_map)(problematic[f'{metric}_th'])
 
-        overlap.plot.scatter(ax=ax, x='trange', y=metric, c=colors, s=96)
+        overlap.plot.scatter(ax=ax, x='trange_sec', y=f"{metric}_sec", c=colors, s=96)
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -125,15 +126,16 @@ class DLPAnalyzerPlots(object):
         bw_col = 'bw'
 
         def _set_bw(df: pd.DataFrame):
-            df[bw_col] = df['size'] / df['dur']
+            df[bw_col] = df['size'] / df['dur'] / 1e6
             return df
 
         timeline = self._create_timeline(events=self.events) \
             .map_partitions(_set_bw) \
             .reset_index() \
             .compute()
+        timeline["trange_sec"] = timeline["trange"] / 1e6
 
-        ax = timeline.plot.line(x='trange', y=bw_col, figsize=figsize)
+        ax = timeline.plot.line(x='trange_sec', y=bw_col, figsize=figsize)
 
         ylabel_denom = 1024
         ylabel_unit = 'KB/s'
@@ -211,14 +213,13 @@ class DLPAnalyzerPlots(object):
     @staticmethod
     def _create_timeline(events: dd.DataFrame):
         events['index'] = 1
-
-        timeline = events.groupby(['trange', 'pid']) \
+        timeline = events.groupby(['trange']) \
             .agg({
                 'index': 'count',
                 'size': 'sum',
-                'dur': 'sum',
-            }) \
-            .groupby(['trange']) \
-            .max()
-
+                'total_time': 'max',
+                'io_time': 'max',
+                'app_io_time': 'max'
+            })
+        logging.info(timeline.head())
         return timeline
