@@ -1,0 +1,20 @@
+enable: True
+profiler:
+  init: FUNCTION
+  log_file: trace
+  data_dirs: ./data
+  log_level: DEBUG
+  compression: True
+gotcha:
+  priority: 1
+features:
+  metadata: True
+  core_affinity: True
+  io:
+    enable: True
+    posix: True
+    stdio: True
+  tid: True
+internal:
+  bind_signals: True
+  throw_error: False

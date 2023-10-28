@@ -48,7 +48,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cmake ${PYTHON_SITE_PACKAGES}/dlio_profiler/lib/cmake)
 message("-- " "[DLIO Profiler] DLIO_PROFILER_CMAKE_DIR ${DLIO_PROFILER_CMAKE_DIR}")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${DLIO_PROFILER_CMAKE_DIR})
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PYTHON_SITE_PACKAGES}/dlio_profiler/lib/cmake)
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PYTHON_SITE_PACKAGES}/dlio_profiler/lib/cmake ${PYTHON_SITE_PACKAGES}/dlio_profiler/share/cmake)
 
 if (NOT DLIO_PROFILER_INSTALL_BIN_DIR)
     set(DLIO_PROFILER_INSTALL_BIN_DIR ${CMAKE_INSTALL_PREFIX}/bin)
@@ -157,6 +157,16 @@ else ()
     message(FATAL_ERROR "-- [DLIO_PROFILER] gotcha is needed for ${PROJECT_NAME} build")
 endif ()
 
+# find yaml-cpp
+find_package(yaml-cpp REQUIRED)
+if (${yaml-cpp_FOUND})
+    message(STATUS "[DLIO_PROFILER] found yaml-cpp at ${YAML_CPP_INCLUDE_DIR}")
+    include_directories(${YAML_CPP_INCLUDE_DIR})
+    set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${YAML_CPP_LIBRARIES})
+else ()
+    message(FATAL_ERROR "-- [DLIO_PROFILER] yaml-cpp is needed for ${PROJECT_NAME} build")
+endif ()
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(DLIO_PROFILER_PRELOAD_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler_preload.cpp)
@@ -167,7 +177,8 @@ set(DLIO_PROFILER_CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/writer/chrome_writer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/posix_internal.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/dlio_profiler_main.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/dlio_profiler_main.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/configuration_manager.cpp)
 set(DLIO_PROFILER_CORE_PUBLIC_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler.h)
 set(DLIO_PROFILER_CORE_PRIVATE_INCLUDE
@@ -179,7 +190,8 @@ set(DLIO_PROFILER_CORE_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/constants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/macro.h
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/singleton.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/typedef.h)
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/typedef.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/configuration_manager.h)
 add_library(${PROJECT_NAME} SHARED)
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCY_LIB})
 add_library(${PROJECT_NAME}_preload SHARED)

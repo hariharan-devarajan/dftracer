@@ -49,7 +49,7 @@ class CMakeBuild(build_ext):
                 clone_dir = f"{project_dir}/dependency/{parts[0]}"
                 need_install = parts[3]
                 print(f"Installing {parts[0]} into {install_prefix}")
-                os.system(f"bash {project_dir}/dependency/install_dependency.sh {parts[1]} {clone_dir} {install_prefix} {parts[2]} {need_install}")
+                os.system(f"bash {project_dir}/dependency/install_dependency.sh {parts[1]} {clone_dir} {install_prefix} {parts[2]} {need_install} {parts[4]} {parts[5]}")
 
         import pybind11 as py
         py_cmake_dir = py.get_cmake_dir()

@@ -1,19 +1,19 @@
 
-#include <dlio_profiler/dlio_logger.h>
-#include <pybind11/pybind11.h>
-#include <dlio_profiler/utils/utils.h>
-#include <pybind11/stl.h>
-#include <iostream>
-#include <fstream>
-
-
-#include <stdio.h>
-#include <execinfo.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <dlio_profiler/core/constants.h>
 #include <dlio_profiler/core/dlio_profiler_main.h>
+#include <dlio_profiler/dlio_logger.h>
+#include <dlio_profiler/utils/configuration_manager.h>
+#include <dlio_profiler/utils/utils.h>
+#include <execinfo.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include <fstream>
+#include <iostream>
 
 namespace py = pybind11;
 namespace dlio_profiler {
@@ -21,6 +21,7 @@ namespace dlio_profiler {
 
     void initialize(const char *log_file, const char *data_dirs, int process_id) {
       DLIO_PROFILER_LOGDEBUG("py.initialize","");
+      auto conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
       dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_INIT,
                                                                               ProfileType::PROFILER_PY_APP, log_file,
                                                                               data_dirs, &process_id);
@@ -50,8 +51,8 @@ namespace dlio_profiler {
 
     void finalize() {
       DLIO_PROFILER_LOGDEBUG("py.finalize","");
-      const char *user_init_type = getenv(DLIO_PROFILER_INIT);
-      if (user_init_type == nullptr || strcmp(user_init_type, "FUNCTION") == 0) {
+      auto conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
+      if (conf->init_type == ProfileInitType::PROFILER_INIT_FUNCTION) {
         auto dlio_profiler_inst = dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(
                 ProfilerStage::PROFILER_FINI,
                 ProfileType::PROFILER_PY_APP);

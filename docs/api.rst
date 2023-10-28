@@ -21,17 +21,48 @@ The DLIO Profiler can be used in three main modes.
 Configurations of DLIO Profiler
 ----------------------------------------
 
-.. table:: section - main configuration settings
+DLIO Profiler can be configured through ENV variables and YAML file.
+The ENV variables would override any yaml configurations provided.
+
+YAML configuration supported. WE need to set DLIO_PROFILER_CONFIGURATION ENV variable for YAML to load.
+
+.. code-block:: yaml
+
+    # contents of conf.yaml
+
+    enable: True        # Enable DLIO Profiler (default False).
+    profiler:
+      init: FUNCTION    # DLIO Profiler Mode FUNCTION/PRELOAD (default FUNCTION). For Hybrid use PRELOAD mode.
+      log_file: trace   # PATH To log file. In this case process id and app name is appended to file.
+      data_dirs: ./data # Colon separated paths that will be traced for I/O accesses by profiler. For tracing all directories use the string "all" (not recommended).
+      log_level: DEBUG  # Logging level within DLIO Profiler ERROR/WARN/INFO/DEBUG (default ERROR).
+      compression: True # Enable trace compression (default True)
+    gotcha:
+      priority: 1       # PRIORITY of DLIO Profiler in GOTCHA (default: True).
+    features:
+      metadata: True    # Include metadata (default False)
+      core_affinity: True # Include core affinity (default True). metadata needs to be enabled.
+      io:
+        enable: True    # Enable automatic binding of all I/O calls (default True).
+        posix: True     # Enable automatic binding of POSIX I/O calls (default True).
+        stdio: True     # Enable automatic binding of STDIO I/O calls (default True).
+      tid: True         # Enable tracing of thread ids (default True).
+
+ENV Variables supported
+
+.. table:: section - main configuration settings using env variables
    :widths: auto
 
    ================================ ======  ===========================================================================
    Environment Variable             Type    Description
    ================================ ======  ===========================================================================
+   DLIO_PROFILER_CONFIGURATION      STRING  PATH to the yaml configuration
    DLIO_PROFILER_ENABLE             INT     Enable or Disable DLIO Profiler (default 0).
    DLIO_PROFILER_INIT               STRING  DLIO Profiler Mode FUNCTION/PRELOAD (default FUNCTION).
                                             For Hybrid use PRELOAD mode.
    DLIO_PROFILER_LOG_FILE           STRING  PATH To log file. In this case process id and app name is appended to file.
    DLIO_PROFILER_DATA_DIR           STRING  Colon separated paths that will be traced for I/O accesses by profiler.
+                                            For tracing all directories use the string "all" (not recommended).
    DLIO_PROFILER_INC_METADATA       INT     Include or exclude metadata (default 0)
    DLIO_PROFILER_SET_CORE_AFFINITY  INT     Include or exclude core affinity (default 0).
                                             DLIO_PROFILER_INC_METADATA needs to be enabled.
@@ -40,9 +71,8 @@ Configurations of DLIO Profiler
    DLIO_PROFILER_DISABLE_IO         STRING  Disable automatic binding of all I/O calls.
    DLIO_PROFILER_DISABLE_POSIX      STRING  Disable automatic binding of POSIX I/O calls.
    DLIO_PROFILER_DISABLE_STDIO      STRING  Disable automatic binding of STDIO I/O calls.
-   DLIO_PROFILER_TRACE_COMPRESSION  INT     Enable trace compression (default 0)
-   DLIO_PROFILER_TRACE_ALL_FILES    INT     TRACE all files loaded by LD_PRELOAD (default 0).
-   DLIO_PROFILER_DISABLE_TIDS       INT     Diable tracing of thread ids (default 0).
+   DLIO_PROFILER_TRACE_COMPRESSION  INT     Enable trace compression (default 1)
+   DLIO_PROFILER_DISABLE_TIDS       INT     Disable tracing of thread ids (default 0).
    ================================ ======  ===========================================================================
 
 ----------------------------------------

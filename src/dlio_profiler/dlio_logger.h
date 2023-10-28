@@ -5,16 +5,18 @@
 #ifndef DLIO_PROFILER_GENERIC_LOGGER_H
 #define DLIO_PROFILER_GENERIC_LOGGER_H
 
-#include <chrono>
-#include <unordered_map>
-#include <any>
-#include <cstring>
-#include <dlio_profiler/core/singleton.h>
-#include <dlio_profiler/writer/chrome_writer.h>
-#include <unistd.h>
 #include <dlio_profiler/core/macro.h>
+#include <dlio_profiler/core/singleton.h>
+#include <dlio_profiler/utils/configuration_manager.h>
 #include <dlio_profiler/utils/utils.h>
+#include <dlio_profiler/writer/chrome_writer.h>
 #include <sys/time.h>
+#include <unistd.h>
+
+#include <any>
+#include <chrono>
+#include <cstring>
+#include <unordered_map>
 
 typedef std::chrono::high_resolution_clock chrono;
 
@@ -27,18 +29,10 @@ public:
     bool include_metadata;
     DLIOLogger(bool init_log = false) : is_init(false), include_metadata(false), dlio_profiler_tid(false) {
       DLIO_PROFILER_LOGDEBUG("DLIOLogger.DLIOLogger","");
-      char *dlio_profiler_meta = getenv(DLIO_PROFILER_INC_METADATA);
-      if (dlio_profiler_meta != nullptr && strcmp(dlio_profiler_meta, "1") == 0) {
-        include_metadata = true;
-      }
-      char *dlio_profiler_tid_str = getenv(DLIO_PROFILER_DISABLE_TIDS);
-      if (dlio_profiler_tid_str == nullptr || strcmp(dlio_profiler_tid_str, "0") == 0) {
-        dlio_profiler_tid = true;
-      }
-      char *dlio_profiler_error = getenv("DLIO_PROFILER_ERROR");
-      if (dlio_profiler_error != nullptr && strcmp(dlio_profiler_error, "1") == 0) {
-        throw_error = true; // GCOVR_EXCL_LINE
-      }
+      auto conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
+      include_metadata = conf->metadata;
+      dlio_profiler_tid = conf->tids;
+      throw_error = conf->throw_error;
       this->is_init = true;
       std::string log_file;
       if (!log_file.empty()) {

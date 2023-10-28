@@ -17,6 +17,7 @@
 #include <dlio_profiler/utils/utils.h>
 #include <unordered_map>
 #include <dlio_profiler/utils/posix_internal.h>
+#include <dlio_profiler/utils/configuration_manager.h>
 #include <dlio_profiler/core/typedef.h>
 #define ERROR(cond, format, ...) \
   DLIO_PROFILER_LOGERROR(format, __VA_ARGS__); \
@@ -91,18 +92,10 @@ namespace dlio_profiler {
           DLIO_PROFILER_LOGDEBUG("ChromeWriter.ChromeWriter","");
           write_buffer = static_cast<char *>(malloc(WRITE_BUFFER_SIZE + MAX_LINE_SIZE));
           get_hostname(hostname);
-          char *dlio_profiler_meta = getenv(DLIO_PROFILER_INC_METADATA);
-          if (dlio_profiler_meta != nullptr && strcmp(dlio_profiler_meta, "1") == 0) {
-            include_metadata = true;
-          }
-          char *enable_core_affinity_str = getenv(DLIO_PROFILER_SET_CORE_AFFINITY);
-          if (enable_core_affinity_str != nullptr && strcmp(enable_core_affinity_str, "1") == 0) {
-            enable_core_affinity = true;
-          }
-          char *enable_compression_str = getenv(DLIO_PROFILER_TRACE_COMPRESSION);
-          if (enable_compression_str != nullptr && strcmp(enable_compression_str, "1") == 0) {
-            enable_compression = true;
-          }
+          auto conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
+          include_metadata = conf->metadata;
+          enable_core_affinity = conf->core_affinity;
+          enable_compression = conf->compression;
           this->fd = fd;
           if (enable_core_affinity) {
             hwloc_topology_init(&topology);  // initialization
