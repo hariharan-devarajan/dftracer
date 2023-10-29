@@ -190,10 +190,10 @@ class fn_interceptor(object):
                 if len(self._arguments) > 0:
                     dlio_logger.get_instance().log_event(name=name, cat=self._cat, start_time=start,
                                                          duration=end - start,
-                                                         int_args=self._arguments)
+                                                         string_args=self._arguments)
                     dlio_logger.get_instance().log_event(name=kernal_name, cat=self._cat, start_time=t0,
                                                          duration=t1 - t0,
-                                                         int_args=self._arguments)
+                                                         string_args=self._arguments)
                 else:
                     dlio_logger.get_instance().log_event(name=name, cat=self._cat, start_time=start,
                                                          duration=end - start)
@@ -221,7 +221,7 @@ class fn_interceptor(object):
                 if len(self._arguments) > 0:
                     dlio_logger.get_instance().log_event(name=init.__qualname__, cat=self._cat, start_time=start,
                                                          duration=end - start,
-                                                         int_args=self._arguments)
+                                                         string_args=self._arguments)
                 else:
                     dlio_logger.get_instance().log_event(name=init.__qualname__, cat=self._cat, start_time=start,
                                                          duration=end - start)
