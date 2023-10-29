@@ -160,6 +160,7 @@ def load_objects(line, fn, time_granularity, time_approximate):
                 val["ts"] = int(val["ts"])
                 d["ts"] = val["ts"]
                 d["dur"] = val["dur"]
+                d["te"] = d["ts"] + d["dur"]
                 if not time_approximate:
                     d["tinterval"] = I.to_string(I.closed(val["ts"] , val["ts"] + val["dur"]))
                 d["trange"] = int(((val["ts"] + val["dur"])/2.0) / time_granularity)
@@ -172,6 +173,7 @@ def load_objects(line, fn, time_granularity, time_approximate):
     return d
 def io_function(json_object, current_dict, time_approximate):
     d = {}
+    d["phase"] = 0
     if time_approximate:
         d["total_time"] = 0
         if "compute" in json_object["name"]:
@@ -228,7 +230,7 @@ def io_columns():
         'compute_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'app_io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
-        'total_time': "uint64[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
+        'total_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'filename': "string[pyarrow]",
         'phase': "uint16[pyarrow]",
         'size': "uint64[pyarrow]"
@@ -349,7 +351,7 @@ class DLPAnalyzer:
         if main_bag:
             columns = {'name': "string[pyarrow]", 'cat': "string[pyarrow]",
                        'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]",
-                       'ts': "uint64[pyarrow]", 'dur': "uint64[pyarrow]",
+                       'ts': "uint64[pyarrow]", 'te': "uint64[pyarrow]", 'dur': "uint64[pyarrow]",
                        'tinterval': "string[pyarrow]" if not self.conf.time_approximate else "uint64[pyarrow]", 'trange': "uint64[pyarrow]"}
             columns.update(io_columns())
             columns.update(load_cols)
@@ -366,12 +368,13 @@ class DLPAnalyzer:
         logging.info(f"Loaded plots with slope threshold: {self.conf.slope_threshold}")
 
     def _calculate_time(self):
+        start_time, end_time = dask.compute(self.events["ts"].min(), self.events["te"].max())
+        total_time = end_time - start_time
+
         if self.conf.time_approximate:
-            agg = {"compute_time": max,
-                   "io_time": max,
-                   "app_io_time": max,
-                   "total_time": max}
-            grouped_df = self.events.groupby("trange").agg(agg)
+            grouped_df = self.events.groupby(["trange", "pid", "tid"]) \
+                            .agg({"compute_time": sum, "io_time": sum, "app_io_time": sum}) \
+                            .groupby(["trange"]).max()
             grouped_df["io_time"] = grouped_df["io_time"].fillna(0)
             grouped_df["compute_time"] = grouped_df["compute_time"].fillna(0)
             grouped_df["app_io_time"] = grouped_df["app_io_time"].fillna(0)
@@ -380,14 +383,13 @@ class DLPAnalyzer:
             grouped_df["only_app_io"] =  grouped_df[["compute_time","app_io_time"]].apply(lambda s: s["app_io_time"] - s["compute_time"] if s["app_io_time"] > s["compute_time"] else 0, axis=1)
             grouped_df["only_app_compute"] =  grouped_df[["compute_time","app_io_time"]].apply(lambda s: s["compute_time"] - s["app_io_time"] if s["compute_time"] > s["app_io_time"] else 0, axis=1)
             final_df = grouped_df.sum().compute()
-            total_time, total_io_time, total_compute_time, total_app_io_time, \
-            only_io, only_compute, only_app_io, only_app_compute = final_df["total_time"], final_df["io_time"], final_df["compute_time"], final_df["app_io_time"], \
+            total_io_time, total_compute_time, total_app_io_time, \
+            only_io, only_compute, only_app_io, only_app_compute = final_df["io_time"], final_df["compute_time"], final_df["app_io_time"], \
                                                                    final_df["only_io"], final_df["only_compute"], final_df["only_app_io"], final_df["only_app_compute"]
         else:
             agg = {"compute_time": union_portions(),
                    "io_time": union_portions(),
-                   "app_io_time": union_portions(),
-                   "tinterval": union_portions()}
+                   "app_io_time": union_portions()}
             grouped_df = self.events.groupby("trange").agg(agg, split_out=self.n_partition)
             grouped_df["only_io"] = grouped_df[["io_time", "compute_time"]].apply(difference_portion, a="io_time",
                                                                                   b="compute_time", axis=1,
@@ -399,9 +401,8 @@ class DLPAnalyzer:
                                                                                   meta=("string[pyarrow]"))
             grouped_df["only_app_compute"] = grouped_df[["app_io_time", "compute_time"]].apply(difference_portion, a="compute_time",
                                                                                        b="app_io_time", axis=1)
-            total_time, total_io_time, total_compute_time, total_app_io_time,\
+            total_io_time, total_compute_time, total_app_io_time,\
             only_io, only_compute, only_app_io, only_app_compute = dask.compute(
-                grouped_df[["tinterval"]].apply(size_portion, col="tinterval", axis=1).sum(),
                 grouped_df[["io_time"]].apply(size_portion, col="io_time", axis=1).sum(),
                 grouped_df[["compute_time"]].apply(size_portion, col="compute_time", axis=1).sum(),
                 grouped_df[["app_io_time"]].apply(size_portion, col="app_io_time", axis=1).sum(),
@@ -501,7 +502,7 @@ class DLPAnalyzer:
         io_tree = Tree("Behavior of Application")
         io_time = Tree("Split of Time in application")
         io_time.add(f"Total Time: {total_time / 1e6:.3f} sec")
-        io_time.add(f"Overall App Level sI/O: {total_app_io_time / 1e6:.3f} sec")
+        io_time.add(f"Overall App Level I/O: {total_app_io_time / 1e6:.3f} sec")
         io_time.add(f"Unoverlapped App I/O: {only_app_io / 1e6:.3f} sec")
         io_time.add(f"Unoverlapped App Compute: {only_app_compute / 1e6:.3f} sec")
         io_time.add(f"Compute: {total_compute_time / 1e6:.3f} sec")
