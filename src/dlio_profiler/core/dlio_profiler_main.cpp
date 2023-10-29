@@ -116,7 +116,7 @@ dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, c
       } else {
         this->process_id = *_process_id;
       }
-      DLIO_PROFILER_LOGDEBUG("Setting process_id to %d and thread id to %d", this->process_id);
+      DLIO_PROFILER_LOGDEBUG("Setting process_id to %d", this->process_id);
       if (_log_file == nullptr) {
         char cmd[128];
         sprintf(cmd, "/proc/%lu/cmdline", dlp_getpid());
