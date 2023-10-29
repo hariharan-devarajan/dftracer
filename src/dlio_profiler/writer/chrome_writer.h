@@ -47,7 +47,7 @@ namespace dlio_profiler {
         size_t write_size;
         char* write_buffer;
         inline int write_buffer_op(){
-          DLIO_PROFILER_LOGDEBUG("ChromeWriter.write_buffer_op","");
+          DLIO_PROFILER_LOGDEBUG("ChromeWriter.write_buffer_op %s",this->filename.c_str());
           auto written_elements = dlp_write(fd, write_buffer, write_size);
           if (written_elements != write_size) {  // GCOVR_EXCL_START
             ERROR(written_elements != write_size, "unable to log write %s fd %d for a+ written only %d of %d with error %s",
@@ -56,7 +56,7 @@ namespace dlio_profiler {
           return write_size;
         }
         inline int merge_buffer(const char* data, int size) {
-          DLIO_PROFILER_LOGDEBUG("ChromeWriter.merge_buffer","");
+          DLIO_PROFILER_LOGDEBUG("ChromeWriter.merge_buffer %s",this->filename.c_str());
           std::lock_guard<std::mutex> lockGuard(write_mtx);
           memcpy(write_buffer + write_size, data, size);
           write_size += size;
