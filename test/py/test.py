@@ -20,13 +20,15 @@ def log_events(index):
 
 def custom_events():
     args = {
-        "epoch": 1,
-        "index": 1,
+        "epoch": "1",
+        "index": "1",
     }
     start = log_inst.get_time()
     sleep(1)
     end = log_inst.get_time()
-    log_inst.log_event("test", "cat2", start, end - start, int_args=args)
+    log_inst.log_event("test", "cat2", start, end - start, string_args=args)
+    for i in dlio_log.iter(range(2)):
+        sleep(1)
 
 
 def posix_calls(val):
