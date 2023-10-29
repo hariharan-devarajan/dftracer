@@ -64,11 +64,11 @@ class dlio_logger:
             return self.logger.get_time()
         return 0
 
-    def log_event(self, name, cat, start_time, duration, int_args=None):
+    def log_event(self, name, cat, start_time, duration, string_args=None):
         if DLIO_PROFILER_ENABLE:
-            if int_args is None:
-                int_args = {}
-            self.logger.log_event(name=name, cat=cat, start_time=start_time, duration=duration, int_args=int_args)
+            if string_args is None:
+                string_args = {}
+            self.logger.log_event(name=name, cat=cat, start_time=start_time, duration=duration, string_args=string_args)
 
     def finalize(self):
         if DLIO_PROFILER_ENABLE:
