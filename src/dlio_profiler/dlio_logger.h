@@ -25,6 +25,7 @@ private:
     bool throw_error;
     bool is_init,dlio_profiler_tid;
     ProcessID process_id;
+    std::shared_ptr<dlio_profiler::ChromeWriter> writer;
 public:
     bool include_metadata;
     DLIOLogger(bool init_log = false) : is_init(false), include_metadata(false), dlio_profiler_tid(false) {
@@ -34,18 +35,14 @@ public:
       dlio_profiler_tid = conf->tids;
       throw_error = conf->throw_error;
       this->is_init = true;
-      std::string log_file;
-      if (!log_file.empty()) {
-        update_log_file(log_file);
-      }
     }
     ~DLIOLogger(){DLIO_PROFILER_LOGDEBUG("Destructing DLIOLogger","");}
     inline void update_log_file(std::string log_file, ProcessID process_id = -1) {
-      DLIO_PROFILER_LOGDEBUG("DLIOLogger.update_log_file","");
+      DLIO_PROFILER_LOGDEBUG("DLIOLogger.update_log_file %s",log_file.c_str());
       this->process_id = process_id;
-      auto writer = dlio_profiler::Singleton<dlio_profiler::ChromeWriter>::get_instance(-1);
-      if (writer != nullptr) {
-        writer->initialize(log_file.data(), this->throw_error);
+      this->writer = dlio_profiler::Singleton<dlio_profiler::ChromeWriter>::get_instance();
+      if (this->writer != nullptr) {
+        this->writer->initialize(log_file.data(), this->throw_error);
       }
       this->is_init = true;
       DLIO_PROFILER_LOGINFO("Writing trace to %s", log_file.c_str());
@@ -67,16 +64,14 @@ public:
       if (dlio_profiler_tid) {
         tid = dlp_gettid() + this->process_id;
       }
-      auto writer = dlio_profiler::Singleton<dlio_profiler::ChromeWriter>::get_instance(-1);
-      if (writer != nullptr) {
-        writer->log(event_name, category, start_time, duration, metadata, this->process_id, tid);
+      if (this->writer != nullptr) {
+        this->writer->log(event_name, category, start_time, duration, metadata, this->process_id, tid);
       }
     }
 
     inline void finalize() {
       DLIO_PROFILER_LOGDEBUG("DLIOLogger.finalize","");
-      auto writer = dlio_profiler::Singleton<dlio_profiler::ChromeWriter>::get_instance(-1);
-      if (writer != nullptr) {
+      if (this->writer != nullptr) {
         writer->finalize();
         dlio_profiler::Singleton<dlio_profiler::ChromeWriter>::finalize();
         DLIO_PROFILER_LOGINFO("Released Logger","");

@@ -14,7 +14,6 @@
 
 
 void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
-  DLIO_PROFILER_LOGDEBUG("ChromeWriter.initialize","");
   this->throw_error = throw_error;
   this->filename = filename;
   if (fd == -1) {
@@ -25,6 +24,7 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
       DLIO_PROFILER_LOGINFO("created log file %s with fd %d", filename, fd);
     }
   }
+  DLIO_PROFILER_LOGDEBUG("ChromeWriter.initialize %s %d",this->filename.c_str(), fd);
 }
 
 void
@@ -37,6 +37,8 @@ dlio_profiler::ChromeWriter::log(ConstEventType event_name, ConstEventType categ
     char data[MAX_LINE_SIZE];
     convert_json(event_name, category, start_time, duration, metadata, process_id, thread_id, &size, data);
     merge_buffer(data, size);
+  } else {
+    DLIO_PROFILER_LOGERROR("ChromeWriter.log invalid fd %d",fd);
   }
   is_first_write = false;
 }
@@ -97,7 +99,6 @@ void
 dlio_profiler::ChromeWriter::convert_json(ConstEventType event_name, ConstEventType category, TimeResolution start_time,
                                           TimeResolution duration, std::unordered_map<std::string, std::any> *metadata,
                                           ProcessID process_id, ThreadID thread_id, int* size, char* data) {
-  DLIO_PROFILER_LOGDEBUG("ChromeWriter.convert_json","");
 
   std::string is_first_char = "";
   if (is_first_write) is_first_char = "   ";
@@ -166,5 +167,6 @@ dlio_profiler::ChromeWriter::convert_json(ConstEventType event_name, ConstEventT
                      is_first_char.c_str(), index.load(), event_name, category,
                      process_id, thread_id, start_time, duration);
   }
+  DLIO_PROFILER_LOGDEBUG("ChromeWriter.convert_json %s",data);
   index++;
 }

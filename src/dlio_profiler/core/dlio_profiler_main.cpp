@@ -31,7 +31,7 @@ dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileTy
           initialize(true, log_file, data_dirs, process_id);
         }
         DLIO_PROFILER_LOGINFO("Preloading DLIO Profiler with log_file %s data_dir %s and process %d",
-                              log_file, data_dirs, this->process_id);
+                              this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
       }
       break;
     }
@@ -45,7 +45,7 @@ dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileTy
         }
         initialize(bind, log_file, data_dirs, process_id);
         DLIO_PROFILER_LOGINFO("App Initializing DLIO Profiler with log_file %s data_dir %s and process %d",
-                              log_file, data_dirs, this->process_id);
+                              this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
       }
       break;
     }
@@ -61,7 +61,6 @@ void dlio_profiler::DLIOProfilerCore::log(ConstEventType event_name, ConstEventT
                                           std::unordered_map<std::string, std::any> *metadata) {
   DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::log","");
   if (this->is_initialized && conf->enable) {
-    auto logger = dlio_profiler::Singleton<DLIOLogger>::get_instance();
     if (logger != nullptr) {
       logger->log(event_name, category, start_time, duration, metadata);
     }
@@ -109,7 +108,7 @@ dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, c
   if (!is_initialized) {
     this->bind = _bind;
     include_metadata = conf->metadata;
-    auto logger = dlio_profiler::Singleton<DLIOLogger>::get_instance();
+    logger = dlio_profiler::Singleton<DLIOLogger>::get_instance();
     if (conf->enable) {
       DLIO_PROFILER_LOGDEBUG("DLIO Profiler enabled", "");
       if (_process_id == nullptr || *_process_id == -1) {
@@ -206,7 +205,6 @@ dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, c
 
 TimeResolution dlio_profiler::DLIOProfilerCore::get_time() {
   DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::get_time","");
-  auto logger = dlio_profiler::Singleton<DLIOLogger>::get_instance();
   if (this->is_initialized && conf->enable && logger != nullptr) {
     return logger->get_time();
   }

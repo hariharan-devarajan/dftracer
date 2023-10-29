@@ -35,6 +35,7 @@ namespace dlio_profiler {
         ProcessID process_id;
         bool is_initialized;
         bool bind;
+        std::shared_ptr<DLIOLogger> logger;
         void initialize(bool _bind, const char *_log_file = nullptr, const char *_data_dirs = nullptr,
                          const int *_process_id = nullptr);
 

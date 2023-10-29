@@ -87,7 +87,7 @@ namespace dlio_profiler {
         }
 
     public:
-        ChromeWriter(int fd = -1): is_first_write(true), write_mtx(), enable_core_affinity(false), include_metadata(false),
+        ChromeWriter(): is_first_write(true), fd(-1), write_mtx(), enable_core_affinity(false), include_metadata(false),
                   enable_compression(false), index(0), write_size(0){
           DLIO_PROFILER_LOGDEBUG("ChromeWriter.ChromeWriter","");
           write_buffer = static_cast<char *>(malloc(WRITE_BUFFER_SIZE + MAX_LINE_SIZE));
@@ -96,7 +96,6 @@ namespace dlio_profiler {
           include_metadata = conf->metadata;
           enable_core_affinity = conf->core_affinity;
           enable_compression = conf->compression;
-          this->fd = fd;
           if (enable_core_affinity) {
             hwloc_topology_init(&topology);  // initialization
             hwloc_topology_load(topology);   // actual detection
