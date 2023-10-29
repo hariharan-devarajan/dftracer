@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
   foo();
   truncate(filename, 0);
   FILE *fh = fopen(filename, "w+");
-  if (fh != NULL) {
+  if (fh != nullptr) {
     fwrite("hello", sizeof("hello"), 1, fh);
     fclose(fh);
   }
