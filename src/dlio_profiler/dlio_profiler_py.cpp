@@ -60,7 +60,6 @@ namespace dlio_profiler {
               ProfileType::PROFILER_PY_APP);
       if (dlio_profiler_inst != nullptr) {
         dlio_profiler_inst->finalize();
-        dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::finalize();
       }
       //}
       DLIO_PROFILER_LOGINFO("Finalized Py Binding","");
