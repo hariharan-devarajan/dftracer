@@ -180,9 +180,10 @@ def io_function(json_object, current_dict, time_approximate):
     d["phase"] = 0
     # app_io_cond = "NPZReader.read_index" in json_object["name"]
     app_io_cond = "IO" == json_object["cat"]
+    compute_cond = "cpu" in json_object["name"] or "compute" in json_object["cat"]
     if time_approximate:
         d["total_time"] = 0
-        if "compute" in json_object["name"]:
+        if compute_cond:
             d["compute_time"] = current_dict["dur"]
             d["total_time"] = current_dict["dur"]
             d["phase"] = 1
@@ -196,7 +197,7 @@ def io_function(json_object, current_dict, time_approximate):
             d["phase"] = 3
 
     else:
-        if "compute" in json_object["name"]:
+        if compute_cond:
             d["compute_time"] = current_dict["tinterval"]
             d["total_time"] = current_dict["tinterval"]
             d["phase"] = 1
