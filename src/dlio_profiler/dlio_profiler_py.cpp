@@ -54,15 +54,15 @@ namespace dlio_profiler {
     void finalize() {
       DLIO_PROFILER_LOGDEBUG("py.finalize","");
       auto conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
-      if (conf->init_type == ProfileInitType::PROFILER_INIT_FUNCTION) {
-        auto dlio_profiler_inst = dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(
-                ProfilerStage::PROFILER_FINI,
-                ProfileType::PROFILER_PY_APP);
-        if (dlio_profiler_inst != nullptr) {
-          dlio_profiler_inst->finalize();
-          dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::finalize();
-        }
+      //if (conf->init_type == ProfileInitType::PROFILER_INIT_FUNCTION) {
+      auto dlio_profiler_inst = dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(
+              ProfilerStage::PROFILER_FINI,
+              ProfileType::PROFILER_PY_APP);
+      if (dlio_profiler_inst != nullptr) {
+        dlio_profiler_inst->finalize();
+        dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::finalize();
       }
+      //}
       DLIO_PROFILER_LOGINFO("Finalized Py Binding","");
     }
 } // dlio_profiler
