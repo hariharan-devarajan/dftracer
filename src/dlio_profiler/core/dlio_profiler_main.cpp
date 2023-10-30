@@ -143,12 +143,9 @@ dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, c
             }
           }
         }
-        auto tid = dlp_gettid();
         DLIO_PROFILER_LOGINFO("Extracted process_name %s", exec_name.c_str());
         if (!conf->log_file.empty()) {
-            this->log_file = std::string(conf->log_file) + "-" + exec_name +
-                           "-" + std::to_string(this->process_id) +
-                           "-" + std::to_string(tid) + ".pfw" ;
+            this->log_file = std::string(conf->log_file) + "-" + exec_name + "-" + std::to_string(this->process_id) + ".pfw" ;
         } else {  // GCOV_EXCL_START
           DLIO_PROFILER_LOGERROR(UNDEFINED_LOG_FILE.message, "");
           throw std::runtime_error(UNDEFINED_LOG_FILE.code);
