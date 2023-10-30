@@ -40,6 +40,7 @@ class DLPConfiguration:
         self.time_approximate = False
         self.slope_threshold = 45
         self.time_granularity = 1e3
+        self.skip_hostname = False
 
 dlp_configuration = DLPConfiguration()
 
@@ -60,8 +61,11 @@ def update_dlp_configuration(
     time_approximate=None,
     slope_threshold=None,
     time_granularity=None,
+    skip_hostname=None
 ):
     global dlp_configuration
+    if skip_hostname:
+        dlp_configuration.skip_hostname = skip_hostname
     if host_pattern:
         dlp_configuration.host_pattern = host_pattern
     if rebuild_index:
@@ -174,6 +178,8 @@ def load_objects(line, fn, time_granularity, time_approximate):
 def io_function(json_object, current_dict, time_approximate):
     d = {}
     d["phase"] = 0
+    # app_io_cond = "NPZReader.read_index" in json_object["name"]
+    app_io_cond = "IO" == json_object["cat"]
     if time_approximate:
         d["total_time"] = 0
         if "compute" in json_object["name"]:
@@ -184,7 +190,7 @@ def io_function(json_object, current_dict, time_approximate):
             d["io_time"] = current_dict["dur"]
             d["total_time"] = current_dict["dur"]
             d["phase"] = 2
-        elif "NPZReader.read_index" in json_object["name"]:
+        elif app_io_cond:
             d["total_time"] = current_dict["dur"]
             d["app_io_time"] = current_dict["dur"]
             d["phase"] = 3
@@ -200,7 +206,7 @@ def io_function(json_object, current_dict, time_approximate):
             d["io_time"] = current_dict["tinterval"]
             d["total_time"] = current_dict["tinterval"]
             d["phase"] = 2
-        elif "NPZReader.read_index" in json_object["name"]:
+        elif app_io_cond:
             d["app_io_time"] = current_dict["tinterval"]
             d["total_time"] = current_dict["tinterval"]
             d["phase"] = 3
@@ -428,20 +434,23 @@ class DLPAnalyzer:
 
     def _create_host_intervals(self, hosts_list):
         conf = get_dlp_configuration()
-        logging.debug(f"Creating regex for {hosts_list} {conf.host_pattern}")
-        is_first = True
-        value = I.empty()
-        for host in hosts_list:
-            val = int(re.findall(conf.host_pattern, host)[0])
-            if is_first:
-                prev = val
-                is_first = False
-                value = I.closed(prev, prev)
-            else:
-                value = value | I.closed(prev, val)
-        val = re.findall(conf.host_pattern, hosts_list[0])[0]
-        regex = hosts_list[0].replace(val, str(value))
-        logging.info(f"Created regex value {val}")
+        if not conf.skip_hostname:
+            logging.debug(f"Creating regex for {hosts_list} {conf.host_pattern}")
+            is_first = True
+            value = I.empty()
+            for host in hosts_list:
+                val = int(re.findall(conf.host_pattern, host)[0])
+                if is_first:
+                    prev = val
+                    is_first = False
+                    value = I.closed(prev, prev)
+                else:
+                    value = value | I.closed(prev, val)
+            val = re.findall(conf.host_pattern, hosts_list[0])[0]
+            regex = hosts_list[0].replace(val, str(value))
+            logging.info(f"Created regex value {val}")
+        else:
+            regex = hosts_list
         return regex
 
     def _remove_numbers(self, string_items):
