@@ -66,6 +66,8 @@ public:
       }
       if (this->writer != nullptr) {
         this->writer->log(event_name, category, start_time, duration, metadata, this->process_id, tid);
+      } else  {
+        DLIO_PROFILER_LOGERROR("DLIOLogger.log writer not initialized","");
       }
     }
 
@@ -75,6 +77,8 @@ public:
         writer->finalize();
         dlio_profiler::Singleton<dlio_profiler::ChromeWriter>::finalize();
         DLIO_PROFILER_LOGINFO("Released Logger","");
+      } else  {
+        DLIO_PROFILER_LOGWARN("DLIOLogger.finalize writer not initialized","");
       }
     }
 };

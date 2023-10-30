@@ -167,6 +167,6 @@ dlio_profiler::ChromeWriter::convert_json(ConstEventType event_name, ConstEventT
                      is_first_char.c_str(), index.load(), event_name, category,
                      process_id, thread_id, start_time, duration);
   }
-  DLIO_PROFILER_LOGDEBUG("ChromeWriter.convert_json %s",data);
+  DLIO_PROFILER_LOGDEBUG("ChromeWriter.convert_json %s on %s",data, this->filename.c_str());
   index++;
 }

@@ -32,6 +32,7 @@ namespace dlio_profiler {
       auto dlio_profiler_inst = dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_OTHER,
                                                                                    ProfileType::PROFILER_PY_APP);
       if (dlio_profiler_inst != nullptr) return dlio_profiler_inst->get_time();
+      else DLIO_PROFILER_LOGERROR("py.get_time dlio_profiler not initialized","");
       return 0;
     }
 
@@ -47,20 +48,20 @@ namespace dlio_profiler {
       auto dlio_profiler_inst = dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_OTHER,
                                                                               ProfileType::PROFILER_PY_APP);
       if (dlio_profiler_inst != nullptr) dlio_profiler_inst->log(name.c_str(), cat.c_str(), start_time, duration, &args);
+      else DLIO_PROFILER_LOGERROR("py.log_event dlio_profiler not initialized","");
     }
 
     void finalize() {
       DLIO_PROFILER_LOGDEBUG("py.finalize","");
       auto conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
-      if (conf->init_type == ProfileInitType::PROFILER_INIT_FUNCTION) {
-        auto dlio_profiler_inst = dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(
-                ProfilerStage::PROFILER_FINI,
-                ProfileType::PROFILER_PY_APP);
-        if (dlio_profiler_inst != nullptr) {
-          dlio_profiler_inst->finalize();
-          dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::finalize();
-        }
+      //if (conf->init_type == ProfileInitType::PROFILER_INIT_FUNCTION) {
+      auto dlio_profiler_inst = dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(
+              ProfilerStage::PROFILER_FINI,
+              ProfileType::PROFILER_PY_APP);
+      if (dlio_profiler_inst != nullptr) {
+        dlio_profiler_inst->finalize();
       }
+      //}
       DLIO_PROFILER_LOGINFO("Finalized Py Binding","");
     }
 } // dlio_profiler

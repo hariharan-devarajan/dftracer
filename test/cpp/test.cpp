@@ -32,17 +32,10 @@ int main(int argc, char *argv[]) {
   foo();
   truncate(filename, 0);
   FILE *fh = fopen(filename, "w+");
-  if (fh != NULL) {
+  if (fh != nullptr) {
     fwrite("hello", sizeof("hello"), 1, fh);
     fclose(fh);
   }
-  struct stat stat_buf;
-  struct stat64 stat_buf64;
-  stat(filename, &stat_buf);
-  lstat(filename, &stat_buf);
-  stat64(filename, &stat_buf64);
-  lstat64(filename, &stat_buf64);
-
   link(filename, filename_link);
   unlink(filename_link);
   symlink(filename, filename_link);
@@ -63,8 +56,6 @@ int main(int argc, char *argv[]) {
   umask(0);
   mkfifo(filename, 0);
   symlinkat(filename, dd, filename_link);
-  fstat(dd, &stat_buf);
-  fstat64(dd, &stat_buf64);
   faccessat(dd, "demofile.txt", O_RDONLY, 0);
   linkat(dd, "demofile.txt", dd, "demofile_link2.txt", 0);
   chdir(dir);

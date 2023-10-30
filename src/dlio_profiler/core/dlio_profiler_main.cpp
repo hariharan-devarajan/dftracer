@@ -3,8 +3,6 @@
 //
 #include <dlio_profiler/core/dlio_profiler_main.h>
 
-
-
 void dlio_finalize() {
   DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore.dlio_finalize","");
   auto conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
@@ -63,6 +61,8 @@ void dlio_profiler::DLIOProfilerCore::log(ConstEventType event_name, ConstEventT
   if (this->is_initialized && conf->enable) {
     if (logger != nullptr) {
       logger->log(event_name, category, start_time, duration, metadata);
+    } else  {
+      DLIO_PROFILER_LOGERROR("DLIOProfilerCore::log logger not initialized","");
     }
   }
 }
@@ -116,7 +116,7 @@ dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, c
       } else {
         this->process_id = *_process_id;
       }
-      DLIO_PROFILER_LOGDEBUG("Setting process_id to %d and thread id to %d", this->process_id);
+      DLIO_PROFILER_LOGDEBUG("Setting process_id to %d", this->process_id);
       if (_log_file == nullptr) {
         char cmd[128];
         sprintf(cmd, "/proc/%lu/cmdline", dlp_getpid());
@@ -207,6 +207,8 @@ TimeResolution dlio_profiler::DLIOProfilerCore::get_time() {
   DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::get_time","");
   if (this->is_initialized && conf->enable && logger != nullptr) {
     return logger->get_time();
+  } else  {
+    DLIO_PROFILER_LOGERROR("DLIOProfilerCore::get_time logger not initialized","");
   }
   return -1;
 }
