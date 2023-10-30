@@ -178,9 +178,10 @@ def load_objects(line, fn, time_granularity, time_approximate):
 def io_function(json_object, current_dict, time_approximate):
     d = {}
     d["phase"] = 0
-    # app_io_cond = "NPZReader.read_index" in json_object["name"]
-    app_io_cond = "IO" == json_object["cat"]
-    compute_cond = "cpu" in json_object["name"] or "compute" in json_object["cat"]
+    # app_io_cond = "NPZReader.read_index" in json_object["name"] # Unet3d
+    # compute_cond = "compute" in json_object["name"] # Unet3d
+    app_io_cond = "IO" == json_object["cat"] # Resnet50
+    compute_cond = "cpu" in json_object["name"] or "compute" in json_object["cat"] # Resnet50
     if time_approximate:
         d["total_time"] = 0
         if compute_cond:
