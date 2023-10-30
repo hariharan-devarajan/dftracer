@@ -18,10 +18,12 @@ import sys, signal
 
 def capture_signal(signal_number, frame):
     dlio_logger.get_instance().finalize()
-    sys.exit(1)
+    sys.exit(signal_number)
 
-
-signal.signal(signal.SIGABRT, capture_signal)
+if DLIO_PROFILER_ENABLE:
+    signal.signal(signal.SIGABRT, capture_signal)
+    signal.signal(signal.SIGINT, capture_signal)
+    signal.signal(signal.SIGTERM, capture_signal)
 
 
 class dlio_logger:
