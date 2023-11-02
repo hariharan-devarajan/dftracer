@@ -1,17 +1,21 @@
 config:
   root_dir:  /usr/WS2/haridev/dlio-profiler/dlp_analyzer/dask
-  SCRIPT_DIR: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/scripts
-  CONF_DIR: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/conf
-  RUN_DIR: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/run_dir
-  LOG_DIR: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/logs
-  NUM_NODES: 1
-  WALL_TIME_MIN: 60
-  PPN: 48
-  JOB_ALLOC_CMD: srun -N ${DLIO_PROFILER_CONFIG_NUM_NODES} -t ${DLIO_PROFILER_CONFIG_WALL_TIME_MIN}
-  EXEC_CMD: srun -N ${DLIO_PROFILER_CONFIG_NUM_NODES} --ntasks-per-node=${DLIO_PROFILER_CONFIG_PPN}
-  JOB_ID: FLUX_JOB_ID
-  DASK_SCHEDULER_PORT: 10001
-  WORKER_PER_CORE: 1
-  THREADS_PER_WORKER: 1
-  WORKER_LOCAL_DIR: /l/ssd/$USER/dask-workspace
-  JOB_KILL: flux cancel --all
+  script_dir: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/scripts
+  conf_dir: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/conf
+  run_dir: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/run_dir
+  log_dir: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/logs
+job:
+  num_nodes: 1
+  wall_time_min: 60
+  env_id: FLUX_JOB_ID
+scheduler:
+  cmd: srun -N ${DLIO_PROFILER_JOB_NUM_NODES} -t ${DLIO_PROFILER_JOB_WALL_TIME_MIN}
+  port: 10001
+  kill: flux cancel --all
+worker:
+  ppn: 48
+  cmd: srun -N ${DLIO_PROFILER_JOB_NUM_NODES} --ntasks-per-node=${DLIO_PROFILER_WORKER_PPN}
+  per_core: 1
+  threads: 1
+  local_dir: /l/ssd/$USER/dask-workspace
+  kill: flux cancel --all
