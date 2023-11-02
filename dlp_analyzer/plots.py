@@ -1,3 +1,4 @@
+import dask
 import matplotlib.pyplot as plt
 import numpy as np
 import dask.dataframe as dd
@@ -5,191 +6,168 @@ import pandas as pd
 from matplotlib import ticker
 from typing import Literal, Tuple
 
-DELTA_BINS = [
-    0,
-    0.001,
-    0.01,
-    0.1,
-    0.25,
-    0.5,
-    0.75,
-    0.9
-]
-XFER_SIZE_BINS = [
-    -np.inf,
-    4 * 1024.0,
-    16 * 1024.0,
-    64 * 1024.0,
-    256 * 1024.0,
-    1 * 1024.0 * 1024.0,
-    4 * 1024.0 * 1024.0,
-    16 * 1024.0 * 1024.0,
-    64 * 1024.0 * 1024.0,
-    np.inf
-]
-XFER_SIZE_BIN_NAMES = [
-    '<4 KB',
-    '4 KB',
-    '16 KB',
-    '64 KB',
-    '256 KB',
-    '1 MB',
-    '4 MB',
-    '16 MB',
-    '64 MB',
-    '>64 MB'
-]
+TIME_COLS = ['io_time', 'app_io_time']
 
 
-import logging
 class DLPAnalyzerPlots(object):
 
-    def __init__(self, events: dd.DataFrame, slope_threshold: int) -> None:
+    def __init__(self, events: dd.DataFrame, slope_threshold: int, time_granularity: int) -> None:
         self.events = events
         self.slope_threshold = slope_threshold
-    def bottleneck_timeline(
+        self.time_granularity = time_granularity
+
+    def time_bw_timeline(
         self,
+        time_col: Literal['io_time', 'app_io_time'],
         figsize: Tuple[int, int],
+        bw_unit: Literal['kb', 'mb', 'gb'] = 'kb',
+        line1_label: str = 'I/O Time',
+        line2_label: str = 'I/O Bandwidth',
         xlabel: str = 'Timeline (sec)',
-        ylabel: str = 'I/O Time (sec)',
+        y1label: str = 'Time (sec)',
+        y2label: str = 'Bandwidth',
+        x_num_ticks: int = 10,
+        y_num_ticks: int = 5,
     ):
-        metric = 'total_time'
-        slope_col = f"{metric}_slope"
-        def _set_slope_and_score(df: pd.DataFrame, metric_max: dd.core.Scalar):
-            bin_col, pero_col, per_rev_col, per_rev_cs_col, per_rev_cs_diff_col, score_col, sum_col, th_col = (
-                f"{metric}_bin",
-                f"{metric}_pero",
-                f"{metric}_per_rev",
-                f"{metric}_per_rev_cs",
-                f"{metric}_per_rev_cs_diff",
-                f"{metric}_score",
-                f"{metric}_sum",
-                f"{metric}_th",
-            )
-            logging.info(df.head())
-            df[pero_col] = df[metric] / metric_max
-            df[bin_col] = np.digitize(df[pero_col], bins=DELTA_BINS, right=True)
-            df[th_col] = np.choose(df[bin_col] - 1, choices=DELTA_BINS, mode='clip')
-
-            df['index_sum'] = df['index'].sum()
-            df['index_cs'] = df['index'].cumsum()
-            df['index_cs_per'] = 1 - df['index_cs'] / df['index_sum']
-            df['index_cs_per_rev'] = 1 - df['index_cs_per']
-            df['index_cs_per_rev_diff'] = 0.0
-            df['index_cs_per_rev_diff'] = df['index_cs_per_rev'].diff().fillna(0)
-
-            df[sum_col] = df[metric].sum()
-            df[per_rev_col] = 1 - df[metric] / df[sum_col]
-            df[per_rev_cs_col] = (1 - df[per_rev_col]).cumsum()
-            df[per_rev_cs_diff_col] = df[per_rev_cs_col].diff().fillna(0)
-
-            df[slope_col] = np.rad2deg(np.arctan2(df['index_cs_per_rev_diff'], df[per_rev_cs_diff_col]))
-            df[slope_col] = df[slope_col].fillna(0)
-
-            return df[[metric, pero_col, slope_col, th_col, "io_time"]]
-
-        timeline = self._create_timeline(events=self.events)
-
-        metric_max = timeline[metric].max()
-        logging.info(timeline.head())
-        timeline = timeline \
-            .map_partitions(_set_slope_and_score, metric_max=metric_max) \
-            .reset_index().compute()
-        min_trange = timeline[f"trange"].min()
-        timeline[f"trange"] =  timeline[f"trange"] - min_trange
-        timeline["trange_sec"] = timeline["trange"] / 1e6
-        timeline[f"{metric}_sec"] = timeline[f"{metric}"] / 1e6
-        problematic = timeline.query(f"io_time > 0 and {slope_col} > 0 and {slope_col} < 90")
-
-        fig, ax = plt.subplots(figsize=figsize)
-
-        timeline.plot.line(ax=ax, x='trange_sec', y=f"{metric}_sec", alpha=0.8, color='C0')
-
-        overlap = problematic[problematic['trange'].isin(timeline['trange'])]
-        colors = np.vectorize(self._color_map)(problematic[f'{metric}_th'])
-
-        overlap.plot.scatter(ax=ax, x='trange_sec', y=f"{metric}_sec", c=colors, s=96)
-
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-        ax.get_legend().remove()
-
-        return fig, ax
-
-    def bw_timeline(
-        self,
-        figsize: Tuple[int, int],
-        unit: Literal['kb', 'mb', 'gb'],
-        xlabel: str = 'Timeline (sec)',
-        ylabel: str = 'Agg. Bandwidth',
-    ):
-        bw_col = 'bw'
+        size_denom = 1024
+        y2label_suffix = 'KB/s'
+        if bw_unit == 'mb':
+            size_denom = 1024 ** 2
+            y2label_suffix = 'MB/s'
+        elif bw_unit == 'gb':
+            size_denom = 1024 ** 3
+            y2label_suffix = 'GB/s'
 
         def _set_bw(df: pd.DataFrame):
-            df[bw_col] = df['size'] / df['dur'] / 1e6
+            for col in TIME_COLS:
+                df[f"{col}_bw"] = (df['size'] / size_denom) / (df[col] / 1e6)
+            df.replace([np.inf, -np.inf], np.nan, inplace=True)
+            df[f"{col}_bw"] = df[f"{col}_bw"].fillna(0)
             return df
 
         timeline = self._create_timeline(events=self.events) \
             .map_partitions(_set_bw) \
             .reset_index() \
-            .compute()
-        timeline["trange_sec"] = timeline["trange"] / 1e6
+            .compute() \
+            .assign(seconds=self._assign_seconds)
 
-        ax = timeline.plot.line(x='trange_sec', y=bw_col, figsize=figsize)
+        fig, ax1 = plt.subplots(figsize=figsize)
 
-        ylabel_denom = 1024
-        ylabel_unit = 'KB/s'
-        if unit == 'mb':
-            ylabel_denom = 1024 ** 2
-            ylabel_unit = 'MB/s'
-        elif unit == 'gb':
-            ylabel_denom = 1024 ** 3
-            ylabel_unit = 'GB/s'
+        timeline.plot.line(ax=ax1, x='seconds', y=time_col,
+                           alpha=0.8, color='C0', label=line1_label)
 
-        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.2f}'.format(x/ylabel_denom)))
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(f"{ylabel} ({ylabel_unit})")
-        ax.get_legend().remove()
+        ax2 = ax1.twinx()
 
-        return ax
+        timeline.plot.line(ax=ax2, x='seconds', y=f"{time_col}_bw", linestyle='dashed',
+                           alpha=0.8, color='C1', label=line2_label)
 
-    def xfer_size_distribution(
+        y1_min = np.min([timeline[col].min() for col in TIME_COLS])
+        y1_max = np.max([timeline[col].max() for col in TIME_COLS])
+        ax1.set_ylim([0, y1_max])
+
+        y2_min = np.min([timeline[f"{col}_bw"].min() for col in TIME_COLS])
+        y2_max = np.max([timeline[f"{col}_bw"].max() for col in TIME_COLS])
+        ax2.set_ylim([0, y2_max])
+
+        ax1.yaxis.set_major_formatter(ticker.FuncFormatter(
+            lambda x, pos: '{:.0f}'.format(x/1e6)))
+        ax1.set_xlabel(xlabel)
+        ax1.set_ylabel(y1label)
+
+        ax2.yaxis.set_major_formatter(ticker.FuncFormatter(
+            lambda x, pos: '{:.1f}'.format(x)))
+        ax2.set_ylabel(f"{y2label} ({y2label_suffix})")
+
+        ax1.yaxis.set_major_locator(ticker.LinearLocator(y_num_ticks))
+        ax2.yaxis.set_major_locator(ticker.LinearLocator(y_num_ticks))
+
+        handles1, labels1 = ax1.get_legend_handles_labels()
+        handles2, labels2 = ax2.get_legend_handles_labels()
+        ax1.get_legend().remove()
+        ax2.get_legend().remove()
+
+        # Combine handles and labels
+        handles = handles1 + handles2
+        labels = labels1 + labels2
+
+        # Create the legend
+        ax2.legend(handles, labels)
+
+        ax1.minorticks_on()
+        ax2.minorticks_on()
+
+        ax1.grid(axis='y', which='major')
+        ax1.grid(axis='y', which='minor', alpha=0.3)
+
+        ts_min, te_max = dask.compute(
+            self.events['ts'].min(), self.events['te'].max())
+        ax1.set_xlim([ts_min / 1e6, te_max / 1e6])
+        ax1.xaxis.set_major_formatter(ticker.FormatStrFormatter('%d'))
+        ax1.xaxis.set_major_locator(ticker.LinearLocator(x_num_ticks))
+
+        return fig, ax1, ax2
+
+    def xfer_size_timeline(
         self,
         figsize: Tuple[int, int],
-        xlabel: str = 'Transfer Sizes',
-        ylabel: str = 'Frequency',
+        unit: Literal['kb', 'mb', 'gb'] = 'kb',
+        xlabel: str = 'Timeline (sec)',
+        ylabel: str = 'Transfer Size',
+        x_num_ticks: int = 10,
+        y_num_ticks: int = 5,
     ):
-        xfer_col, xfer_bin_col, xfer_label_col = (
-            'xfer',
-            'xfer_bin',
-            'xfer_label'
-        )
+        xfer_col = 'xfer'
+
+        ylabel_denom = 1024
+        ylabel_unit = 'KB'
+        if unit == 'mb':
+            ylabel_denom = 1024 ** 2
+            ylabel_unit = 'MB'
+        elif unit == 'gb':
+            ylabel_denom = 1024 ** 3
+            ylabel_unit = 'GB'
 
         def _set_xfer_size(df: pd.DataFrame):
-            df[xfer_col] = df['size'] / df['index']
-            df[xfer_bin_col] = np.digitize(df[xfer_col], bins=XFER_SIZE_BINS, right=True)
-            df[xfer_label_col] = np.choose(df[xfer_bin_col] - 1, choices=XFER_SIZE_BIN_NAMES, mode='clip')
+            df[xfer_col] = (df['size'] / ylabel_denom) / df['index']
             return df
 
         timeline = self._create_timeline(events=self.events) \
+            .query('size > 0') \
             .map_partitions(_set_xfer_size) \
             .reset_index() \
-            .compute()
+            .compute() \
+            .assign(seconds=self._assign_seconds)
 
-        xfer_labels = timeline \
-            .groupby([xfer_bin_col, xfer_label_col]) \
-            .agg({'index': 'sum'}) \
-            .reset_index() \
-            .sort_values(xfer_bin_col)
+        fig, ax = plt.subplots(figsize=figsize)
 
-        ax = xfer_labels.plot.bar(x=xfer_label_col, y='index', figsize=figsize)
+        timeline.plot.line(ax=ax, x='seconds', y=xfer_col,
+                           alpha=0.8, color='C3', label='Avg. Transfer Size')
 
-        ax.yaxis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
         ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-        ax.get_legend().remove()
+        ax.set_ylabel(f"{ylabel} ({ylabel_unit})")
+        _, ylim_max = ax.get_ylim()
+        ax.set_ylim([0, ylim_max * 2])
+        ax.yaxis.set_major_locator(ticker.LinearLocator(y_num_ticks))
+        # ax1.yaxis.set_major_formatter(ticker.FuncFormatter(
+        #     lambda x, pos: '{:.0f}'.format(x/1e6)))
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(
+            lambda x, pos: '{:.1f}'.format(x)))
 
-        return ax
+        # ax.get_legend().remove()
+        ax.minorticks_on()
+        ax.grid(axis='y', which='major')
+        ax.grid(axis='y', which='minor', alpha=0.3)
+
+        ts_min, te_max = dask.compute(
+            self.events['ts'].min(), self.events['te'].max())
+        ax.set_xlim([ts_min / 1e6, te_max / 1e6])
+        ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%d'))
+        ax.xaxis.set_major_locator(ticker.LinearLocator(x_num_ticks))
+
+        return fig, ax
+
+    def _assign_seconds(self, timeline: pd.DataFrame):
+        return timeline['trange'] * (self.time_granularity / 1e6)
 
     @staticmethod
     def _color_map(threshold: float):
@@ -213,13 +191,15 @@ class DLPAnalyzerPlots(object):
     @staticmethod
     def _create_timeline(events: dd.DataFrame):
         events['index'] = 1
-        timeline = events.groupby(['trange']) \
+
+        timeline = events.groupby(['trange', 'pid', 'tid']) \
             .agg({
                 'index': 'count',
                 'size': 'sum',
-                'total_time': 'max',
-                'io_time': 'max',
-                'app_io_time': 'max'
-            })
-        logging.info(timeline.head())
+                'io_time': 'sum',
+                'app_io_time': 'sum',
+            }) \
+            .groupby(['trange']) \
+            .max()
+
         return timeline
