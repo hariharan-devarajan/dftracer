@@ -1,9 +1,8 @@
 config:
-  root_dir:  ${DLIO_PROFILER_APP}
-  script_dir: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/scripts
-  conf_dir: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/conf
-  run_dir: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/run_dir
-  log_dir: ${DLIO_PROFILER_CONFIG_ROOT_DIR}/logs
+  script_dir: ${DLIO_PROFILER_APP}/dlp_analyzer/dask/scripts
+  conf_dir: ${DLIO_PROFILER_APP}/dlp_analyzer/dask/conf
+  run_dir: ${DLIO_PROFILER_APP}/dlp_analyzer/dask/run_dir
+  log_dir: ${DLIO_PROFILER_APP}/dlp_analyzer/dask/logs
 job:
   num_nodes: 1
   wall_time_min: 60
