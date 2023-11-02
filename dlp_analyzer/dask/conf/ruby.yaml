@@ -6,15 +6,15 @@ config:
 job:
   num_nodes: 1
   wall_time_min: 60
-  env_id: FLUX_JOB_ID
+  env_id: SLURM_JOB_ID
 scheduler:
   cmd: srun -N ${DLIO_PROFILER_JOB_NUM_NODES} -t ${DLIO_PROFILER_JOB_WALL_TIME_MIN}
   port: 10001
-  kill: flux cancel --all
+  kill: skill ${SLURM_JOB_ID}
 worker:
   ppn: 48
   cmd: srun -N ${DLIO_PROFILER_JOB_NUM_NODES} --ntasks-per-node=${DLIO_PROFILER_WORKER_PPN}
   per_core: 1
   threads: 1
   local_dir: /l/ssd/$USER/dask-workspace
-  kill: flux cancel --all
+  kill: skill ${SLURM_JOB_ID}
