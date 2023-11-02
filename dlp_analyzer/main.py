@@ -635,7 +635,7 @@ def main():
     analyzer = DLPAnalyzer(args.trace)
     analyzer.summary()
     analyzer.plots.time_bw_timeline(figsize=(8, 4))
-    analyzer.plots.xfer_size_timeline(figsize=(4, 4))
+    analyzer.plots.xfer_size_timeline(figsize=(4, 4), time_col="io_time")
 
 if __name__ == '__main__':
     main()
