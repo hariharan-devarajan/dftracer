@@ -26,6 +26,7 @@ fi
 source ${DLIO_PROFILER_APP}/dlp_analyzer/dask/scripts/utils.sh
 eval $(parse_yaml $DLIO_PROFILER_DASK_CONF_NAME DLIO_PROFILER_)
 
+source ${DLIO_PROFILER_ENV}/bin/activate
 
 dask scheduler --scheduler-file ${DLIO_PROFILER_CONFIG_RUN_DIR}/scheduler.json --port ${DLIO_PROFILER_SCHEDULER_PORT} > ${DLIO_PROFILER_CONFIG_LOG_DIR}/scheduler.log 2>&1 &
 scheduler_pid=$!

@@ -9,6 +9,8 @@ export PYTHONPATH=${DLIO_PROFILER_APP}:${PYTHONPATH}
 source ${DLIO_PROFILER_APP}/dlp_analyzer/dask/scripts/utils.sh
 eval $(parse_yaml $DLIO_PROFILER_DASK_CONF_NAME DLIO_PROFILER_)
 DLIO_PROFILER_JOB_ID=${!DLIO_PROFILER_JOB_ENV_ID}
+source ${DLIO_PROFILER_ENV}/bin/activate
+echo "Activated Env"
 while :
 do
 ${DLIO_PROFILER_WORKER_CMD} dask worker --scheduler-file ${DLIO_PROFILER_CONFIG_RUN_DIR}/scheduler.json \
