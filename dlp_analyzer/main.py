@@ -370,16 +370,25 @@ class DLPAnalyzer:
             logging.debug(f"Number of partitions used are {self.n_partition}")
             self.events = events.repartition(npartitions=self.n_partition).persist()
             _ = wait(self.events)
+            self.events['ts'] = self.events['ts'] - self.events['ts'].min()
+            self.events['te'] = self.events['ts'] + self.events['dur']
+            self.events['trange'] = self.events['ts'] // self.conf.time_granularity
+            self.events = self.events.persist()
+            _ = wait(self.events)
         else:
             logging.error(f"Unable to load Traces")
             exit(1)
         logging.info(f"Loaded events")
-        self.plots = DLPAnalyzerPlots(events=self.events, slope_threshold=self.conf.slope_threshold)
+        self.plots = DLPAnalyzerPlots(
+            events=self.events,
+            slope_threshold=self.conf.slope_threshold,
+            time_granularity=self.conf.time_granularity,
+        )
         logging.info(f"Loaded plots with slope threshold: {self.conf.slope_threshold}")
 
     def _calculate_time(self):
-        start_time, end_time = dask.compute(self.events["ts"].min(), self.events["te"].max())
-        total_time = end_time - start_time
+        ts_min, te_max = dask.compute(self.events['ts'].min(), self.events['te'].max())
+        total_time = te_max - ts_min
 
         if self.conf.time_approximate:
             grouped_df = self.events.groupby(["trange", "pid", "tid"]) \
