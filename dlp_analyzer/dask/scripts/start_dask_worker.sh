@@ -13,7 +13,7 @@ while :
 do
 ${DLIO_PROFILER_WORKER_CMD} dask worker --scheduler-file ${DLIO_PROFILER_CONFIG_RUN_DIR}/scheduler.json \
           --local-directory ${DLIO_PROFILER_WORKER_LOCAL_DIR} \
-          --nworkers ${DLIO_PROFILER_WORKER_PER_CORE} --nthreads ${DLIO_PROFILER_WORKER_THREADS} > ${DLIO_PROFILER_CONFIG_LOG_DIR}/worker_${DLIO_PROFILER_JOB_ENV_ID}.log 2>&1
+          --nworkers ${DLIO_PROFILER_WORKER_PER_CORE} --nthreads ${DLIO_PROFILER_WORKER_THREADS} > ${DLIO_PROFILER_CONFIG_LOG_DIR}/worker_${DLIO_PROFILER_JOB_ID}.log 2>&1
 echo "Workers existed. Restarting in 1 second"
 sleep 1
 done
