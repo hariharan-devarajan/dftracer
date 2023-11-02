@@ -20,7 +20,7 @@ class DLPAnalyzerPlots(object):
         self,
         time_col: Literal['io_time', 'app_io_time'],
         figsize: Tuple[int, int],
-        bw_unit: Literal['kb', 'mb', 'gb'] = 'kb',
+        bw_unit: Literal['kb', 'mb', 'gb','tb'] = 'kb',
         line1_label: str = 'I/O Time',
         line2_label: str = 'I/O Bandwidth',
         xlabel: str = 'Timeline (sec)',
@@ -37,6 +37,9 @@ class DLPAnalyzerPlots(object):
         elif bw_unit == 'gb':
             size_denom = 1024 ** 3
             y2label_suffix = 'GB/s'
+        elif bw_unit == 'tb':
+            size_denom = 1024 ** 4
+            y2label_suffix = 'TB/s'
 
         def _set_bw(df: pd.DataFrame):
             for col in TIME_COLS:
@@ -46,28 +49,36 @@ class DLPAnalyzerPlots(object):
             return df
 
         timeline = self._create_timeline(events=self.events) \
-            .map_partitions(_set_bw) \
-            .reset_index() \
-            .compute() \
-            .assign(seconds=self._assign_seconds)
+                    .reset_index() \
+                    .map_partitions(_set_bw) \
+                    .compute() \
+                    .assign(seconds=self._assign_seconds)
 
         fig, ax1 = plt.subplots(figsize=figsize)
-
-        timeline.plot.line(ax=ax1, x='seconds', y=time_col,
+        if time_col == "io_time":
+            phase = 2
+        else:
+            phase = 3
+        timeline.query(f"phase == {phase}").plot.line(ax=ax1, x='seconds', y=time_col,
                            alpha=0.8, color='C0', label=line1_label)
 
         ax2 = ax1.twinx()
+        y2_min = np.min([timeline.query(f"phase == {phase}")[f"{time_col}_bw"].min()])
+        y2_max = np.max([timeline.query(f"phase == {phase}")[f"{time_col}_bw"].max()])
 
-        timeline.plot.line(ax=ax2, x='seconds', y=f"{time_col}_bw", linestyle='dashed',
-                           alpha=0.8, color='C1', label=line2_label)
-
+        has_y2 = False
+        if y2_max > 0:
+            timeline.query(f"phase == {phase}").plot.line(ax=ax2, x='seconds', y=f"{time_col}_bw", linestyle='dashed',
+                               alpha=0.8, color='C1', label=line2_label)
+            y2_min = np.min([timeline[f"{time_col}_bw"].min()])
+            y2_max = np.max([timeline[f"{time_col}_bw"].max()])
+            ax2.set_ylim([0, y2_max])
+            has_y2 = True
         y1_min = np.min([timeline[col].min() for col in TIME_COLS])
         y1_max = np.max([timeline[col].max() for col in TIME_COLS])
         ax1.set_ylim([0, y1_max])
 
-        y2_min = np.min([timeline[f"{col}_bw"].min() for col in TIME_COLS])
-        y2_max = np.max([timeline[f"{col}_bw"].max() for col in TIME_COLS])
-        ax2.set_ylim([0, y2_max])
+
 
         ax1.yaxis.set_major_formatter(ticker.FuncFormatter(
             lambda x, pos: '{:.0f}'.format(x/1e6)))
@@ -76,25 +87,30 @@ class DLPAnalyzerPlots(object):
 
         ax2.yaxis.set_major_formatter(ticker.FuncFormatter(
             lambda x, pos: '{:.1f}'.format(x)))
-        ax2.set_ylabel(f"{y2label} ({y2label_suffix})")
+        if has_y2:
+            ax2.set_ylabel(f"{y2label} ({y2label_suffix})")
 
         ax1.yaxis.set_major_locator(ticker.LinearLocator(y_num_ticks))
-        ax2.yaxis.set_major_locator(ticker.LinearLocator(y_num_ticks))
+        if has_y2:
+            ax2.yaxis.set_major_locator(ticker.LinearLocator(y_num_ticks))
 
         handles1, labels1 = ax1.get_legend_handles_labels()
         handles2, labels2 = ax2.get_legend_handles_labels()
         ax1.get_legend().remove()
-        ax2.get_legend().remove()
+        if has_y2:
+            ax2.get_legend().remove()
 
         # Combine handles and labels
         handles = handles1 + handles2
         labels = labels1 + labels2
 
-        # Create the legend
-        ax2.legend(handles, labels)
+        if has_y2:
+            # Create the legend
+            ax2.legend(handles, labels)
 
         ax1.minorticks_on()
-        ax2.minorticks_on()
+        if has_y2:
+            ax2.minorticks_on()
 
         ax1.grid(axis='y', which='major')
         ax1.grid(axis='y', which='minor', alpha=0.3)
@@ -128,13 +144,13 @@ class DLPAnalyzerPlots(object):
             ylabel_unit = 'GB'
 
         def _set_xfer_size(df: pd.DataFrame):
-            df[xfer_col] = (df['size'] / ylabel_denom) / df['index']
+            df[xfer_col] = df['size'] / ylabel_denom /df['index']
             return df
 
         timeline = self._create_timeline(events=self.events) \
-            .query('size > 0') \
-            .map_partitions(_set_xfer_size) \
             .reset_index() \
+            .query("phase == 2") \
+            .map_partitions(_set_xfer_size) \
             .compute() \
             .assign(seconds=self._assign_seconds)
 
@@ -190,16 +206,20 @@ class DLPAnalyzerPlots(object):
 
     @staticmethod
     def _create_timeline(events: dd.DataFrame):
-        events['index'] = 1
-
-        timeline = events.groupby(['trange', 'pid', 'tid']) \
+        events['index'] = events['size']
+        timeline = events.groupby(['phase','trange', 'pid', 'tid']) \
             .agg({
                 'index': 'count',
                 'size': 'sum',
                 'io_time': 'sum',
                 'app_io_time': 'sum',
             }) \
-            .groupby(['trange']) \
-            .max()
+            .groupby(['phase','trange']) \
+            .agg({
+                'index': 'sum',
+                'size': 'sum',
+                'io_time': max,
+                'app_io_time': max,
+            }).reset_index().set_index("trange", sorted=True)
 
         return timeline

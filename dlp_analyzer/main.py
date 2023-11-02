@@ -26,6 +26,10 @@ import zindex_py as zindex
 
 from dlp_analyzer.plots import DLPAnalyzerPlots
 
+def get_conditions_default(json_obj):
+    io_cond = "POSIX" == json_obj["cat"]
+    return False, False, io_cond
+
 class DLPConfiguration:
     def __init__(self):
         self.host_pattern = r'corona(\d+)'
@@ -41,6 +45,7 @@ class DLPConfiguration:
         self.slope_threshold = 45
         self.time_granularity = 1e3
         self.skip_hostname = False
+        self.conditions = None
 
 dlp_configuration = DLPConfiguration()
 
@@ -61,9 +66,12 @@ def update_dlp_configuration(
     time_approximate=None,
     slope_threshold=None,
     time_granularity=None,
-    skip_hostname=None
+    skip_hostname=None,
+    conditions=None,
 ):
     global dlp_configuration
+    if conditions:
+        dlp_configuration.conditions = conditions
     if skip_hostname:
         dlp_configuration.skip_hostname = skip_hostname
     if host_pattern:
@@ -148,7 +156,7 @@ def load_indexed_gzip_files(filename, start, end):
     logging.debug(f"Read {len(json_lines)} json lines for [{start}, {end}]")
     return json_lines
 
-def load_objects(line, fn, time_granularity, time_approximate):
+def load_objects(line, fn, time_granularity, time_approximate, condition_fn):
     d = {}
     if line is not None and line !="" and len(line) > 0 and "[" != line[0] and line != "\n" :
         val = {}
@@ -168,29 +176,26 @@ def load_objects(line, fn, time_granularity, time_approximate):
                 if not time_approximate:
                     d["tinterval"] = I.to_string(I.closed(val["ts"] , val["ts"] + val["dur"]))
                 d["trange"] = int(((val["ts"] + val["dur"])/2.0) / time_granularity)
-                d.update(io_function(val, d, time_approximate))
+                d.update(io_function(val, d, time_approximate,condition_fn))
                 if fn:
-                    d.update(fn(val, d, time_approximate))
+                    d.update(fn(val, d, time_approximate,condition_fn))
                 logging.debug(f"built an dictionary for line {d}")
         except ValueError as error:
             logging.error(f"Processing {line} failed with {error}")
     return d
-def io_function(json_object, current_dict, time_approximate):
+def io_function(json_object, current_dict, time_approximate,condition_fn):
     d = {}
     d["phase"] = 0
-    # app_io_cond = "NPZReader.read_index" in json_object["name"] # Unet3d
-    # compute_cond = "compute" in json_object["name"] # Unet3d
-    app_io_cond = "TFReader.parse_image" in json_object["name"] # Cosmoflow
-    compute_cond = "compute" in json_object["name"] # Cosmoflow
-    # app_io_cond = "IO" == json_object["cat"] # Resnet50
-    # compute_cond = "cpu" in json_object["name"] or "compute" in json_object["cat"] # Resnet50
+    if not condition_fn:
+        condition_fn = get_conditions_default
+    app_io_cond , compute_cond, io_cond = condition_fn(json_object)
     if time_approximate:
         d["total_time"] = 0
         if compute_cond:
             d["compute_time"] = current_dict["dur"]
             d["total_time"] = current_dict["dur"]
             d["phase"] = 1
-        if "POSIX" in json_object["cat"]:
+        elif io_cond:
             d["io_time"] = current_dict["dur"]
             d["total_time"] = current_dict["dur"]
             d["phase"] = 2
@@ -204,9 +209,7 @@ def io_function(json_object, current_dict, time_approximate):
             d["compute_time"] = current_dict["tinterval"]
             d["total_time"] = current_dict["tinterval"]
             d["phase"] = 1
-        else:
-            d["compute_time"] = I.to_string(I.empty())
-        if "POSIX" in json_object["cat"]:
+        elif io_cond:
             d["io_time"] = current_dict["tinterval"]
             d["total_time"] = current_dict["tinterval"]
             d["phase"] = 2
@@ -348,10 +351,16 @@ class DLPAnalyzer:
                 num_lines = end - start + 1
                 json_line_bags.append(dask.delayed(load_indexed_gzip_files, nout=num_lines)(filename, start, end))
             json_lines = dask.bag.concat(json_line_bags)
-            gz_bag = json_lines.map(load_objects, fn=load_fn, time_granularity=self.conf.time_granularity, time_approximate=self.conf.time_approximate).filter(lambda x: "name" in x)
+            gz_bag = json_lines.map(load_objects, fn=load_fn,
+                                    time_granularity=self.conf.time_granularity,
+                                    time_approximate=self.conf.time_approximate,
+                                    condition_fn=self.conf.conditions).filter(lambda x: "name" in x)
         main_bag = None
         if len(pfw_pattern) > 0:
-            pfw_bag = dask.bag.read_text(pfw_pattern).map(load_objects, fn=load_fn, time_granularity=self.conf.time_granularity, time_approximate=self.conf.time_approximate).filter(lambda x: "name" in x)
+            pfw_bag = dask.bag.read_text(pfw_pattern).map(load_objects, fn=load_fn,
+                                                          time_granularity=self.conf.time_granularity,
+                                                          time_approximate=self.conf.time_approximate,
+                                                          condition_fn=self.conf.conditions).filter(lambda x: "name" in x)
         if len(pfw_gz_pattern) > 0 and len(pfw_pattern) > 0:
             main_bag = dask.bag.concat([pfw_bag, gz_bag])
         elif len(pfw_gz_pattern) > 0:
