@@ -634,9 +634,8 @@ def main():
     setup_dask_cluster()
     analyzer = DLPAnalyzer(args.trace)
     analyzer.summary()
-    analyzer.plots.bottleneck_timeline(figsize=(8, 4))
-    analyzer.plots.bw_timeline(figsize=(4, 4), unit='kb')
-    analyzer.plots.xfer_size_distribution(figsize=(4, 4))
+    analyzer.plots.time_bw_timeline(figsize=(8, 4))
+    analyzer.plots.xfer_size_timeline(figsize=(4, 4))
 
 if __name__ == '__main__':
     main()
