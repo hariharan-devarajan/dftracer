@@ -12,7 +12,7 @@ worker:
   cmd:
   per_core: 1
   threads: 1
-  local_dir: /l/ssd/$USER/dask-workspace
+  local_dir: /dev/shm/dask-workspace
   kill: skill ${SLURM_JOB_ID}
 scheduler:
   cmd: srun -N ${DLIO_PROFILER_JOB_NUM_NODES} -t ${DLIO_PROFILER_JOB_WALL_TIME_MIN} --ntasks-per-node=${DLIO_PROFILER_WORKER_PPN}
