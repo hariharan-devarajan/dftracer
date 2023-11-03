@@ -5,7 +5,7 @@ RUN pip install git+https://github.com/hariharan-devarajan/dlio-profiler.git
 RUN pip install git+https://github.com/argonne-lcf/dlio_benchmark.git
 RUN mkdir -p /dlio/data /dlio/output
 ENV DLIO_PROFILER_ENABLE=1
-ENV DLIO_PROFILER_LOG_LEVEL=INFO
+ENV DLIO_PROFILER_LOG_LEVEL=ERROR
 ENV DLIO_PROFILER_INC_METADATA=1
 RUN cd /dlio/data && mpirun -n 2 dlio_benchmark workload=resnet50 ++workload.workflow.generate_data=True ++workload.output.folder=/dlio/output
 RUN gzip -d /dlio/output/.trace*.pfw.gz
