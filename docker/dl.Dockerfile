@@ -10,4 +10,4 @@ ENV DLIO_PROFILER_LOG_LEVEL=ERROR
 ENV DLIO_PROFILER_INC_METADATA=1
 RUN mpirun -n 2 --allow-run-as-root dlio_benchmark workload=resnet50 ++workload.dataset.data_folder=/dlio/data ++workload.output.folder=/dlio/output
 RUN gzip -d /dlio/output/.trace*.pfw.gz
-RUN cat /dlio/output/.trace*.pfw
+RUN cat /dlio/output/.trace*.pfw | grep POSIX
