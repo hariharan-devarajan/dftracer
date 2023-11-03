@@ -43,7 +43,7 @@ namespace dlio_profiler {
 
         bool is_first_write;
         std::mutex write_mtx;
-        static const int WRITE_BUFFER_SIZE=1024*1024;
+        int WRITE_BUFFER_SIZE=1024*1024;
         size_t write_size;
         char* write_buffer;
         inline int write_buffer_op(){
@@ -53,10 +53,15 @@ namespace dlio_profiler {
             ERROR(written_elements != write_size, "unable to log write %s fd %d for a+ written only %d of %d with error %s",
                   filename.c_str(), fd, written_elements, write_size, strerror(errno));
           }  // GCOVR_EXCL_STOP
+          dlp_fsync(fd);
           return write_size;
         }
+        inline int free_buffer() {
+          std::lock_guard<std::mutex> lockGuard(write_mtx);
+          free(write_buffer);
+          return 0;
+        }
         inline int merge_buffer(const char* data, int size) {
-          DLIO_PROFILER_LOGDEBUG("ChromeWriter.merge_buffer %s",this->filename.c_str());
           std::lock_guard<std::mutex> lockGuard(write_mtx);
           memcpy(write_buffer + write_size, data, size);
           write_size += size;
@@ -64,6 +69,7 @@ namespace dlio_profiler {
             write_buffer_op();
             write_size = 0;
           }
+          DLIO_PROFILER_LOGDEBUG("ChromeWriter.merge_buffer %s with size %d",this->filename.c_str(),write_size);
           return size;
         }
 
@@ -90,9 +96,10 @@ namespace dlio_profiler {
         ChromeWriter(): is_first_write(true), fd(-1), write_mtx(), enable_core_affinity(false), include_metadata(false),
                   enable_compression(false), index(0), write_size(0){
           DLIO_PROFILER_LOGDEBUG("ChromeWriter.ChromeWriter","");
+          auto conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
+          WRITE_BUFFER_SIZE = conf->write_buffer_size;
           write_buffer = static_cast<char *>(malloc(WRITE_BUFFER_SIZE + MAX_LINE_SIZE));
           get_hostname(hostname);
-          auto conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
           include_metadata = conf->metadata;
           enable_core_affinity = conf->core_affinity;
           enable_compression = conf->compression;

@@ -27,6 +27,7 @@ class ConfigurationManager {
   bool tids;
   bool bind_signals;
   bool throw_error;
+  size_t write_buffer_size;
   ConfigurationManager();
   void finalize() {}
 };
