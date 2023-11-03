@@ -202,6 +202,7 @@ int brahma::POSIXDLIOProfiler::openat(int dirfd, const char *pathname, int flags
   }
   DLIO_LOGGER_UPDATE(ret);
   DLIO_LOGGER_END();
+  if (trace) this->trace(ret, pathname);
   return ret;
 }
 
