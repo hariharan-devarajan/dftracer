@@ -47,7 +47,10 @@ void dlio_profiler::ChromeWriter::finalize() {
   DLIO_PROFILER_LOGDEBUG("ChromeWriter.finalize","");
   if (fd != -1) {
     DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s", filename.c_str());
-    write_buffer_op();
+    {
+      std::lock_guard<std::mutex> lockGuard(write_mtx);
+      write_buffer_op();
+    }
     free_buffer();
     int status = dlp_close(fd);
     if (status != 0) {
