@@ -33,6 +33,7 @@
 #define DLP_YAML_INTERNAL "internal"
 #define DLP_YAML_INTERNAL_SIGNALS "bind_signals"
 #define DLP_YAML_INTERNAL_THROW_ERROR "throw_error"
+#define DLP_YAML_INTERNAL_WRITE_BUFFER_SIZE "write_buffer_size"
 
 
 dlio_profiler::ConfigurationManager::ConfigurationManager()
@@ -40,7 +41,7 @@ dlio_profiler::ConfigurationManager::ConfigurationManager()
       data_dirs(), trace_all_files(false), logger_level(cpplogger::LOG_ERROR),
       compression(true), gotcha_priority(1), metadata(false), core_affinity(false),
       io(true), stdio(true), posix(true), tids(true), bind_signals(true),
-      throw_error(false) {
+      throw_error(false),write_buffer_size(1024*1024) {
   const char *env_conf = getenv(DLIO_PROFILER_CONFIGURATION);
   YAML::Node config;
   if (env_conf != nullptr) {
@@ -155,6 +156,11 @@ dlio_profiler::ConfigurationManager::ConfigurationManager()
             config[DLP_YAML_INTERNAL][DLP_YAML_INTERNAL_THROW_ERROR].as<bool>();
       }
       DLIO_PROFILER_LOGDEBUG("YAML ConfigurationManager.throw_error %d",this->throw_error);
+      if (config[DLP_YAML_INTERNAL][DLP_YAML_INTERNAL_WRITE_BUFFER_SIZE]) {
+        this->write_buffer_size =
+            config[DLP_YAML_INTERNAL][DLP_YAML_INTERNAL_WRITE_BUFFER_SIZE].as<size_t>();
+      }
+      DLIO_PROFILER_LOGDEBUG("YAML ConfigurationManager.write_buffer_size %d",this->write_buffer_size);
     }
   }
   const char *env_enable = getenv(DLIO_PROFILER_ENABLE);
@@ -231,6 +237,11 @@ dlio_profiler::ConfigurationManager::ConfigurationManager()
       this->compression = false;
     }
     DLIO_PROFILER_LOGDEBUG("ENV ConfigurationManager.compression %d",this->compression);
+    const char *env_write_buf_size = getenv(DLIO_PROFILER_WRITE_BUFFER_SIZE);
+    if (env_write_buf_size != nullptr) {
+      this->write_buffer_size = atoi(env_write_buf_size);
+    }
+    DLIO_PROFILER_LOGDEBUG("ENV ConfigurationManager.write_buffer_size %d",this->write_buffer_size);
   }
   DLIO_PROFILER_LOGDEBUG("ENV ConfigurationManager finished","");
 }
