@@ -11,6 +11,6 @@ ENV DLIO_PROFILER_LOG_LEVEL=ERROR
 ENV DLIO_PROFILER_INC_METADATA=1
 ENV DLIO_PROFILER_WRITE_BUFFER_SIZE=10
 RUN ls -al /dlio/output/
-RUN dlio_benchmark workload=resnet50 ++workload.dataset.data_folder=/dlio/data ++workload.output.folder=/dlio/output ++workload.dataset.num_files_train=1 | grep POSIX
+RUN dlio_benchmark workload=resnet50 ++workload.dataset.data_folder=/dlio/data ++workload.output.folder=/dlio/output
 RUN ls -al /dlio/output/
 RUN cat /dlio/output/.trace*.pfw | grep POSIX
