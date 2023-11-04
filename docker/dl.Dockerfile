@@ -7,7 +7,7 @@ RUN mkdir -p /dlio/data /dlio/output
 ENV DLIO_PROFILER_ENABLE=0
 RUN mpirun -n 2 --allow-run-as-root dlio_benchmark workload=resnet50 ++workload.dataset.data_folder=/dlio/data ++workload.output.folder=/dlio/output ++workload.workflow.generate_data=True ++workload.workflow.train=False
 ENV DLIO_PROFILER_ENABLE=1
-ENV DLIO_PROFILER_LOG_LEVEL=DEBUG
+ENV DLIO_PROFILER_LOG_LEVEL=ERROR
 ENV DLIO_PROFILER_INC_METADATA=1
 ENV DLIO_PROFILER_WRITE_BUFFER_SIZE=10
 RUN ls -al /dlio/output/
