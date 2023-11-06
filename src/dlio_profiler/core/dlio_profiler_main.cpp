@@ -154,34 +154,34 @@ dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, c
         this->log_file = _log_file;
       }
       DLIO_PROFILER_LOGDEBUG("Setting log file to %s", this->log_file.c_str());
-      if (!conf->trace_all_files) {
-        if (_data_dirs == nullptr) {
-          if (!conf->data_dirs.empty()) {
-            this->data_dirs = conf->data_dirs;
-          } else {  // GCOV_EXCL_START
-            DLIO_PROFILER_LOGERROR(UNDEFINED_DATA_DIR.message, "");
-            throw std::runtime_error(UNDEFINED_DATA_DIR.code);
-          }  // GCOV_EXCL_STOP
-        } else {
-          this->data_dirs = _data_dirs;
-        }
-        DLIO_PROFILER_LOGDEBUG("Setting data_dirs to %s",
-                               this->data_dirs.c_str());
-      } else {
-        DLIO_PROFILER_LOGDEBUG("Ignoring data_dirs as tracing all files","");
-      }
       logger->update_log_file(this->log_file, this->process_id);
       if (bind) {
-        auto trie = dlio_profiler::Singleton<Trie>::get_instance();
-        const char* ignore_extensions[2] = {"pfw", "py"};
-        const char* ignore_prefix[3] = {"/pipe", "/socket", "/proc"};
-        for(const char* folder: ignore_prefix) {
-          trie->exclude(folder, strlen(folder));
-        }
-        for(const char* ext: ignore_extensions) {
-          trie->exclude_reverse(ext, strlen(ext));
-        }
         if (conf->io) {
+          auto trie = dlio_profiler::Singleton<Trie>::get_instance();
+          const char* ignore_extensions[2] = {"pfw", "py"};
+          const char* ignore_prefix[3] = {"/pipe", "/socket", "/proc"};
+          for(const char* folder: ignore_prefix) {
+            trie->exclude(folder, strlen(folder));
+          }
+          for(const char* ext: ignore_extensions) {
+            trie->exclude_reverse(ext, strlen(ext));
+          }
+          if (!conf->trace_all_files) {
+            if (_data_dirs == nullptr) {
+              if (!conf->data_dirs.empty()) {
+                this->data_dirs = conf->data_dirs;
+              } else {  // GCOV_EXCL_START
+                DLIO_PROFILER_LOGERROR(UNDEFINED_DATA_DIR.message, "");
+                throw std::runtime_error(UNDEFINED_DATA_DIR.code);
+              }  // GCOV_EXCL_STOP
+            } else {
+              this->data_dirs = _data_dirs;
+            }
+            DLIO_PROFILER_LOGDEBUG("Setting data_dirs to %s",
+                                   this->data_dirs.c_str());
+          } else {
+            DLIO_PROFILER_LOGDEBUG("Ignoring data_dirs as tracing all files","");
+          }
           brahma_gotcha_wrap("dlio_profiler", conf->gotcha_priority);
           if (!conf->trace_all_files) {
             auto paths = split(this->data_dirs, DLIO_PROFILER_DATA_DIR_DELIMITER);
