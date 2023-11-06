@@ -30,11 +30,18 @@ option(ENABLE_PAPER_TESTS "Enable paper tests" Off)
 #------------------------------------------------------------------------------
 # Setup install and output Directories
 #------------------------------------------------------------------------------
+if(DEFINED ENV{DLIO_PYTHON_EXECUTABLE})
+    set(PYTHON_EXECUTABLE  $ENV{DLIO_PYTHON_EXECUTABLE})
+else()
+    find_program(PYTHON_EXECUTABLE python)
+endif()
+message("-- " "Found python executable ${PYTHON_EXECUTABLE}")
 
 if (BUILD_PYTHON_BINDINGS)
 
     if (DLIO_PYTHON_SITE)
         set(PYTHON_SITE_PACKAGES "${DLIO_PYTHON_SITE}")
+        set(MAIN_PYTHON_SITE_PACKAGES ${PYTHON_SITE_PACKAGES})
     else()
         set(PYTHON_SITE_PACKAGES ${CMAKE_INSTALL_PREFIX})
         execute_process (COMMAND python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())" OUTPUT_VARIABLE MAIN_PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
