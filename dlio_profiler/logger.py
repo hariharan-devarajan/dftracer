@@ -12,6 +12,8 @@ from pathlib import Path
 import inspect
 import sys, signal
 
+if DLIO_PROFILER_ENABLE:
+    import dlio_profiler_py as profiler
 
 def capture_signal(signal_number, frame):
     dlio_logger.get_instance().finalize()
