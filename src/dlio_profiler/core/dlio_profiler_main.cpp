@@ -78,6 +78,8 @@ bool dlio_profiler::DLIOProfilerCore::finalize() {
       dlio_profiler::Singleton<Trie>::finalize();
     }
     if (bind && conf->io) {
+      DLIO_PROFILER_LOGINFO("Release I/O bindings","");
+      free_bindings();
       auto posix_instance = brahma::POSIXDLIOProfiler::get_instance();
       if (posix_instance != nullptr) {
         posix_instance->finalize();
@@ -86,8 +88,6 @@ bool dlio_profiler::DLIOProfilerCore::finalize() {
       if (stdio_instance != nullptr) {
         stdio_instance->finalize();
       }
-      DLIO_PROFILER_LOGINFO("Release I/O bindings","");
-      free_bindings();
     }
     auto logger = dlio_profiler::Singleton<DLIOLogger>::get_instance();
     if (logger != nullptr) {
