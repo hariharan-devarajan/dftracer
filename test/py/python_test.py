@@ -68,7 +68,6 @@ if __name__ == "__main__":
     data_gen(data)
     for n in range(args.niter):
         read_data(n)
-    time.sleep(1)
     dlp_logger.finalize()
-    time.sleep(5)
+    exit(0)
 
