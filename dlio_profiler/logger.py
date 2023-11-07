@@ -48,7 +48,6 @@ class dlio_logger:
             log_file = Path(logfile)
         instance = dlio_logger.get_instance(log_file)
         if DLIO_PROFILER_ENABLE:
-            import dlio_profiler_py as profiler
             if log_file:
                 os.makedirs(log_file.parent, exist_ok=True)
                 if os.path.isfile(log_file):
