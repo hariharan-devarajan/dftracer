@@ -11,20 +11,20 @@
 #include <sstream>
 #include <cmath>
 
-
+uint64_t dlio_profiler::ChromeWriter::write_size = 0;
 
 void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
   this->throw_error = throw_error;
   this->filename = filename;
-  if (fd == -1) {
-    fd = dlp_open(filename, O_WRONLY | O_APPEND | O_CREAT, S_IRUSR | S_IWUSR);
-    if (fd == -1) {
-      ERROR(fd == -1, "unable to create log file %s", filename); // GCOVR_EXCL_LINE
+  if (fh == nullptr) {
+    fh = fopen(filename, "a+");
+    if (fh == nullptr) {
+      ERROR(fh == nullptr, "unable to create log file %s", filename); // GCOVR_EXCL_LINE
     } else {
-      DLIO_PROFILER_LOGINFO("created log file %s with fd %d", filename, fd);
+      DLIO_PROFILER_LOGINFO("created log file %s", filename);
     }
   }
-  DLIO_PROFILER_LOGDEBUG("ChromeWriter.initialize %s %d",this->filename.c_str(), fd);
+  DLIO_PROFILER_LOGDEBUG("ChromeWriter.initialize %s",this->filename.c_str());
 }
 
 void
@@ -32,27 +32,24 @@ dlio_profiler::ChromeWriter::log(ConstEventType event_name, ConstEventType categ
                                  TimeResolution &duration,
                                  std::unordered_map<std::string, std::any> *metadata, ProcessID process_id, ThreadID thread_id) {
   DLIO_PROFILER_LOGDEBUG("ChromeWriter.log","");
-  if (fd != -1) {
+  if (fh != nullptr) {
     int size;
     char data[MAX_LINE_SIZE];
     convert_json(event_name, category, start_time, duration, metadata, process_id, thread_id, &size, data);
     merge_buffer(data, size);
   } else {
-    DLIO_PROFILER_LOGERROR("ChromeWriter.log invalid fd %d",fd);
+    DLIO_PROFILER_LOGERROR("ChromeWriter.log invalid","");
   }
   is_first_write = false;
 }
 
 void dlio_profiler::ChromeWriter::finalize() {
   DLIO_PROFILER_LOGDEBUG("ChromeWriter.finalize","");
-  if (fd != -1) {
+  if (fh != nullptr) {
     DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s", filename.c_str());
-    {
-      std::lock_guard<std::mutex> lockGuard(write_mtx);
-      write_buffer_op();
-    }
+    { std::unique_lock lock(write_mtx); write_buffer_op(); }
     free_buffer();
-    int status = dlp_close(fd);
+    int status = fclose(fh);
     if (status != 0) {
       ERROR(status != 0, "unable to close log file %d for a+", filename.c_str());  // GCOVR_EXCL_LINE
     }
@@ -61,17 +58,17 @@ void dlio_profiler::ChromeWriter::finalize() {
       dlp_unlink(filename.c_str());
     } else {
       DLIO_PROFILER_LOGINFO("Profiler writing the final symbol", "");
-      fd = dlp_open(this->filename.c_str(), O_WRONLY);
-      if (fd == -1) {
-        ERROR(fd == -1, "unable to open log file %s with O_WRONLY", this->filename.c_str());  // GCOVR_EXCL_LINE
+      fh = fopen(this->filename.c_str(), "r+");
+      if (fh == nullptr) {
+        ERROR(fh == nullptr, "unable to open log file %s with O_WRONLY", this->filename.c_str());  // GCOVR_EXCL_LINE
       }
       std::string data = "[\n";
-      auto written_elements = dlp_write(fd, data.c_str(), data.size());
+      auto written_elements = fwrite(data.c_str(), sizeof(char), data.size(), fh);
       if (written_elements != data.size()) {  // GCOVR_EXCL_START
         ERROR(written_elements != data.size(), "unable to finalize log write %s for O_WRONLY written only %d of %d",
               filename.c_str(), data.size(), written_elements);
       } // GCOVR_EXCL_STOP
-      status = dlp_close(fd);
+      status = fclose(fh);
       if (status != 0) {
         ERROR(status != 0, "unable to close log file %d for O_WRONLY", filename.c_str());  // GCOVR_EXCL_LINE
       }
