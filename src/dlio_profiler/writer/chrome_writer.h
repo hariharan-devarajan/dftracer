@@ -47,7 +47,7 @@ namespace dlio_profiler {
         size_t write_size;
         char* write_buffer;
         inline int write_buffer_op(){
-          DLIO_PROFILER_LOGDEBUG("ChromeWriter.write_buffer_op %s writing size %d", this->filename.c_str(), write_size);
+          DLIO_PROFILER_LOGDEBUG("ChromeWriter.write_buffer_op %s writing size %d fd %d", this->filename.c_str(), write_size, fd);
           auto written_elements = dlp_write(fd, write_buffer, write_size);
           if (written_elements != write_size) {  // GCOVR_EXCL_START
             ERROR(written_elements != write_size, "unable to log write %s fd %d for a+ written only %d of %d with error %s",

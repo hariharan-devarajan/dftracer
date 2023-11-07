@@ -31,7 +31,7 @@ int dlp_open(const char *pathname, int flags, ...) {
 }
 
 ssize_t dlp_write(int fd, const void *buf, size_t count) {
-  DLIO_PROFILER_LOGDEBUG("dlp_write","");
+  DLIO_PROFILER_LOGDEBUG("dlp_write %d %d",fd, count);
   return syscall(SYS_write, fd, buf, count);
 }
 
@@ -41,7 +41,7 @@ off_t dlp_read(int fd, void *buf, size_t count) {
 }
 
 int dlp_close(int fd) {
-  DLIO_PROFILER_LOGDEBUG("fd","");
+  DLIO_PROFILER_LOGDEBUG("close %d",fd);
   return syscall(SYS_close, fd);
 }
 
