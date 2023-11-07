@@ -207,7 +207,7 @@ TimeResolution dlio_profiler::DLIOProfilerCore::get_time() {
   if (this->is_initialized && conf->enable && logger != nullptr) {
     return logger->get_time();
   } else  {
-    DLIO_PROFILER_LOGERROR("DLIOProfilerCore::get_time logger not initialized","");
+    DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::get_time logger not initialized","");
   }
   return -1;
 }
