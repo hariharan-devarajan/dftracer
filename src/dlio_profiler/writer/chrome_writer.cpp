@@ -15,7 +15,7 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
   this->throw_error = throw_error;
   this->filename = filename;
   if (fh == nullptr) {
-    fh = fopen(filename, "a+");
+    fh = fopen(filename, "ab+");
     if (fh == nullptr) {
       ERROR(fh == nullptr, "unable to create log file %s", filename); // GCOVR_EXCL_LINE
     } else {
