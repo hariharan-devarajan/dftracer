@@ -45,6 +45,7 @@ void dlio_profiler::ChromeWriter::finalize() {
   DLIO_PROFILER_LOGDEBUG("ChromeWriter.finalize","");
   if (fh != nullptr) {
     DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s", filename.c_str());
+    fflush(fh);
     int status = fclose(fh);
     if (status != 0) {
       ERROR(status != 0, "unable to close log file %d for a+", filename.c_str());  // GCOVR_EXCL_LINE
