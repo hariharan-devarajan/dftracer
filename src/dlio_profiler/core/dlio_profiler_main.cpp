@@ -19,7 +19,6 @@ void dlio_finalize() {
 dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileType type, const char *log_file,
                                                   const char *data_dirs, const int *process_id) :
              is_initialized(false), bind(false), include_metadata(false){
-  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::DLIOProfilerCore type %d",type);
   conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
   switch (type) {
     case ProfileType::PROFILER_ANY:
@@ -52,6 +51,7 @@ dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileTy
       throw std::runtime_error(UNKNOWN_PROFILER_TYPE.code);
     }  // GCOVR_EXCL_STOP
   }
+  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::DLIOProfilerCore type %d",type);
 }
 
 void dlio_profiler::DLIOProfilerCore::log(ConstEventType event_name, ConstEventType category,
@@ -89,7 +89,6 @@ bool dlio_profiler::DLIOProfilerCore::finalize() {
       DLIO_PROFILER_LOGINFO("Release I/O bindings","");
       free_bindings();
     }
-    auto logger = dlio_profiler::Singleton<DLIOLogger>::get_instance();
     if (logger != nullptr) {
       logger->finalize();
       dlio_profiler::Singleton<DLIOLogger>::finalize();

@@ -5,20 +5,21 @@
 #ifndef DLIO_PROFILER_CHROME_WRITER_H
 #define DLIO_PROFILER_CHROME_WRITER_H
 
-#include <string>
-#include <unordered_map>
-#include <thread>
-#include <mutex>
-#include <unistd.h>
-#include <hwloc.h>
 #include <dlio_profiler/core/constants.h>
-#include <atomic>
-#include <any>
-#include <dlio_profiler/utils/utils.h>
-#include <unordered_map>
-#include <dlio_profiler/utils/posix_internal.h>
-#include <dlio_profiler/utils/configuration_manager.h>
 #include <dlio_profiler/core/typedef.h>
+#include <dlio_profiler/utils/configuration_manager.h>
+#include <dlio_profiler/utils/posix_internal.h>
+#include <dlio_profiler/utils/utils.h>
+#include <hwloc.h>
+#include <unistd.h>
+
+#include <any>
+#include <atomic>
+#include <mutex>
+#include <shared_mutex>
+#include <string>
+#include <thread>
+#include <unordered_map>
 #define ERROR(cond, format, ...) \
   DLIO_PROFILER_LOGERROR(format, __VA_ARGS__); \
   if (this->throw_error) assert(cond);
@@ -32,7 +33,7 @@ namespace dlio_profiler {
     private:
         bool enable_core_affinity, include_metadata, enable_compression;
         hwloc_topology_t topology;
-        int fd;
+        FILE* fh;
         std::atomic_int index;
         char hostname[256];
         static const int MAX_LINE_SIZE=4096;
@@ -42,27 +43,26 @@ namespace dlio_profiler {
                                                   ProcessID process_id, ThreadID thread_id, int* size, char* data);
 
         bool is_first_write;
-        std::mutex write_mtx;
+        mutable std::shared_mutex write_mtx;
         int WRITE_BUFFER_SIZE=1024*1024;
-        size_t write_size;
+        static uint64_t write_size;
         char* write_buffer;
-        inline int write_buffer_op(){
+        inline uint64_t write_buffer_op(){
           DLIO_PROFILER_LOGDEBUG("ChromeWriter.write_buffer_op %s writing size %d fd %d", this->filename.c_str(), write_size, fd);
-          auto written_elements = dlp_write(fd, write_buffer, write_size);
+          auto written_elements = fwrite(write_buffer, sizeof(char), write_size, fh);
           if (written_elements != write_size) {  // GCOVR_EXCL_START
-            ERROR(written_elements != write_size, "unable to log write %s fd %d for a+ written only %d of %d with error %s",
-                  filename.c_str(), fd, written_elements, write_size, strerror(errno));
+            ERROR(written_elements != write_size, "unable to log write %s for a+ written only %d of %d with error %s",
+                  filename.c_str(), written_elements, write_size, strerror(errno));
           }  // GCOVR_EXCL_STOP
-          dlp_fsync(fd);
-          return write_size;
+          return written_elements;
         }
-        inline int free_buffer() {
-          std::lock_guard<std::mutex> lockGuard(write_mtx);
+        int free_buffer() {
+          std::unique_lock lock(write_mtx);
           free(write_buffer);
           return 0;
         }
-        inline int merge_buffer(const char* data, int size) {
-          std::lock_guard<std::mutex> lockGuard(write_mtx);
+        int merge_buffer(const char* data, int size) {
+          std::unique_lock lock(write_mtx);
           memcpy(write_buffer + write_size, data, size);
           write_size += size;
           if (write_size >= WRITE_BUFFER_SIZE) {
@@ -93,8 +93,8 @@ namespace dlio_profiler {
         }
 
     public:
-        ChromeWriter(): is_first_write(true), fd(-1), write_mtx(), enable_core_affinity(false), include_metadata(false),
-                  enable_compression(false), index(0), write_size(0){
+        ChromeWriter(): is_first_write(true), fh(nullptr), write_mtx(), enable_core_affinity(false), include_metadata(false),
+                  enable_compression(false), index(0) {
           DLIO_PROFILER_LOGDEBUG("ChromeWriter.ChromeWriter","");
           auto conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
           WRITE_BUFFER_SIZE = conf->write_buffer_size;
