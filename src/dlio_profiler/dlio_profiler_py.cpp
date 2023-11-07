@@ -18,10 +18,9 @@
 namespace py = pybind11;
 namespace dlio_profiler {
 
-
     void initialize(const char *log_file, const char *data_dirs, int process_id) {
-      DLIO_PROFILER_LOGDEBUG("py.initialize","");
       auto conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
+      DLIO_PROFILER_LOGDEBUG("py.initialize","");
       dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::get_instance(ProfilerStage::PROFILER_INIT,
                                                                               ProfileType::PROFILER_PY_APP, log_file,
                                                                               data_dirs, &process_id);

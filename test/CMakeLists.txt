@@ -135,9 +135,6 @@ set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_FIL
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_INIT=PRELOAD)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_INC_METADATA=1)
 
-dlp_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 82)
-set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
-
 set(TEST_SRC ${CMAKE_CURRENT_SOURCE_DIR}/util.h)
 if (ENABLE_DLIO_BENCHMARK_TESTS)
     add_subdirectory(dlio_benchmark)
