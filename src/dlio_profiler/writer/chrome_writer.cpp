@@ -76,18 +76,20 @@ void dlio_profiler::ChromeWriter::finalize() {
         ERROR(status != 0, "unable to close log file %d for O_WRONLY", filename.c_str());  // GCOVR_EXCL_LINE
       }
       if (enable_compression) {
-        DLIO_PROFILER_LOGINFO("Applying Gzip compression on file %s", filename.c_str());
-        char *argv[] = { "gzip", "-f", filename.data(), 0 };
-        char *envp[] =
-            {
-                "LD_PRELOAD=",
-                0
-            };
-        int ret = execve(argv[0], &argv[0], envp);
-        if (ret == 0) {
-          DLIO_PROFILER_LOGINFO("Successfully compressed file %s.gz", filename.c_str());
-        } else
-          DLIO_PROFILER_LOGERROR("Unable to compress file %s with return code %d", filename.c_str(), ret);
+        if (system("which gzip > /dev/null 2>&1")) {
+          DLIO_PROFILER_LOGERROR("Gzip compression does not exists", "");  // GCOVR_EXCL_LINE
+        } else {
+          DLIO_PROFILER_LOGINFO("Applying Gzip compression on file %s", filename.c_str());
+          char cmd[2048];
+          sprintf(cmd, "gzip -f %s", filename.c_str());
+          int ret = system(cmd);
+          if (ret == 0) {
+            DLIO_PROFILER_LOGINFO("Successfully compressed file %s.gz", filename.c_str());
+          } else {
+            DLIO_PROFILER_LOGERROR("Unable to compress file %s",
+                                   filename.c_str());
+          }
+        }
       }
     }
   }
