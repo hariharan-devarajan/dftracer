@@ -61,16 +61,20 @@ void dlio_profiler::ChromeWriter::finalize() {
       fh = fopen(this->filename.c_str(), "r+");
       if (fh == nullptr) {
         ERROR(fh == nullptr, "unable to open log file %s with O_WRONLY", this->filename.c_str());  // GCOVR_EXCL_LINE
-      }
-      std::string data = "[\n";
-      auto written_elements = fwrite(data.c_str(), sizeof(char), data.size(), fh);
-      if (written_elements != data.size()) {  // GCOVR_EXCL_START
-        ERROR(written_elements != data.size(), "unable to finalize log write %s for O_WRONLY written only %d of %d",
-              filename.c_str(), data.size(), written_elements);
-      } // GCOVR_EXCL_STOP
-      status = fclose(fh);
-      if (status != 0) {
-        ERROR(status != 0, "unable to close log file %d for O_WRONLY", filename.c_str());  // GCOVR_EXCL_LINE
+      } else {
+        std::string data = "[\n";
+        auto written_elements =
+            fwrite(data.c_str(), sizeof(char), data.size(), fh);
+        if (written_elements != data.size()) {  // GCOVR_EXCL_START
+          ERROR(written_elements != data.size(),
+                "unable to finalize log write %s for O_WRONLY written only %d of %d",
+                filename.c_str(), data.size(), written_elements);
+        }  // GCOVR_EXCL_STOP
+        status = fclose(fh);
+        if (status != 0) {
+          ERROR(status != 0, "unable to close log file %d for O_WRONLY",
+                filename.c_str());  // GCOVR_EXCL_LINE
+        }
       }
       if (enable_compression) {
         if (system("which gzip > /dev/null 2>&1")) {
