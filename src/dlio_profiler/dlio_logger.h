@@ -75,7 +75,6 @@ public:
       DLIO_PROFILER_LOGDEBUG("DLIOLogger.finalize","");
       if (this->writer != nullptr) {
         writer->finalize();
-        dlio_profiler::Singleton<dlio_profiler::ChromeWriter>::finalize();
         DLIO_PROFILER_LOGINFO("Released Logger","");
       } else  {
         DLIO_PROFILER_LOGWARN("DLIOLogger.finalize writer not initialized","");

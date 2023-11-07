@@ -11,13 +11,11 @@
 #include <sstream>
 #include <cmath>
 
-uint64_t dlio_profiler::ChromeWriter::write_size = 0;
-
 void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
   this->throw_error = throw_error;
   this->filename = filename;
   if (fh == nullptr) {
-    fh = fopen(filename, "a+");
+    fh = fopen(filename, "ab+");
     if (fh == nullptr) {
       ERROR(fh == nullptr, "unable to create log file %s", filename); // GCOVR_EXCL_LINE
     } else {
@@ -36,7 +34,7 @@ dlio_profiler::ChromeWriter::log(ConstEventType event_name, ConstEventType categ
     int size;
     char data[MAX_LINE_SIZE];
     convert_json(event_name, category, start_time, duration, metadata, process_id, thread_id, &size, data);
-    merge_buffer(data, size);
+    write_buffer_op(data, size);
   } else {
     DLIO_PROFILER_LOGERROR("ChromeWriter.log invalid","");
   }
@@ -47,8 +45,7 @@ void dlio_profiler::ChromeWriter::finalize() {
   DLIO_PROFILER_LOGDEBUG("ChromeWriter.finalize","");
   if (fh != nullptr) {
     DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s", filename.c_str());
-    { std::unique_lock lock(write_mtx); write_buffer_op(); }
-    free_buffer();
+    fflush(fh);
     int status = fclose(fh);
     if (status != 0) {
       ERROR(status != 0, "unable to close log file %d for a+", filename.c_str());  // GCOVR_EXCL_LINE

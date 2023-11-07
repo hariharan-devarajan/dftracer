@@ -2,7 +2,6 @@ FROM ubuntu:latest
 RUN apt-get update && apt-get install -y python3 python3-pip openmpi-bin openmpi-common libopenmpi-dev
 RUN apt-get install -y git cmake default-jre
 RUN pip install "dlio_benchmark @ git+https://github.com/argonne-lcf/dlio_benchmark.git"
-ENV DLIO_PROFILER_WRITE_BUFFER_SIZE=10
 RUN pip install git+https://github.com/hariharan-devarajan/dlio-profiler.git
 RUN mkdir -p /dlio/data /dlio/output
 ENV DLIO_PROFILER_ENABLE=0
