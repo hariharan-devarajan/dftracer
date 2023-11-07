@@ -13,7 +13,7 @@ else
   else
     echo "Failed to parse JSON, or got false/null";
     jq --slurp -e <<< `cat $1 | grep -v "\["   | awk '{$1=$1;print}'`
-    cat $1
+    cat $1 | grep -v "\["   | awk '{$1=$1;print}'
     exit 1
   fi
 fi
