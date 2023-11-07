@@ -1,13 +1,8 @@
 #!/usr/bin/env python
 import argparse
-import numpy as np
 import os
-import h5py
-from PIL import Image
-import cv2
 
 if __name__ == "__main__":
-    from dlio_profiler.logger import dlio_logger, fn_interceptor as Profile
     parser = argparse.ArgumentParser(
         prog='DLIO testing',
         description='What the program does',
@@ -21,42 +16,44 @@ if __name__ == "__main__":
     args = parser.parse_args()
     os.makedirs(f"{args.log_dir}/{args.format}", exist_ok=True)
     os.makedirs(f"{args.data_dir}/{args.format}", exist_ok=True)
-    dlp_logger = dlio_logger.initialize_log(f"{args.log_dir}_{args.format}.pfw", None, -1)
-    dlp = Profile("dlio")
-
-    dlp_data_dir = os.getenv("DLIO_PROFILER_DATA_DIR", f"{args.data_dir}")
-
-
-
     class IOHandler:
         def __init__(self, format):
             self.format = format
         def read(self, filename):
-            if (self.format=="jpeg" or self.format=="png"):
+            if self.format== "jpeg" or self.format== "png":
+                from PIL import Image
                 return np.asarray(Image.open(filename))
-            if (self.format=="npz"):
+            if self.format== "npz":
+                import numpy as np
                 return np.load(filename)
-            if (self.format=="hdf5"):
+            if self.format== "hdf5":
+                import h5py
                 fd = h5py.File(filename, 'r')
                 x = fd['x'][:]
                 fd.close()
         def write(self, filename, a):
-            if (self.format=="jpeg" or self.format=="png"):
-                #cv2.imwrite(filename, a)
+            if self.format== "jpeg" or self.format== "png":
+                from PIL import Image
                 im = Image.fromarray(a)
                 #im.show()
                 im.save(filename)
-            if (self.format=="npz"):
+            if self.format== "npz":
+                import numpy as np
                 with open(filename, 'wb') as f:
                     np.save(f, a)
-            if (self.format=="hdf5"):
+            if self.format== "hdf5":
+                import h5py
                 fd = h5py.File(filename, 'w')
                 fd.create_dataset("x", data=a)
                 fd.close()
     io = IOHandler(args.format)
     # Writing data
+    import numpy as np
     data = np.ones((args.record_size, 1), dtype=np.uint8)
-
+    dlp_data_dir = os.getenv("DLIO_PROFILER_DATA_DIR", f"{args.data_dir}")
+    from dlio_profiler.logger import dlio_logger, fn_interceptor as Profile
+    dlp_logger = dlio_logger.initialize_log(f"{args.log_dir}_{args.format}.pfw", None, -1)
+    dlp = Profile("dlio")
     @dlp.log
     def data_gen(data):
         print(data)
@@ -67,6 +64,7 @@ if __name__ == "__main__":
     def read_data(epoch):
         for i in dlp.iter(range(args.num_files)):
             d = io.read(f"{args.data_dir}/{args.format}/{i}-of-{args.num_files}.{args.format}")
+
     data_gen(data)
     for n in range(args.niter):
         read_data(n)
