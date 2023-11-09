@@ -45,6 +45,18 @@ class dlio_logger:
 
     @staticmethod
     def initialize_log(logfile, data_dir, process_id):
+        log_file_path = None
+        if logfile:
+            log_file_path = Path(logfile)
+        outfile = "dlp.log"
+        if DLIO_PROFILER_ENABLE:
+            if log_file_path:
+                os.makedirs(log_file_path.parent, exist_ok=True)
+                if os.path.isfile(log_file_path):
+                    os.remove(log_file_path)
+                outfile = os.path.join(log_file_path.parent, "dlp.log")
+                if os.path.isfile(outfile):
+                    os.remove(outfile)
         log_level = logging.ERROR
         if DLIO_PROFILER_LOG_LEVEL == "DEBUG":
             log_level = logging.DEBUG
@@ -55,21 +67,14 @@ class dlio_logger:
         logging.basicConfig(
             level=log_level,
             handlers=[
-                logging.FileHandler(f"{logfile}.log", mode="a", encoding='utf-8'),
+                logging.FileHandler(outfile, mode="a", encoding='utf-8'),
                 logging.StreamHandler()
             ],
             format='[DLIO_PROFILER_PY %(levelname)s] %(message)s [%(pathname)s:%(lineno)d]'
         )
-        log_file_path = None
-        if logfile:
-            log_file_path = Path(logfile)
         logging.debug(f"logger.initialize_log {logfile} {data_dir} {process_id}")
         instance = dlio_logger.get_instance()
         if DLIO_PROFILER_ENABLE:
-            if log_file_path:
-                os.makedirs(log_file_path.parent, exist_ok=True)
-                if os.path.isfile(log_file_path):
-                    os.remove(log_file_path)
             instance.logger = profiler
             logging.debug(f"logger.initialize {logfile} {data_dir} {process_id}")
             instance.logger.initialize(log_file=logfile, data_dirs=data_dir, process_id=process_id)
