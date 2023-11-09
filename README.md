@@ -2,12 +2,26 @@
 [![Coverage Status](https://coveralls.io/repos/github/hariharan-devarajan/dlio-profiler/badge.svg?branch=feature/apis)](https://coveralls.io/github/hariharan-devarajan/dlio-profiler?branch=dev)
 [![Documentation Status](https://readthedocs.org/projects/dlio-profiler/badge/?version=latest)](https://dlio-profiler.readthedocs.io/en/latest/?badge=latest)
 
-# dlio-profiler
-A low-level profiler for capture I/O calls from deep learning applications.
+# DLIO Profiler v0.0.2
+A multi-level profiler for capturing application functions and low-level system I/O calls from deep learning workloads.
 
-Requirements
-1. Python > 3.8
+Requirements for profiler
+1. Python > 3.7
+2. pybind11
 
+
+Requirements for analyzer
+1. bokeh>=2.4.2
+2. pybind11
+3. [zindex_py](https://github.com/hariharan-devarajan/zindex.git)
+4. pandas>=2.0.3
+5. dask>=2023.5.0
+6. distributed
+7. numpy>=1.24.3
+8. pyarrow>=12.0.1
+9. rich>=13.6.0
+10. python-intervals>=1.10.0.post1
+11. matplotlib>=3.7.3
 
 ## Build DLIO Profiler with pip
 
