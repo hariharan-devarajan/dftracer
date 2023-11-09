@@ -45,31 +45,13 @@ jobs:
             python -m venv ../venv
             source ../venv/bin/activate
           fi
-      - name: Install DLIO Benchmark
-        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'venv'
-        run: |
-          LOC=git+https://github.com/argonne-lcf/dlio_benchmark.git
-          if [[ $PERM == 'user' ]]; then
-            export DLIO_LOGGER_USER=1
-            echo pip install --user -v ${LOC}
-            pip install -v ${LOC}
-          elif [[ $PERM == 'venv' ]]; then
-            source ../venv/bin/activate
-            pip install --upgrade pip
-            echo pip install -v ${LOC}
-            pip install -v ${LOC}
-          else
-             echo pip install -v ${LOC}
-             sudo pip install -v ${LOC}
-          fi
       - name: Build from ${{ matrix.dir }} on ${{ matrix.perm }}
         run: |
           export CMAKE_BUILD_TYPE=PROFILE
           if [ $OS == 'ubuntu-22.04' ] && [ $DIR == 'clone' ] && [ $PERM == 'venv' ]; then
-            export ENABLE_DLIO_BENCHMARK_TESTS=On
             export DLIO_PROFILER_ENABLE_TESTS=On
           fi
-          echo Install variables ENABLE_DLIO_BENCHMARK_TESTS $ENABLE_DLIO_BENCHMARK_TESTS DLIO_PROFILER_ENABLE_TESTS $DLIO_PROFILER_ENABLE_TESTS
+          echo Install variables DLIO_PROFILER_ENABLE_TESTS $DLIO_PROFILER_ENABLE_TESTS
           LOC=.[dlp_analyzer]
           if [[ $PERM == 'user' ]]; then
             export DLIO_LOGGER_USER=1
