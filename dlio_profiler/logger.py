@@ -1,12 +1,15 @@
 from functools import wraps
 from typing import Dict
 import os
+import logging
 
 DLIO_PROFILER_ENABLE_ENV = "DLIO_PROFILER_ENABLE"
 DLIO_PROFILER_INIT_ENV = "DLIO_PROFILER_INIT"
+DLIO_PROFILER_LOG_LEVEL_ENV = "DLIO_PROFILER_LOG_LEVEL"
 
 DLIO_PROFILER_ENABLE = True if os.getenv(DLIO_PROFILER_ENABLE_ENV, '1') == '1' else False
 DLIO_PROFILER_INIT_PRELOAD = True if os.getenv(DLIO_PROFILER_INIT_ENV, 'PRELOAD') == 'PRELOAD' else False
+DLIO_PROFILER_LOG_LEVEL = os.getenv(DLIO_PROFILER_LOG_LEVEL_ENV, 'ERROR')
 
 from pathlib import Path
 import inspect
@@ -28,51 +31,67 @@ if DLIO_PROFILER_ENABLE:
 class dlio_logger:
     __instance = None
 
-    def __init__(self, logfile):
+    def __init__(self):
         if DLIO_PROFILER_ENABLE:
-            self.logfile = logfile
             self.logger = None
         dlio_logger.__instance = self
 
     @classmethod
-    def get_instance(cls, log_file=None):
+    def get_instance(cls):
         """ Static access method. """
         if dlio_logger.__instance is None:
-            dlio_logger(log_file)
+            dlio_logger()
         return dlio_logger.__instance
 
     @staticmethod
     def initialize_log(logfile, data_dir, process_id):
-        log_file = None
+        log_level = logging.ERROR
+        if DLIO_PROFILER_LOG_LEVEL == "DEBUG":
+            log_level = logging.DEBUG
+        elif DLIO_PROFILER_LOG_LEVEL == "INFO":
+            log_level = logging.INFO
+        elif DLIO_PROFILER_LOG_LEVEL == "WARN":
+            log_level = logging.WARN
+        logging.basicConfig(
+            level=log_level,
+            handlers=[
+                logging.FileHandler(f"{logfile}.log", mode="a", encoding='utf-8'),
+                logging.StreamHandler()
+            ],
+            format='[%(levelname)s] %(message)s [%(pathname)s:%(lineno)d]'
+        )
+        log_file_path = None
         if logfile:
-            log_file = Path(logfile)
-        instance = dlio_logger.get_instance(log_file)
+            log_file_path = Path(logfile)
+        logging.debug(f"logger.initialize_log {logfile} {data_dir} {process_id}")
+        instance = dlio_logger.get_instance()
         if DLIO_PROFILER_ENABLE:
-            if log_file:
-                os.makedirs(log_file.parent, exist_ok=True)
-                if os.path.isfile(log_file):
-                    os.remove(log_file)
+            if log_file_path:
+                os.makedirs(log_file_path.parent, exist_ok=True)
+                if os.path.isfile(log_file_path):
+                    os.remove(log_file_path)
             instance.logger = profiler
-            if log_file:
-                log_file = f"{instance.logfile}"
-            if data_dir:
-                data_dir = f"{data_dir}"
-            instance.logger.initialize(log_file=log_file, data_dirs=data_dir, process_id=process_id)
+            logging.debug(f"logger.initialize {logfile} {data_dir} {process_id}")
+            instance.logger.initialize(log_file=logfile, data_dirs=data_dir, process_id=process_id)
         return instance
 
     def get_time(self):
         if DLIO_PROFILER_ENABLE and self.logger:
-            return self.logger.get_time()
+            t = self.logger.get_time()
+            logging.debug(f"logger.get_time {t}")
+            return t
         return 0
 
     def log_event(self, name, cat, start_time, duration, string_args=None):
         if DLIO_PROFILER_ENABLE and self.logger:
+            logging.debug(f"logger.log_event {name} {cat} {start_time} {duration} {string_args}")
             if string_args is None:
                 string_args = {}
             self.logger.log_event(name=name, cat=cat, start_time=start_time, duration=duration, string_args=string_args)
 
     def finalize(self):
         if DLIO_PROFILER_ENABLE and self.logger:
+            logging.debug(f"logger.finalize")
             self.logger.finalize()
 
 

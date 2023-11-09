@@ -1,4 +1,4 @@
-cpp-logger,https://github.com/hariharan-devarajan/cpp-logger.git,dev,1,branch,
-gotcha,https://github.com/LLNL/GOTCHA.git,develop,1,branch,
-brahma,https://github.com/hariharan-devarajan/brahma.git,dev,1,branch,
+cpp-logger,https://github.com/hariharan-devarajan/cpp-logger.git,v0.0.2,1,tag,
+gotcha,https://github.com/LLNL/GOTCHA.git,1.0.4,1,tag,
+brahma,https://github.com/hariharan-devarajan/brahma.git,v0.0.2,1,tag,
 yaml-cpp,https://github.com/jbeder/yaml-cpp.git,yaml-cpp-0.6.3,1,tag,"-DYAML_BUILD_SHARED_LIBS=On"

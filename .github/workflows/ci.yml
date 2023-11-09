@@ -18,8 +18,8 @@ jobs:
     name: ${{ matrix.os }}-${{ matrix.dir }}-${{ matrix.perm }}
     runs-on: ${{ matrix.os }}
     env:
-      CC: gcc
-      CXX: g++
+      CC: gcc-10
+      CXX: g++-10
       DIR: ${{ matrix.dir }}
       PERM: ${{ matrix.perm }}
       OS: ${{ matrix.os }}
@@ -36,7 +36,7 @@ jobs:
       - name: Install additional packages
         run: |
           sudo apt-get update
-          sudo apt-get install gcc g++ libtool-bin openmpi-bin libopenmpi-dev
+          sudo apt-get install ${CC} ${CXX} libtool-bin openmpi-bin libopenmpi-dev
           sudo apt-get install python3.10 python3-pip
           sudo apt-get install gcovr clang-format
           sudo pip install --upgrade pip
@@ -48,23 +48,23 @@ jobs:
       - name: Build from ${{ matrix.dir }} on ${{ matrix.perm }}
         run: |
           export CMAKE_BUILD_TYPE=PROFILE
-          export DLIO_PROFILER_ENABLE_TESTS=On
           if [ $OS == 'ubuntu-22.04' ] && [ $DIR == 'clone' ] && [ $PERM == 'venv' ]; then
-            export ENABLE_DLIO_BENCHMARK_TESTS=On
+            export DLIO_PROFILER_ENABLE_TESTS=On
           fi
+          echo Install variables DLIO_PROFILER_ENABLE_TESTS $DLIO_PROFILER_ENABLE_TESTS
           LOC=.[dlp_analyzer]
           if [[ $PERM == 'user' ]]; then
             export DLIO_LOGGER_USER=1
-            echo pip install --user -v ${LOC}
-            pip install -v ${LOC}[dlp_analyzer]
+            echo pip install --user ${LOC}
+            pip install -v ${LOC}
           elif [[ $PERM == 'venv' ]]; then
             source ../venv/bin/activate
             pip install --upgrade pip
-            echo pip install -v ${LOC}
-            pip install -v ${LOC}
+            echo pip install ${LOC}
+            pip install ${LOC}
           else
-             echo pip install -v ${LOC}
-             sudo pip install -v ${LOC}
+             echo pip install ${LOC}
+             sudo pip install ${LOC}
           fi
       - name: Test ctest
         if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'venv'
