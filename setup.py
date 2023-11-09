@@ -65,9 +65,9 @@ class CMakeBuild(build_ext):
         # auxiliary "native" libs
         build_type = os.environ.get("CMAKE_BUILD_TYPE", "Release")
         cmake_args += [f"-DCMAKE_BUILD_TYPE={build_type}"]
-        enable_tests = os.environ.get("DLIO_PROFILER_ENABLE_TESTS", "On")
+        enable_tests = os.environ.get("DLIO_PROFILER_ENABLE_TESTS", "Off")
         cmake_args += [f"-DDLIO_PROFILER_ENABLE_TESTS={enable_tests}"]
-        enable_dlio_tests = os.environ.get("ENABLE_DLIO_BENCHMARK_TESTS", "On")
+        enable_dlio_tests = os.environ.get("ENABLE_DLIO_BENCHMARK_TESTS", "Off")
         cmake_args += [f"-DENABLE_DLIO_BENCHMARK_TESTS={enable_dlio_tests}"]
         enable_dlio_tests = os.environ.get("ENABLE_PAPER_TESTS", "Off")
         cmake_args += [f"-DENABLE_PAPER_TESTS={enable_dlio_tests}"]
