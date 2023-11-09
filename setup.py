@@ -29,14 +29,11 @@ class CMakeExtension(Extension):
 class CMakeBuild(build_ext):
     def build_extension(self, ext: CMakeExtension) -> None:
         cmake_args = []
-        install_prefix = sys.prefix
-        if "VIRTUAL_ENV" in os.environ:
-            install_prefix = os.environ['VIRTUAL_ENV']
-        elif "CONDA_DEFAULT_ENV" in os.environ:
-            install_prefix = os.environ['CONDA_DEFAULT_ENV']
+        from distutils.sysconfig import get_python_lib
+        install_prefix = f"{get_python_lib()}/dlio_profiler"
         if "DLIO_LOGGER_USER" in os.environ:
-            install_prefix=site.USER_BASE
-            cmake_args += [f"-DUSER_INSTALL=ON"]
+            install_prefix=f"{site.USER_SITE}/dlio_profiler"
+            # cmake_args += [f"-DUSER_INSTALL=ON"]
         if "DLIO_PROFILER_DIR" in os.environ:
             install_prefix = os.environ['DLIO_PROFILER_DIR']
         cmake_args += [f"-DCMAKE_INSTALL_PREFIX={install_prefix}"]
@@ -52,7 +49,7 @@ class CMakeBuild(build_ext):
                 clone_dir = f"{project_dir}/dependency/{parts[0]}"
                 need_install = parts[3]
                 print(f"Installing {parts[0]} into {install_prefix}")
-                os.system(f"bash {project_dir}/dependency/install_dependency.sh {parts[1]} {clone_dir} {install_prefix} {parts[2]} {need_install}")
+                os.system(f"bash {project_dir}/dependency/install_dependency.sh {parts[1]} {clone_dir} {install_prefix} {parts[2]} {need_install} {parts[4]} {parts[5]}")
 
         import pybind11 as py
         py_cmake_dir = py.get_cmake_dir()
@@ -66,9 +63,14 @@ class CMakeBuild(build_ext):
         print(f"{extdir}")
         # Using this requires trailing slash for auto-detection & inclusion of
         # auxiliary "native" libs
-
-        debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
-        cfg = "Debug" if debug else "Release"
+        build_type = os.environ.get("CMAKE_BUILD_TYPE", "Release")
+        cmake_args += [f"-DCMAKE_BUILD_TYPE={build_type}"]
+        enable_tests = os.environ.get("DLIO_PROFILER_ENABLE_TESTS", "Off")
+        cmake_args += [f"-DDLIO_PROFILER_ENABLE_TESTS={enable_tests}"]
+        enable_dlio_tests = os.environ.get("ENABLE_DLIO_BENCHMARK_TESTS", "Off")
+        cmake_args += [f"-DENABLE_DLIO_BENCHMARK_TESTS={enable_dlio_tests}"]
+        enable_dlio_tests = os.environ.get("ENABLE_PAPER_TESTS", "Off")
+        cmake_args += [f"-DENABLE_PAPER_TESTS={enable_dlio_tests}"]
 
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.
@@ -94,12 +96,7 @@ class CMakeBuild(build_ext):
 
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.
-        if "CMAKE_BUILD_PARALLEL_LEVEL" not in os.environ:
-            # self.parallel is a Python 3 only way to set parallel jobs by hand
-            # using -j in the build_ext call, not supported by pip or PyPA-build.
-            if hasattr(self, "parallel") and self.parallel:
-                # CMake 3.12+ only.
-                build_args += [f"-j{self.parallel}"]
+        build_args += [f"--", "-j"]
 
         build_temp = Path(self.build_temp) / ext.name
         if not build_temp.exists():
@@ -122,7 +119,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="dlio_profiler_py",
-    version="0.0.1",
+    version="0.0.2",
     description="I/O profiler for deep learning python apps. Specifically for dlio_benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -156,10 +153,24 @@ setup(
         "Source": "https://github.com/hariharan-devarajan/dlio-profiler",
     },
     packages=find_namespace_packages(where="."),
-    package_dir={"dlio_profiler": "dlio_profiler"},
+    package_dir={"dlio_profiler": "dlio_profiler",
+                 "dlp_analyzer": "dlp_analyzer"},
     ext_modules=[CMakeExtension("dlio_profiler_py")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
-    extras_require={"test": ["pytest>=6.0"]},
+    extras_require={"test": ["pytest>=6.0"],
+                    "dlp_analyzer": [
+                        "bokeh>=2.4.2",
+                        "pybind11",
+                        "zindex_py @ git+https://github.com/hariharan-devarajan/zindex.git@feature/dlio_profiler",
+                        "pandas>=2.0.3",
+                        "dask>=2023.5.0",
+                        "distributed",
+                        "numpy>=1.24.3",
+                        "pyarrow>=12.0.1",
+                        "rich>=13.6.0",
+                        "python-intervals>=1.10.0.post1",
+                        "matplotlib>=3.7.3",
+                    ]},
     python_requires=">=3.7",
 )

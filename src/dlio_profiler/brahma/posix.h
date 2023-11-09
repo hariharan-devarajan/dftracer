@@ -5,184 +5,173 @@
 #ifndef DLIO_PROFILER_POSIX_H
 #define DLIO_PROFILER_POSIX_H
 
+#include <dlio_profiler/utils/utils.h>
 #include <brahma/brahma.h>
-#include <dlio_profiler/macro.h>
-#include <vector>
+#include <dlio_profiler/core/macro.h>
 #include <dlio_profiler/dlio_logger.h>
 #include <fcntl.h>
-#include <sys/param.h>
 #include <filesystem>
 #include <fstream>
+#include <sys/param.h>
+#include <vector>
+
 namespace fs = std::filesystem;
 
 namespace brahma {
-class POSIXDLIOProfiler : public POSIX {
- private:
-  static std::shared_ptr<POSIXDLIOProfiler> instance;
-  std::unordered_set<int> tracked_fd;
-  std::vector<std::string> track_filename;
-  std::vector<std::string> ignore_filename;
-  std::shared_ptr<DLIOLogger> logger;
-  inline std::string get_filename(int fd) {
-    char proclnk[PATH_MAX];
-    char filename[PATH_MAX];
-    snprintf(proclnk, PATH_MAX, "/proc/self/fd/%d", fd);
-    size_t r = readlink(proclnk, filename, PATH_MAX);
-    filename[r] = '\0';
-    return filename;
-  }
-  inline std::pair<bool, std::string> is_traced(int fd, const char* func) {
-    if (fd == -1) return std::pair<bool, std::string>(false, "");
-    auto iter = tracked_fd.find(fd);
-    if (iter != tracked_fd.end()) return std::pair<bool, std::string>(true, "");
-    return is_traced(get_filename(fd).c_str(), func);
-  }
+    class POSIXDLIOProfiler : public POSIX {
+    private:
+        static bool stop_trace;
+        static std::shared_ptr<POSIXDLIOProfiler> instance;
+        static const int MAX_FD = 1024;
+        std::string tracked_fd[MAX_FD];
+        std::shared_ptr<DLIOLogger> logger;
+        bool trace_all_files;
 
-  inline std::pair<bool, std::string> is_traced(const char* filename, const char* func) {
-    bool found = false;
-    bool ignore = false;
-    char resolved_path[PATH_MAX];
-    char* data = realpath(filename, resolved_path);
-    (void) data;
-    if (ignore_files(resolved_path) || ignore_files(filename)) {
-        DLIO_PROFILER_LOGINFO("Profiler ignoring logfile %s", resolved_path);
-        return std::pair<bool, std::string>(false, filename);
-    }
-    for (const auto file : ignore_filename) {
-      if (strstr(resolved_path, file.c_str()) != NULL) {
-        DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing %s %s %s", resolved_path, filename, func);
-        ignore = true;
-        break;
-      }
-    }
-    if (!ignore) {
-        for (const auto file : track_filename) {
-          if (strstr(resolved_path, file.c_str()) != NULL) {
-            DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX tracing %s %s %s", resolved_path, filename, func);
-            found = true;
-            break;
-          }
+        inline const char* is_traced(int fd, const char *func) {
+          DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.is_traced for %s",func);
+          if (fd == -1) return nullptr;
+          return tracked_fd[fd%MAX_FD].empty() ? nullptr: tracked_fd[fd%MAX_FD].c_str();
         }
-    }
-    DLIO_PROFILER_LOGINFO("Profiler Intercepted POSIX not tracing %s %s %s", resolved_path, filename, func);
-    return std::pair<bool, std::string>(found, filename);
-  }
-  inline void trace(int fd) {
-    tracked_fd.insert(fd);
-  }
-  inline void remove_trace(int fd) {
-    tracked_fd.erase(fd);
-  }
- public:
-  POSIXDLIOProfiler() : POSIX() {
-    DLIO_PROFILER_LOGINFO("POSIX class intercepted", "");
-    logger = DLIO_LOGGER_INIT();
-  }
-  inline void trace(const char* filename) {
-    char resolved_path[PATH_MAX];
-    char* data = realpath(filename, resolved_path);
-    (void) data;
-    track_filename.push_back(resolved_path);
-  }
-  inline void untrace(const char* filename) {
-    char resolved_path[PATH_MAX];
-    char* data = realpath(filename, resolved_path);
-    (void) data;
-    ignore_filename.push_back(resolved_path);
-  }
-  ~POSIXDLIOProfiler() override = default;
-  static std::shared_ptr<POSIXDLIOProfiler> get_instance() {
-    if (instance == nullptr) {
-      instance = std::make_shared<POSIXDLIOProfiler>();
-      POSIX::set_instance(instance);
-    }
-    return instance;
-  }
-  int open(const char *pathname, int flags, ...) override;
-  int creat64(const char *path, mode_t mode) override;
-  int open64(const char *path, int flags, ...) override;
-  int close(int fd) override;
-  ssize_t write(int fd, const void *buf, size_t count) override;
-  ssize_t read(int fd, void *buf, size_t count) override;
-  off_t lseek(int fd, off_t offset, int whence) override;
-  off64_t lseek64(int fd, off64_t offset, int whence) override;
-  ssize_t pread(int fd, void *buf, size_t count, off_t offset) override;
-  ssize_t pread64(int fd, void *buf, size_t count, off64_t offset) override;
-  ssize_t pwrite(int fd, const void *buf, size_t count, off64_t offset) override;
-  ssize_t pwrite64(int fd, const void *buf, size_t count, off64_t offset) override;
-  int fsync(int fd) override;
-  int fdatasync(int fd) override;
 
-  int openat(int dirfd, const char *pathname, int flags, ...) override;
+        inline const char* is_traced(const char* filename, const char *func) {
+          DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.is_traced with filename for %s",func);
+          if (stop_trace) return nullptr;
+          if (trace_all_files) return filename;
+          else return is_traced_common(filename, func);
+        }
 
-  void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset) override;
+        inline void trace(int fd, const char* filename) {
+          DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.trace for %d",fd);
+          if (fd == -1) return;
+          tracked_fd[fd%MAX_FD] = filename;
+        }
 
-  void *mmap64(void *addr, size_t length, int prot, int flags, int fd, off64_t offset) override;
+        inline void remove_trace(int fd) {
+          DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.remove_trace for %d",fd);
+          if (fd == -1) return;
+          tracked_fd[fd%MAX_FD] = std::string();
+        }
 
-  int __xstat(int vers, const char *path, struct stat *buf) override;
+    public:
+        POSIXDLIOProfiler(bool trace_all) : POSIX(), trace_all_files(trace_all){
+          DLIO_PROFILER_LOGDEBUG("POSIX class intercepted", "");
+          for(int i=0;i<MAX_FD;++i) tracked_fd[i] = std::string();
+          logger = DLIO_LOGGER_INIT();
+        }
+        void finalize() {
+          DLIO_PROFILER_LOGDEBUG("Finalizing POSIXDLIOProfiler","");
+          stop_trace = true;
+        }
+        ~POSIXDLIOProfiler() {
+          DLIO_PROFILER_LOGDEBUG("Destructing POSIXDLIOProfiler","");
+        }
+        static std::shared_ptr<POSIXDLIOProfiler> get_instance(bool trace_all = false) {
+          DLIO_PROFILER_LOGDEBUG("POSIX class get_instance", "");
+          if (!stop_trace && instance == nullptr) {
+            instance = std::make_shared<POSIXDLIOProfiler>(trace_all);
+            POSIX::set_instance(instance);
+          }
+          return instance;
+        }
 
-  int __xstat64(int vers, const char *path, struct stat64 *buf) override;
+        int open(const char *pathname, int flags, ...) override;
 
-  int __lxstat(int vers, const char *path, struct stat *buf) override;
+        int creat64(const char *path, mode_t mode) override;
 
-  int __lxstat64(int vers, const char *path, struct stat64 *buf) override;
+        int open64(const char *path, int flags, ...) override;
 
-  int __fxstat(int vers, int fd, struct stat *buf) override;
+        int close(int fd) override;
 
-  int __fxstat64(int vers, int fd, struct stat64 *buf) override;
+        ssize_t write(int fd, const void *buf, size_t count) override;
 
-  int mkdir(const char *pathname, mode_t mode) override;
+        ssize_t read(int fd, void *buf, size_t count) override;
 
-  int rmdir(const char *pathname) override;
+        off_t lseek(int fd, off_t offset, int whence) override;
 
-  int chdir(const char *path) override;
+        off64_t lseek64(int fd, off64_t offset, int whence) override;
 
-  int link(const char *oldpath, const char *newpath) override;
+        ssize_t pread(int fd, void *buf, size_t count, off_t offset) override;
 
-  int linkat(int fd1, const char *path1, int fd2, const char *path2, int flag) override;
+        ssize_t pread64(int fd, void *buf, size_t count, off64_t offset) override;
 
-  int unlink(const char *pathname) override;
+        ssize_t pwrite(int fd, const void *buf, size_t count, off64_t offset) override;
 
-  int symlink(const char *path1, const char *path2) override;
+        ssize_t pwrite64(int fd, const void *buf, size_t count, off64_t offset) override;
 
-  int symlinkat(const char *path1, int fd, const char *path2) override;
+        int fsync(int fd) override;
 
-  ssize_t readlink(const char *path, char *buf, size_t bufsize) override;
+        int fdatasync(int fd) override;
 
-  ssize_t readlinkat(int fd, const char *path, char *buf, size_t bufsize) override;
+        int openat(int dirfd, const char *pathname, int flags, ...) override;
 
-  int rename(const char *oldpath, const char *newpath) override;
+        void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset) override;
 
-  int chmod(const char *path, mode_t mode) override;
+        void *mmap64(void *addr, size_t length, int prot, int flags, int fd, off64_t offset) override;
 
-  int chown(const char *path, uid_t owner, gid_t group) override;
+        int __xstat(int vers, const char *path, struct stat *buf) override;
 
-  int lchown(const char *path, uid_t owner, gid_t group) override;
+        int __xstat64(int vers, const char *path, struct stat64 *buf) override;
 
-  int utime(const char *filename, const utimbuf *buf) override;
+        int __lxstat(int vers, const char *path, struct stat *buf) override;
 
-  DIR *opendir(const char *name) override;
+        int __lxstat64(int vers, const char *path, struct stat64 *buf) override;
 
-  int fcntl(int fd, int cmd, ...) override;
+        int __fxstat(int vers, int fd, struct stat *buf) override;
 
-  int dup(int oldfd) override;
+        int __fxstat64(int vers, int fd, struct stat64 *buf) override;
 
-  int dup2(int oldfd, int newfd) override;
+        int mkdir(const char *pathname, mode_t mode) override;
 
-  int mkfifo(const char *pathname, mode_t mode) override;
+        int rmdir(const char *pathname) override;
 
-  mode_t umask(mode_t mask) override;
+        int chdir(const char *path) override;
 
-  int access(const char *path, int amode) override;
+        int link(const char *oldpath, const char *newpath) override;
 
-  int faccessat(int fd, const char *path, int amode, int flag) override;
+        int linkat(int fd1, const char *path1, int fd2, const char *path2, int flag) override;
 
-  int remove(const char *pathname) override;
+        int unlink(const char *pathname) override;
 
-  int truncate(const char *pathname, off_t length) override;
+        int symlink(const char *path1, const char *path2) override;
 
-  int ftruncate(int fd, off_t length) override;
-};
+        int symlinkat(const char *path1, int fd, const char *path2) override;
+
+        ssize_t readlink(const char *path, char *buf, size_t bufsize) override;
+
+        ssize_t readlinkat(int fd, const char *path, char *buf, size_t bufsize) override;
+
+        int rename(const char *oldpath, const char *newpath) override;
+
+        int chmod(const char *path, mode_t mode) override;
+
+        int chown(const char *path, uid_t owner, gid_t group) override;
+
+        int lchown(const char *path, uid_t owner, gid_t group) override;
+
+        int utime(const char *filename, const utimbuf *buf) override;
+
+        DIR *opendir(const char *name) override;
+
+        int fcntl(int fd, int cmd, ...) override;
+
+        int dup(int oldfd) override;
+
+        int dup2(int oldfd, int newfd) override;
+
+        int mkfifo(const char *pathname, mode_t mode) override;
+
+        mode_t umask(mode_t mask) override;
+
+        int access(const char *path, int amode) override;
+
+        int faccessat(int fd, const char *path, int amode, int flag) override;
+
+        int remove(const char *pathname) override;
+
+        int truncate(const char *pathname, off_t length) override;
+
+        int ftruncate(int fd, off_t length) override;
+    };
 
 }  // namespace brahma
 #endif  // DLIO_PROFILER_POSIX_H

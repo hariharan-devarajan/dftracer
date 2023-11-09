@@ -1,47 +1,87 @@
 name: DLIO Profiler Build and Test
 
 on:
+  pull_request:
+    branches: [ main, dev ]
   push:
-    branches: [dev ]
-
 jobs:
   build-and-test:
     strategy:
       fail-fast: false
       matrix:
         os: [ ubuntu-20.04,  ubuntu-22.04]
-        dir: ["clone", "github"]
-        perm: ["root", "user"]
+        dir: ["clone"]
+        perm: ["root", "user", "venv"]
+        exclude:
+          - dir: "clone"
+            perm: "user"
     name: ${{ matrix.os }}-${{ matrix.dir }}-${{ matrix.perm }}
     runs-on: ${{ matrix.os }}
     env:
-      CC: gcc
-      CXX: g++
+      CC: gcc-10
+      CXX: g++-10
       DIR: ${{ matrix.dir }}
       PERM: ${{ matrix.perm }}
+      OS: ${{ matrix.os }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - name: Push checkout
+        if: github.event_name == 'push'
+        uses: actions/checkout@v3
+      - name: PR checkout
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v3
         with:
-          fetch-depth: 2
-
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Install additional packages
         run: |
           sudo apt-get update
-          sudo apt-get install gcc g++ libtool-bin openmpi-bin libopenmpi-dev
-          sudo apt-get install python3 python3-pip
+          sudo apt-get install ${CC} ${CXX} libtool-bin openmpi-bin libopenmpi-dev
+          sudo apt-get install python3.10 python3-pip
+          sudo apt-get install gcovr clang-format
+          sudo pip install --upgrade pip
+
+          if [[ $PERM == 'venv' ]]; then
+            python -m venv ../venv
+            source ../venv/bin/activate
+          fi
       - name: Build from ${{ matrix.dir }} on ${{ matrix.perm }}
         run: |
-          LOC=.
-          if [[ $DIR == 'github' ]]; then
-            LOC=git+https://github.com/hariharan-devarajan/dlio-profiler.git@dev
+          export CMAKE_BUILD_TYPE=PROFILE
+          if [ $OS == 'ubuntu-22.04' ] && [ $DIR == 'clone' ] && [ $PERM == 'venv' ]; then
+            export DLIO_PROFILER_ENABLE_TESTS=On
           fi
+          echo Install variables DLIO_PROFILER_ENABLE_TESTS $DLIO_PROFILER_ENABLE_TESTS
+          LOC=.[dlp_analyzer]
           if [[ $PERM == 'user' ]]; then
             export DLIO_LOGGER_USER=1
-            echo pip install -v ${LOC}
+            echo pip install --user ${LOC}
             pip install -v ${LOC}
+          elif [[ $PERM == 'venv' ]]; then
+            source ../venv/bin/activate
+            pip install --upgrade pip
+            echo pip install ${LOC}
+            pip install ${LOC}
           else
-             echo pip install -v ${LOC}
-             sudo pip install -v ${LOC}
+             echo pip install ${LOC}
+             sudo pip install ${LOC}
           fi
+      - name: Test ctest
+        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'venv'
+        run: |
+          source ../venv/bin/activate
+          pip install -r test/py/requirements.txt
+          cd build/temp*/dlio_profiler_py
+          ctest -E dlio -VV
+      - name: Create Coverage
+        if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'venv'
+        run: |
+          mkdir coverage
+          FILE=$PWD/coverage/coverage.json
+          cd build
+          COVERALLS_REPO_TOKEN=${{ secrets.GITHUB_TOKEN }} gcovr -r ../ . --coveralls $FILE -e ../test/ -e ../src/example
+          if [ -e '$FILE' ]; then
+          sed -i'' -e 's/"service_name": "github-actions-ci"/"service_name": "github"/' '$FILE'
+          fi
+          cat $FILE
+          curl -v -F json_file=@$FILE https://coveralls.io/api/v1/jobs
