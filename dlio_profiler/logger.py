@@ -58,7 +58,7 @@ class dlio_logger:
                 logging.FileHandler(f"{logfile}.log", mode="a", encoding='utf-8'),
                 logging.StreamHandler()
             ],
-            format='[%(levelname)s] %(message)s [%(pathname)s:%(lineno)d]'
+            format='[DLIO_PROFILER_PY %(levelname)s] %(message)s [%(pathname)s:%(lineno)d]'
         )
         log_file_path = None
         if logfile:
