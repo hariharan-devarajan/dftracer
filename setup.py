@@ -71,6 +71,7 @@ class CMakeBuild(build_ext):
         cmake_args += [f"-DENABLE_DLIO_BENCHMARK_TESTS={enable_dlio_tests}"]
         enable_dlio_tests = os.environ.get("ENABLE_PAPER_TESTS", "Off")
         cmake_args += [f"-DENABLE_PAPER_TESTS={enable_dlio_tests}"]
+        cmake_args += [f"-DPYTHON_EXECUTABLE={sys.executable}"]
 
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.
