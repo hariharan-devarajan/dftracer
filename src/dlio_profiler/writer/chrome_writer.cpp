@@ -19,6 +19,7 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
     if (fh == nullptr) {
       ERROR(fh == nullptr, "unable to create log file %s", filename); // GCOVR_EXCL_LINE
     } else {
+      setvbuf (fh, NULL, _IOLBF, MAX_LINE_SIZE);
       DLIO_PROFILER_LOGINFO("created log file %s", filename);
     }
   }
