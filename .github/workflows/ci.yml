@@ -71,6 +71,7 @@ jobs:
         run: |
           source ../venv/bin/activate
           pip install -r test/py/requirements.txt
+          ls build/*
           cd build/temp*/dlio_profiler_py
           ctest -E dlio -VV
       - name: Create Coverage
