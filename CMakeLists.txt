@@ -73,7 +73,7 @@ if (NOT DLIO_PROFILER_INSTALL_DATA_DIR)
 endif ()
 
 if (NOT CMAKE_INSTALL_RPATH)
-    set(CMAKE_INSTALL_RPATH "../lib:../lib64:dlio_profiler/lib:dlio_profiler/lib64")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${PYTHON_SITE_PACKAGES}/lib:${PYTHON_SITE_PACKAGES}/lib64:../lib:../lib64:dlio_profiler/lib:dlio_profiler/lib64")
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif ()
 
