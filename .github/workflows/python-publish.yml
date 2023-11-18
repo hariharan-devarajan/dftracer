@@ -42,7 +42,8 @@ jobs:
         export DLIO_PROFILER_WHEEL=1
         python setup.py bdist_wheel
         gotcha_so=$(find . -name libgotcha.so.2)
-        path=dirname dirname $gotcha_so
+        path=`dirname $gotcha_so`
+        path=`dirname $path`
         echo $path
         export LD_LIBRARY_PATH=$path/lib:$path/lib64:$LD_LIBRARY_PATH
         auditwheel show dist/*.whl
