@@ -28,8 +28,8 @@ eval $(parse_yaml $DLIO_PROFILER_DASK_CONF_NAME DLIO_PROFILER_)
 
 source ${DLIO_PROFILER_ENV}/bin/activate
 
-dask scheduler --scheduler-file ${DLIO_PROFILER_CONFIG_RUN_DIR}/scheduler.json --port ${DLIO_PROFILER_SCHEDULER_PORT} > ${DLIO_PROFILER_CONFIG_LOG_DIR}/scheduler.log 2>&1 &
+dask scheduler --scheduler-file ${DLIO_PROFILER_CONFIG_RUN_DIR}/scheduler_${USER}.json --port ${DLIO_PROFILER_SCHEDULER_PORT} > ${DLIO_PROFILER_CONFIG_LOG_DIR}/scheduler_${USER}.log 2>&1 &
 scheduler_pid=$!
-echo $scheduler_pid > ${DLIO_PROFILER_CONFIG_RUN_DIR}/scheduler.pid
+echo $scheduler_pid > ${DLIO_PROFILER_CONFIG_RUN_DIR}/scheduler_${USER}.pid
 
 ${DLIO_PROFILER_SCHEDULER_CMD} ${DLIO_PROFILER_CONFIG_SCRIPT_DIR}/start_dask_worker.sh ${DLIO_PROFILER_DASK_CONF_NAME}
