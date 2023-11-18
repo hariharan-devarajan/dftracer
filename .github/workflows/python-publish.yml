@@ -37,7 +37,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y gcc g++ libtool-bin openmpi-bin libopenmpi-dev
         python -m pip install --upgrade pip
-        pip install build wheel auditwheel pybind11
+        pip install build wheel auditwheel pybind11 patchelf
     - name: Build package
       run: |
         export DLIO_PROFILER_WHEEL=1
@@ -49,7 +49,9 @@ jobs:
         export LD_LIBRARY_PATH=$PWD/$path/lib:$PWD/$path/lib64:$LD_LIBRARY_PATH
         echo $LD_LIBRARY_PATH
         auditwheel show dist/*.whl
-        auditwheel repair --plat manylinux_2_34_x86_64 dist/*.whl -w dist/
+        platform=$(auditwheel show dist/*.whl | grep manylinux_ | awk -F'"' '{print $2}')
+        echo $platform
+        auditwheel repair --plat $platform dist/*.whl -w dist/
         rm dist/*linux_x86_64.whl
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
