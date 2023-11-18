@@ -45,7 +45,8 @@ jobs:
         path=`dirname $gotcha_so`
         path=`dirname $path`
         echo $path
-        export LD_LIBRARY_PATH=$path/lib:$path/lib64:$LD_LIBRARY_PATH
+        export LD_LIBRARY_PATH=$PWD/$path/lib:$PWD/$path/lib64:$LD_LIBRARY_PATH
+        echo $LD_LIBRARY_PATH
         auditwheel show dist/*.whl
         auditwheel repair --plat manylinux_2_34_x86_64 dist/*.whl -w dist/
         rm dist/*linux_x86_64.whl
