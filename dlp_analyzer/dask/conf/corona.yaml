@@ -9,7 +9,7 @@ job:
   env_id: FLUX_JOB_ID
 scheduler:
   cmd: srun -N ${DLIO_PROFILER_JOB_NUM_NODES} -t ${DLIO_PROFILER_JOB_WALL_TIME_MIN}
-  port: 10001
+  port: 10005
   kill: flux cancel --all
 worker:
   ppn: 48
