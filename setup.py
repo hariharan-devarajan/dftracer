@@ -170,7 +170,7 @@ setup(
                     "dlp_analyzer": [
                         "bokeh>=2.4.2",
                         "pybind11",
-                        "zindex_py==0.0.1",
+                        "zindex-py==0.0.1",
                         "pandas>=2.0.3",
                         "dask>=2023.5.0",
                         "distributed",
