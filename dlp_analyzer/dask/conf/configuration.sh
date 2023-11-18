@@ -15,4 +15,4 @@ function parse_yaml {
   }'
 }
 
-eval $(parse_yaml configuration.yaml DLIO_PROFILER_)
+eval $(parse_yaml ~/.dlio_profiler/configuration.yaml DLIO_PROFILER_)
