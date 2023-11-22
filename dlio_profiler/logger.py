@@ -55,8 +55,6 @@ class dlio_logger:
                 if os.path.isfile(log_file_path):
                     os.remove(log_file_path)
                 outfile = os.path.join(log_file_path.parent, "dlp.log")
-                if os.path.isfile(outfile):
-                    os.remove(outfile)
         log_level = logging.ERROR
         if DLIO_PROFILER_LOG_LEVEL == "DEBUG":
             log_level = logging.DEBUG
