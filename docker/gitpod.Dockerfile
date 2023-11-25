@@ -1,7 +1,6 @@
 FROM ubuntu:20.04
 
 RUN apt-get update
-RUN apt-get uninstall python3
 RUN apt-get install -y gcc g++ python3.10 python3.11-venv \
     python3-pip openmpi-bin openmpi-common \
     libopenmpi-dev git cmake default-jre jq
