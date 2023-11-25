@@ -13,4 +13,4 @@ ADD . /workspace/dlp
 
 WORKDIR /workspace/dlp
 RUN source /workspace/venv/bin/activate
-RUN python -m pip install -e .
+RUN /workspace/venv/bin/pip install -e .
