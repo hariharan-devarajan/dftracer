@@ -4,7 +4,7 @@ RUN apt-get update
 RUN apt-get install -y gcc g++ python3.10 python3.10-venv \
     python3-pip openmpi-bin openmpi-common \
     libopenmpi-dev git cmake default-jre jq
-
+SHELL ["/bin/bash", "-c"]
 RUN mkdir -p /workspace/venv
 RUN python3.10 -m venv /workspace/venv
 
