@@ -6,5 +6,5 @@
 
 tasks:
   - name: Install Dependencies
-    before: apt-get update
-    command: apt-get install libtool-bin openmpi-bin libopenmpi-dev
+    before: sudo apt-get update
+    command: sudo apt-get install -y libtool-bin openmpi-bin libopenmpi-dev
