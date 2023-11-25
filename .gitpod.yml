@@ -6,5 +6,7 @@
 
 tasks:
   - name: Install Dependencies
-    before: sudo apt-get update
-    command: sudo apt-get install -y libtool-bin openmpi-bin libopenmpi-dev
+    before: sudo apt-get update && sudo apt-get install -y libtool-bin openmpi-bin libopenmpi-dev
+    init: python3 -m venv /workspace/venv && \
+          source /workspace/venv/bin/activate && \
+          /workspace/venv/bin/pip install .
