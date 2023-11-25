@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 RUN apt-get update
 RUN apt-get install -y gcc g++ python3.10 python3.11-venv \
