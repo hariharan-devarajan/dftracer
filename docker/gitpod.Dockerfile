@@ -12,5 +12,3 @@ RUN python3.10 -m venv /workspace/venv
 ADD . /workspace/dlp
 
 WORKDIR /workspace/dlp
-RUN source /workspace/venv/bin/activate
-RUN /workspace/venv/bin/pip install -e .
