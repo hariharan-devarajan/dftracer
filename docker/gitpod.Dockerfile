@@ -1,12 +1,17 @@
-FROM ubuntu:22.04
+FROM ubuntu:20.04
 
-RUN apt-get update 
-RUN apt-get install -y gcc g++ python3.11 \
+RUN apt-get update
+RUN apt-get uninstall python3
+RUN apt-get install -y gcc g++ python3.10 python3.11-venv \
     python3-pip openmpi-bin openmpi-common \
     libopenmpi-dev git cmake default-jre jq
+
+RUN mkdir -p /workspace/venv
+RUN python3.11 -m venv /workspace/venv
 
 # Add contents of the current directory to /workspace/dlio in the container
 ADD . /workspace/dlp
 
 WORKDIR /workspace/dlp
-RUN python3.11 -m pip install -e .
+RUN source /workspace/venv/bin/activate
+RUN python -m pip install -e .
