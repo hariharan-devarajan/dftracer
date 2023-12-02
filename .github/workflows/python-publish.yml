@@ -41,6 +41,7 @@ jobs:
       run: |
         export DLIO_PROFILER_WHEEL=1
         python setup.py bdist_wheel
+        python setup.py sdist
         gotcha_so=$(find . -name libgotcha.so.2)
         path=`dirname $gotcha_so`
         path=`dirname $path`
