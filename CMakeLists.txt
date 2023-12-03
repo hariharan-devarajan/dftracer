@@ -32,6 +32,8 @@ option(ENABLE_PAPER_TESTS "Enable paper tests" Off)
 #------------------------------------------------------------------------------
 if(DEFINED ENV{DLIO_PYTHON_EXECUTABLE})
     set(PYTHON_EXECUTABLE  $ENV{DLIO_PYTHON_EXECUTABLE})
+elseif(DEFINED DLIO_PYTHON_EXECUTABLE)
+    set(PYTHON_EXECUTABLE  $ENV{DLIO_PYTHON_EXECUTABLE})
 else()
     find_program(PYTHON_EXECUTABLE python)
 endif()
@@ -53,10 +55,13 @@ if (BUILD_PYTHON_BINDINGS)
     message("-- " "[Python] Site ${MAIN_PYTHON_SITE_PACKAGES} found for installing python binding")
 endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_BINARY_DIR}/lib/cmake ${PYTHON_SITE_PACKAGES}/dlio_profiler/lib/cmake)
-message("-- " "[DLIO Profiler] DLIO_PROFILER_CMAKE_DIR ${DLIO_PROFILER_CMAKE_DIR}")
+set(DLIO_PROFILER_CMAKE_DIR ${CMAKE_SOURCE_DIR}/CMake
+                            ${CMAKE_BINARY_DIR}/lib/cmake
+                            ${PYTHON_SITE_PACKAGES}/dlio_profiler/lib/cmake
+                            ${PYTHON_SITE_PACKAGES}/pybind11/share/cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${DLIO_PROFILER_CMAKE_DIR})
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PYTHON_SITE_PACKAGES}/dlio_profiler/lib/cmake ${PYTHON_SITE_PACKAGES}/dlio_profiler/share/cmake)
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${DLIO_PROFILER_CMAKE_DIR})
+message("-- " "[DLIO Profiler] CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}")
 
 if (NOT DLIO_PROFILER_INSTALL_BIN_DIR)
     set(DLIO_PROFILER_INSTALL_BIN_DIR ${CMAKE_INSTALL_PREFIX}/bin)
