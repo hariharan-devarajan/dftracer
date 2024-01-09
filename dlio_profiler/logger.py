@@ -52,8 +52,6 @@ class dlio_logger:
         if DLIO_PROFILER_ENABLE:
             if log_file_path:
                 os.makedirs(log_file_path.parent, exist_ok=True)
-                if os.path.isfile(log_file_path):
-                    os.remove(log_file_path)
                 outfile = os.path.join(log_file_path.parent, "dlp.log")
         log_level = logging.ERROR
         if DLIO_PROFILER_LOG_LEVEL == "DEBUG":
