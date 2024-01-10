@@ -32,9 +32,9 @@
 *.app
 
 
-venv
+venv*
 build
-log
+logs/*.log
 .idea
 dlio_profiler_py.egg-info
 dependency/.spack-env
@@ -47,13 +47,14 @@ dependency/spack.lock
 /examples/dlp_analyzer/dlp.log
 /examples/dlp_analyzer/dlp_analyzer_main.log
 /dlp_analyzer/test.pfw.gz.zindex
-/dlp_analyzer/dask/run_dir/*
+/dlp_analyzer/dask/run_dir/*.pid
+/dlp_analyzer/dask/run_dir/*.json
 /build_env/
 /cmake-build-debug/
 /cmake-build-debug-1/
 /data/unet3d/
 /dist/
-/dlp_analyzer/dask/logs/*
+/dlp_analyzer/dask/logs/*.log
 /output/
 /dlp_analyzer/.nfs*
 /hydra_log/unet3d/

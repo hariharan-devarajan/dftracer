@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 print(sys.argv)
-from setuptools import Extension, setup, find_namespace_packages
+from setuptools import Extension, setup, find_namespace_packages, find_packages
 from setuptools.command.build_ext import build_ext
 import site
 
@@ -28,19 +28,30 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def build_extension(self, ext: CMakeExtension) -> None:
+        is_wheel = os.getenv("DLIO_PROFILER_WHEEL", "0") == "1"
         cmake_args = []
         from distutils.sysconfig import get_python_lib
+        project_dir = Path.cwd()
+        # Must be in this form due to bug in .resolve() only fixed in Python 3.10+
+        ext_fullpath = project_dir / self.get_ext_fullpath(ext.name)
+        extdir = ext_fullpath.parent.parent.resolve()
+        sourcedir = extdir.parent.resolve()
+        print(f"{extdir}")
         install_prefix = f"{get_python_lib()}/dlio_profiler"
         if "DLIO_LOGGER_USER" in os.environ:
             install_prefix=f"{site.USER_SITE}/dlio_profiler"
             # cmake_args += [f"-DUSER_INSTALL=ON"]
         if "DLIO_PROFILER_DIR" in os.environ:
             install_prefix = os.environ['DLIO_PROFILER_DIR']
+        if is_wheel:
+            install_prefix = f"{extdir}/dlio_profiler"
+            cmake_args += [f"-DDLIO_PYTHON_SITE={extdir}"]
+
         cmake_args += [f"-DCMAKE_INSTALL_PREFIX={install_prefix}"]
         if "DLIO_PYTHON_SITE" in os.environ:
             dlio_site = os.environ['DLIO_PYTHON_SITE']
             cmake_args += [f"-DDLIO_PYTHON_SITE={dlio_site}"]
-        project_dir = Path.cwd()
+
         if "DLIO_BUILD_DEPENDENCIES" not in os.environ or os.environ['DLIO_BUILD_DEPENDENCIES'] == "1":
             dependency_file = open(f"{project_dir}/dependency/cpp.requirements.txt", 'r')
             dependencies = dependency_file.readlines()
@@ -56,11 +67,7 @@ class CMakeBuild(build_ext):
         # py_cmake_dir = os.popen('python3 -c " import pybind11 as py; print(py.get_cmake_dir())"').read() #python("-c", "import pybind11 as py; print(py.get_cmake_dir())", output=str).strip()
         cmake_args += [f"-DCMAKE_PREFIX_PATH={install_prefix}", f"-Dpybind11_DIR={py_cmake_dir}"]
         print(cmake_args)
-        # Must be in this form due to bug in .resolve() only fixed in Python 3.10+
-        ext_fullpath = project_dir / self.get_ext_fullpath(ext.name)
-        extdir = ext_fullpath.parent.parent.resolve()
-        sourcedir = extdir.parent.resolve()
-        print(f"{extdir}")
+
         # Using this requires trailing slash for auto-detection & inclusion of
         # auxiliary "native" libs
         build_type = os.environ.get("CMAKE_BUILD_TYPE", "Release")
@@ -120,7 +127,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="dlio_profiler_py",
-    version="0.0.2",
+    version="0.0.3",
     description="I/O profiler for deep learning python apps. Specifically for dlio_benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -133,7 +140,7 @@ setup(
         #   5 - Production/Stable
         "Development Status :: 3 - Alpha",
         # Indicate who your project is intended for
-        "Intended Audience :: HPC",
+        "Intended Audience :: Science/Research",
         "Topic :: Software Development :: Build Tools",
         # Pick your license as you wish
         "License :: OSI Approved :: MIT License",
@@ -153,17 +160,17 @@ setup(
         "Bug Reports": "https://github.com/hariharan-devarajan/dlio-profiler/issues",
         "Source": "https://github.com/hariharan-devarajan/dlio-profiler",
     },
-    packages=find_namespace_packages(where="."),
+    packages=(find_namespace_packages(include=['dlio_profiler', 'dlp_analyzer'])),
     package_dir={"dlio_profiler": "dlio_profiler",
                  "dlp_analyzer": "dlp_analyzer"},
-    ext_modules=[CMakeExtension("dlio_profiler_py")],
+    ext_modules=[CMakeExtension("dlio_profiler.dlio_profiler_py"),],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"],
                     "dlp_analyzer": [
                         "bokeh>=2.4.2",
                         "pybind11",
-                        "zindex_py @ git+https://github.com/hariharan-devarajan/zindex.git@feature/dlio_profiler",
+                        "zindex_py==0.0.1",
                         "pandas>=2.0.3",
                         "dask>=2023.5.0",
                         "distributed",
