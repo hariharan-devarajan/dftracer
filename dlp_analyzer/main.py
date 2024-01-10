@@ -1,3 +1,5 @@
+import warnings 
+warnings.filterwarnings('ignore')
 from glob import glob
 import pandas as pd
 import argparse
@@ -305,6 +307,36 @@ def human_format(num):
         return '{}{}'.format('{:.0f}'.format(num).rstrip('.'), ['', 'KB', 'MB', 'GB', 'TB'][magnitude])
     else:
         return "NA"
+def human_format_count(num):
+    if num:
+        num = float('{:.3g}'.format(num))
+        magnitude = 0
+        while abs(num) >= 1000:
+            magnitude += 1
+            num /= 1000.0
+        return '{}{}'.format('{:.0f}'.format(num).rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
+    else:
+        return "NA"
+
+def human_format_time(num):
+    if num:
+        num = float('{:.3g}'.format(num))
+        magnitude = 0
+        while abs(num) >= 1000:
+            if magnitude < 3:
+                magnitude += 1
+                num /= 1000.0
+            elif magnitude < 5:
+                magnitude += 1
+                num /= 60
+            else:
+                magnitude += 1
+                num /= 24
+                break
+                
+        return '{}{}'.format('{:.0f}'.format(num).rstrip('.'), ['us', 'ms', 's','m','hr'][magnitude])
+    else:
+        return "NA"
 
 class DLPAnalyzer:
 
@@ -500,13 +532,13 @@ class DLPAnalyzer:
 
 
         hosts_used = hosts_used.to_list()
-        hosts_used_regex_str = self._create_host_intervals(hosts_used)
+        #hosts_used_regex_str = self._create_host_intervals(hosts_used)
 
         filenames_accessed = filenames_accessed.to_list()
-        filename_basename_regex_str = self._remove_numbers(filenames_accessed)
+        #filename_basename_regex_str = self._remove_numbers(filenames_accessed)
 
         num_procs = num_procs.to_list()
-        proc_name_regex = self._create_interval(num_procs)
+        #proc_name_regex = self._create_interval(num_procs)
 
         io_by_ops_dict = io_by_operations.T.to_dict()
 
@@ -517,44 +549,51 @@ class DLPAnalyzer:
         table.add_column(style="cyan")
         table.add_column()
         app_tree = Tree("Scheduler Allocation Details")
-        app_tree.add(f"Nodes: {str(len(hosts_used))} {hosts_used_regex_str}")
-        app_tree.add(f"Processes: {str(len(num_procs))} {str(proc_name_regex)}")
+        app_tree.add(f"Nodes: {str(len(hosts_used))}") # {hosts_used_regex_str}")
+        app_tree.add(f"Processes: {str(len(num_procs))}") # {str(proc_name_regex)}")
         thread_tree = Tree("Thread allocations across nodes (includes dynamically created threads)")
         thread_tree.add(f"Compute: {str(len(compute_tid))}")
         thread_tree.add(f"I/O: {str(len(posix_tid))}")
         app_tree.add(thread_tree)
-        app_tree.add(f"Events Recorded: {str(num_events)}")
+        app_tree.add(f"Events Recorded: {human_format_count(num_events)}")
         table.add_row("Allocation", app_tree)
 
         data_tree = Tree("Description of Dataset Used")
-        data_tree.add(f"Files: {str(len(filenames_accessed))} {filename_basename_regex_str}")
+        data_tree.add(f"Files: {str(len(filenames_accessed))}") # {filename_basename_regex_str}")
         table.add_row("Dataset", data_tree)
 
         io_tree = Tree("Behavior of Application")
         io_time = Tree("Split of Time in application")
         io_time.add(f"Total Time: {total_time / 1e6:.3f} sec")
-        io_time.add(f"Overall App Level I/O: {total_app_io_time / 1e6:.3f} sec")
-        io_time.add(f"Unoverlapped App I/O: {only_app_io / 1e6:.3f} sec")
-        io_time.add(f"Unoverlapped App Compute: {only_app_compute / 1e6:.3f} sec")
-        io_time.add(f"Compute: {total_compute_time / 1e6:.3f} sec")
+        if total_app_io_time > 0:
+            io_time.add(f"Overall App Level I/O: {total_app_io_time / 1e6:.3f} sec")
+        if only_app_io > 0:
+            io_time.add(f"Unoverlapped App I/O: {only_app_io / 1e6:.3f} sec")
+        if only_app_compute > 0:
+            io_time.add(f"Unoverlapped App Compute: {only_app_compute / 1e6:.3f} sec")
+        if total_compute_time > 0:
+            io_time.add(f"Compute: {total_compute_time / 1e6:.3f} sec")
         io_time.add(f"Overall I/O: {total_io_time / 1e6:.3f} sec")
-        io_time.add(f"Unoverlapped I/O: {only_io / 1e6:.3f} sec")
-        io_time.add(f"Unoverlapped Compute: {only_compute / 1e6:.3f} sec")
+        if only_compute > 0:
+            io_time.add(f"Unoverlapped I/O: {only_io / 1e6:.3f} sec")
+        if only_compute > 0:
+            io_time.add(f"Unoverlapped Compute: {only_compute / 1e6:.3f} sec")
         io_tree.add(io_time)
         padding_size = 6
         key_padding_size = 15
-        io_ts = Tree("Transfer size distribution by function")
+        io_ts = Tree("Metrics by function")
         io_ts.add(
-            f"{'Function':<{key_padding_size}}|{'min':<{padding_size}}|{'25':<{padding_size}}|{'mean':<{padding_size}}|{'median':<{padding_size}}|{'75':<{padding_size}}|{'max':<{padding_size}}|")
+            f"{'Function':<{key_padding_size}}|{'count':<{padding_size}}|{'                  size    ':<{padding_size*6}}     |")
+        io_ts.add(
+            f"{'':<{key_padding_size}}|{'':<{padding_size}}|{'min':<{padding_size}}|{'25':<{padding_size}}|{'mean':<{padding_size}}|{'median':<{padding_size}}|{'75':<{padding_size}}|{'max':<{padding_size}}|")
         for key, value in io_by_ops_dict.items():
-            if "close" not in key or "open" not in key:
-                io_ts.add(
-                    f"{key.split('.')[-1]:<{key_padding_size}}|{human_format(value[('size', 'min')]):<{padding_size}}|{human_format(value[('size', 'percentile_25')]):<{padding_size}}|{human_format(value[('size', 'mean')]):<{padding_size}}|{human_format(value[('size', 'median')]):<{padding_size}}|{human_format(value[('size', 'percentile_75')]):<{padding_size}}|{human_format(value[('size', 'max')]):<{padding_size}}|")
+            io_ts.add(
+                f"{key.split('.')[-1]:<{key_padding_size}}|{human_format_count(value[('dur', 'count')]):<{padding_size}}|{human_format(value[('size', 'min')]):<{padding_size}}|{human_format(value[('size', 'percentile_25')]):<{padding_size}}|{human_format(value[('size', 'mean')]):<{padding_size}}|{human_format(value[('size', 'median')]):<{padding_size}}|{human_format(value[('size', 'percentile_75')]):<{padding_size}}|{human_format(value[('size', 'max')]):<{padding_size}}|")
         io_tree.add(io_ts)
-        io_ops = Tree("Event count by function")
-        for key, value in io_by_ops_dict.items():
-            io_ops.add(f"{key.split('.')[-1]} : {value[('dur', 'count')]}")
-        io_tree.add(io_ops)
+        # io_ops = Tree("Event count by function")
+        # for key, value in io_by_ops_dict.items():
+        #     io_ops.add(f"{key.split('.')[-1]} : {value[('dur', 'count')]}")
+        # io_tree.add(io_ops)
         table.add_row("I/O Behavior", io_tree)
         console = Console()
 
