@@ -37,7 +37,7 @@ jobs:
         sudo apt-get install -y gcc g++ libtool-bin openmpi-bin libopenmpi-dev
         python -m pip install --upgrade pip
         pip install build wheel auditwheel pybind11 patchelf
-    - name: Build package
+    - name: Build wheel package
       run: |
         export DLIO_PROFILER_WHEEL=1
         python setup.py bdist_wheel
@@ -53,6 +53,11 @@ jobs:
         echo $platform
         auditwheel repair --plat $platform dist/*.whl -w dist/
         rm dist/*linux_x86_64.whl
+    - name: Build source package
+      if: matrix.os == 'ubuntu-20.04' && matrix.python == '3.7'
+      run: |
+          export DLIO_PROFILER_WHEEL=1
+          python setup.py sdist
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
