@@ -11,6 +11,31 @@ void initialize(const char *log_file, const char *data_dirs, int *process_id) {
                                     process_id);
 }
 
+struct DLIOProfilerData* initialize_region(ConstEventType name, ConstEventType cat) {
+  auto data = new DLIOProfilerData();
+  data->profiler = new DLIOProfiler(name, C_LOG_CATEGORY);
+  return data;
+}
+void finalize_region(struct DLIOProfilerData* data) {
+  if (data) {
+    if (data->profiler) free(data->profiler);
+    free(data);
+  }
+}
+
+void update_metadata_int(struct DLIOProfilerData* data, const char *key, int value) {
+  if (data && data->profiler) {
+    auto profiler = (DLIOProfiler*) data->profiler;
+    profiler->update(key, value);
+  }
+}
+void update_metadata_string(struct DLIOProfilerData* data, const char *key, const char *value) {
+  if (data && data->profiler) {
+    auto profiler = (DLIOProfiler*) data->profiler;
+    profiler->update(key, value);
+  }
+}
+
 TimeResolution get_time() {
   DLIO_PROFILER_LOGDEBUG("dlio_profiler.cpp.get_time","");
   auto dlio_profiler = DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_OTHER, ProfileType::PROFILER_C_APP);

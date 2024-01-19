@@ -24,6 +24,7 @@ function(set_common_properties test_name)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_DATA_DIR=${CMAKE_CURRENT_BINARY_DIR}/data)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_LOG_FILE=${CMAKE_CURRENT_BINARY_DIR}/${test_name})
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_ENABLE=1)
+    set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_INC_METADATA=1)
 endfunction()
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data)
 
@@ -70,14 +71,14 @@ set_common_properties(${test_name})
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/lib/libdlio_profiler_preload.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DLIO_PROFILER_INIT=PRELOAD)
 
-dlp_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 7)
+dlp_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 8)
 set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
 
 set(test_name test_c_basic_app_only)
 dlp_add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_c ${CMAKE_CURRENT_BINARY_DIR}/data 1)
 set_common_properties(${test_name})
 
-dlp_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 7)
+dlp_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 8)
 set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_name})
 
 set(test_name test_c_basic_app_disable_only)
