@@ -1,5 +1,6 @@
 set(TEST_DEPENDENCY_LIB "-lstdc++fs")
 set(DLIO_PROFILER_DATA_DIR ${CMAKE_CURRENT_BINARY_DIR}/data)
+include_directories(${DLIO_PROFILER_PROJECT_DIR}/include)
 if(DEFINED ENV{DLIO_PROFILER_DATA_DIR})
     set(DLIO_PROFILER_DATA_DIR $ENV{DLIO_PROFILER_DATA_DIR})
 endif()
@@ -36,6 +37,16 @@ endif ()
 function(compile_test example)
     add_executable(${example} ${example}.cpp ${TEST_SRC})
     target_link_libraries(${example} ${TEST_DEPENDENCY_LIB})
+    target_include_directories(${example}
+            PRIVATE
+            # where the library itself will look for its internal headers
+            ${DLIO_PROFILER_PROJECT_DIR}/src
+            PUBLIC
+            # where top-level project will look for the library's public headers
+            $<BUILD_INTERFACE:${DLIO_PROFILER_PROJECT_DIR}/include>
+            # where external projects will look for the library's public headers
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+            )
 endfunction()
 
 function(add_base_test machine PPN NODES example example_name)

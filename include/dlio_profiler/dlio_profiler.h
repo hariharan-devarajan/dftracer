@@ -25,7 +25,7 @@
 #include <string>
 
 // constants defined
-ConstEventType CPP_LOG_CATEGORY="CPP_APP";
+static ConstEventType CPP_LOG_CATEGORY  = "CPP_APP";
 
 class DLIOProfiler {
     ConstEventType name;
@@ -97,7 +97,7 @@ struct DLIOProfilerData {
   void* profiler;
 };
 
-ConstEventType C_LOG_CATEGORY="C_APP";
+static ConstEventType C_LOG_CATEGORY = "C_APP";
 
 void initialize(const char *log_file, const char *data_dirs, int *process_id);
 struct DLIOProfilerData* initialize_region(ConstEventType name, ConstEventType cat);

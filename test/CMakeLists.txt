@@ -1,4 +1,5 @@
 set_property(GLOBAL PROPERTY COVERAGE_FILES "")
+include_directories(${DLIO_PROFILER_PROJECT_DIR}/include)
 function(dlp_add_test)
     add_test(${ARGV})
     set_tests_properties(${ARGV0} PROPERTIES
@@ -7,6 +8,7 @@ function(dlp_add_test)
     set(NEW_CF ${OLD_CF} ${CMAKE_CURRENT_BINARY_DIR}/${ARGV0}.profraw)
     set_property(GLOBAL PROPERTY COVERAGE_FILES ${NEW_CF})
 endfunction()
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(test_cpp cpp/test.cpp)
 target_link_libraries(test_cpp ${PROJECT_NAME})

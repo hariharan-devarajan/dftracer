@@ -22,7 +22,6 @@
 #include <dlio_profiler/core/error.h>
 #include <any>
 #include <csignal>
-#include "typedef.h"
 #include <dlio_profiler/core/typedef.h>
 #include <dlio_profiler/dlio_logger.h>
 
