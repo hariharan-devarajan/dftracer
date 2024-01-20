@@ -28,20 +28,26 @@ namespace brahma {
         bool trace_all_files;
 
         inline const char* is_traced(int fd, const char *func) {
-          DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.is_traced for %s",func);
           if (fd == -1) return nullptr;
-          return tracked_fd[fd%MAX_FD].empty() ? nullptr: tracked_fd[fd%MAX_FD].c_str();
+          const char* trace = tracked_fd[fd%MAX_FD].empty()
+                                  ? nullptr: tracked_fd[fd%MAX_FD].c_str();
+          if (trace != nullptr) DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.is_traced for %s and"
+              " fd %d trace %d", func, fd, trace != nullptr);
+          return trace;
         }
 
         inline const char* is_traced(const char* filename, const char *func) {
-          DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.is_traced with filename for %s",func);
+          const char* trace = nullptr;
           if (stop_trace) return nullptr;
           if (trace_all_files) return filename;
-          else return is_traced_common(filename, func);
+          else trace = is_traced_common(filename, func);
+          if (trace != nullptr) DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.is_traced with "
+              "filename %s for %s trace %d",filename, func, trace != nullptr);
+          return trace;
         }
 
         inline void trace(int fd, const char* filename) {
-          DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.trace for %d",fd);
+          DLIO_PROFILER_LOGDEBUG("Calling POSIXDLIOProfiler.trace for %d and %s",fd, filename);
           if (fd == -1) return;
           tracked_fd[fd%MAX_FD] = filename;
         }

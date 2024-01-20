@@ -158,26 +158,27 @@ class fn_interceptor(object):
         @wraps(func)
         def wrapper(*args, **kwargs):
             if DLIO_PROFILER_ENABLE:
-                if "self" == arg_names[0]:
-                    if hasattr(args[0], "epoch"):
-                        self._arguments["epoch"] = str(args[0].epoch)
-                    if hasattr(args[0], "step"):
-                        self._arguments["step"] = str(args[0].step)
-                    if hasattr(args[0], "image_size"):
-                        self._arguments["image_size"] = str(args[0].image_size)
-                    if hasattr(args[0], "image_idx"):
-                        self._arguments["image_idx"] = str(args[0].image_idx)
-                for name, value in zip(arg_names[1:], kwargs):
-                    if hasattr(args, name):
-                        setattr(args, name, value)
-                        if name == "epoch":
-                            self._arguments["epoch"] = str(value)
-                        elif name == "image_idx":
-                            self._arguments["image_idx"] = str(value)
-                        elif name == "image_size":
-                            self._arguments["image_size"] = str(value)
-                        elif name == "step":
-                            self._arguments["image_size"] = str(value)
+                if len(arg_names) > 0:
+                    if "self" == arg_names[0]:
+                        if hasattr(args[0], "epoch"):
+                            self._arguments["epoch"] = str(args[0].epoch)
+                        if hasattr(args[0], "step"):
+                            self._arguments["step"] = str(args[0].step)
+                        if hasattr(args[0], "image_size"):
+                            self._arguments["image_size"] = str(args[0].image_size)
+                        if hasattr(args[0], "image_idx"):
+                            self._arguments["image_idx"] = str(args[0].image_idx)
+                    for name, value in zip(arg_names[1:], kwargs):
+                        if hasattr(args, name):
+                            setattr(args, name, value)
+                            if name == "epoch":
+                                self._arguments["epoch"] = str(value)
+                            elif name == "image_idx":
+                                self._arguments["image_idx"] = str(value)
+                            elif name == "image_size":
+                                self._arguments["image_size"] = str(value)
+                            elif name == "step":
+                                self._arguments["image_size"] = str(value)
 
                 start = dlio_logger.get_instance().get_time()
             x = func(*args, **kwargs)

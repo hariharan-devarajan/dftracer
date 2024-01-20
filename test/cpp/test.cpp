@@ -4,6 +4,13 @@
 
 #include <string>
 #include <dlio_profiler/dlio_profiler.h>
+#include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <assert.h>
+#include <utime.h>
 
 void foo() {
   DLIO_PROFILER_CPP_FUNCTION();

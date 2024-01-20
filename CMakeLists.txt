@@ -254,7 +254,7 @@ endif ()
 # by other projects.
 #-----------------------------------------------------------------------------
 if (NOT DLIO_PROFILER_EXPORTED_TARGETS)
-    set(DLIO_PROFILER_EXPORTED_TARGETS "dlio-profiler-targets")
+    set(DLIO_PROFILER_EXPORTED_TARGETS "dlio_profiler-targets")
 endif ()
 
 set(DLIO_PROFILER_LIBTYPE SHARED)

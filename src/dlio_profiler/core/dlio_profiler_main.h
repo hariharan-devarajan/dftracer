@@ -29,7 +29,7 @@ namespace dlio_profiler {
     class DLIOProfilerCore {
     private:
         std::string log_file;
-      std::string data_dirs;
+        std::string data_dirs;
         std::shared_ptr<dlio_profiler::ConfigurationManager> conf;
         ProcessID process_id;
         bool is_initialized;
