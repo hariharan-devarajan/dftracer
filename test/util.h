@@ -5,7 +5,6 @@
 #ifndef DLIO_PROFILER_TEST_UTIL_H
 #define DLIO_PROFILER_TEST_UTIL_H
 #include <experimental/filesystem>
-#include <dlio_profiler/core/constants.h>
 #include <cstring>
 
 namespace fs = std::experimental::filesystem;

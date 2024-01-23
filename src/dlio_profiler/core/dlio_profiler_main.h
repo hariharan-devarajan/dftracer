@@ -22,7 +22,6 @@
 #include <dlio_profiler/core/error.h>
 #include <any>
 #include <csignal>
-#include "typedef.h"
 #include <dlio_profiler/core/typedef.h>
 #include <dlio_profiler/dlio_logger.h>
 
@@ -30,7 +29,7 @@ namespace dlio_profiler {
     class DLIOProfilerCore {
     private:
         std::string log_file;
-      std::string data_dirs;
+        std::string data_dirs;
         std::shared_ptr<dlio_profiler::ConfigurationManager> conf;
         ProcessID process_id;
         bool is_initialized;

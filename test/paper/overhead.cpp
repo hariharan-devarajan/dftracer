@@ -9,7 +9,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <math.h>
-#include "../util.h"
+#include <dlio_profiler/core/constants.h>
+#include <util.h>
 
 int main(int argc, char* argv[]) {
   MPI_Init(&argc, &argv);
