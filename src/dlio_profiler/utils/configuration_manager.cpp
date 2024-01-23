@@ -175,8 +175,8 @@ dlio_profiler::ConfigurationManager::ConfigurationManager()
     }
     DLIO_PROFILER_LOGDEBUG("ENV ConfigurationManager.init_type %d",this->init_type);
     const char *env_bind_signals = getenv(DLIO_PROFILER_BIND_SIGNALS);
-    if (env_bind_signals != nullptr && strcmp(env_bind_signals, "0") == 0) {
-      bind_signals = false;
+    if (env_bind_signals != nullptr && strcmp(env_bind_signals, "1") == 0) {
+      bind_signals = true;
     }
     DLIO_PROFILER_LOGDEBUG("ENV ConfigurationManager.bind_signals %d",this->bind_signals);
     const char *env_meta = getenv(DLIO_PROFILER_INC_METADATA);
