@@ -40,7 +40,7 @@ dlio_profiler::ConfigurationManager::ConfigurationManager()
     : enable(false), init_type(PROFILER_INIT_FUNCTION), log_file(),
       data_dirs(), trace_all_files(false), logger_level(cpplogger::LOG_ERROR),
       compression(false), gotcha_priority(1), metadata(false), core_affinity(false),
-      io(true), stdio(true), posix(true), tids(true), bind_signals(true),
+      io(true), stdio(true), posix(true), tids(true), bind_signals(false),
       throw_error(false),write_buffer_size(10) {
   const char *env_conf = getenv(DLIO_PROFILER_CONFIGURATION);
   YAML::Node config;
