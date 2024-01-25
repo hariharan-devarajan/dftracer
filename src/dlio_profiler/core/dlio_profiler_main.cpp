@@ -157,9 +157,9 @@ dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, c
         if (conf->io) {
           auto trie = dlio_profiler::Singleton<Trie>::get_instance();
           const char* ignore_extensions[2] = {"pfw", "py"};
-          const char* ignore_prefix[7] = {"/pipe", "/socket", "/proc",
+          const char* ignore_prefix[8] = {"/pipe", "/socket", "/proc",
                                           "/sys", "/collab",
-                                          "anon_inode", "socket"};
+                                          "anon_inode", "socket", "/var/tmp"};
           for(const char* folder: ignore_prefix) {
             trie->exclude(folder, strlen(folder));
           }
