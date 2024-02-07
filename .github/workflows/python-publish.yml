@@ -53,6 +53,7 @@ jobs:
         echo $platform
         auditwheel repair --plat $platform dist/*.whl -w dist/
         rm dist/*linux_x86_64.whl
+        rm dist/*.tar.gz
     - name: Build source package
       if: matrix.os == 'ubuntu-20.04' && matrix.python == '3.7'
       run: |
