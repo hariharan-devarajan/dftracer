@@ -4,14 +4,27 @@
 
 #include <string>
 #include <dlio_profiler/dlio_profiler.h>
+#include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <assert.h>
+#include <utime.h>
 
 void foo() {
   DLIO_PROFILER_CPP_FUNCTION();
+
+  DLIO_PROFILER_CPP_FUNCTION_UPDATE("key", 0);
+  DLIO_PROFILER_CPP_FUNCTION_UPDATE("key", "0");
   sleep(1);
   {
     DLIO_PROFILER_CPP_REGION(CUSTOM);
+    DLIO_PROFILER_CPP_REGION_UPDATE(CUSTOM, "key", "0");
     sleep(1);
     DLIO_PROFILER_CPP_REGION_START(CUSTOM_BLOCK);
+    DLIO_PROFILER_CPP_REGION_UPDATE(CUSTOM, "key", 0);
+    DLIO_PROFILER_CPP_REGION_DYN_UPDATE(CUSTOM_BLOCK, "key", 0);
     sleep(1);
     DLIO_PROFILER_CPP_REGION_END(CUSTOM_BLOCK);
   }

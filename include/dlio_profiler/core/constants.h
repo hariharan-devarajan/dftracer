@@ -25,7 +25,8 @@
 #define DLIO_PROFILER_WRITE_BUFFER_SIZE "DLIO_PROFILER_WRITE_BUFFER_SIZE"
 #define DLIO_PROFILER_ALL_FILES "all"
 
-const unsigned int DLP_PATH_MAX = 1024 * 4;
-const char SEPARATOR = ';';
+static const int EVENT_TYPE_SIZE = 128;
+static const unsigned int DLP_PATH_MAX = 1024 * 4;
+static const char SEPARATOR = ';';
 
 #endif //DLIO_PROFILER_CONSTANTS_H

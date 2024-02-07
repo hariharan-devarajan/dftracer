@@ -4,9 +4,9 @@ project(dlio_profiler)
 # Version information
 #------------------------------------------------------------------------------
 
-set(DLIO_PROFILER_VERSION_MAJOR "1")
+set(DLIO_PROFILER_VERSION_MAJOR "2")
 set(DLIO_PROFILER_VERSION_MINOR "0")
-set(DLIO_PROFILER_VERSION_PATCH "0")
+set(DLIO_PROFILER_VERSION_PATCH "1")
 set(DLIO_PROFILER_PACKAGE ${PROJECT_NAME})
 set(DLIO_PROFILER_PACKAGE_NAME ${PROJECT_NAME})
 set(DLIO_PROFILER_PACKAGE_VERSION "${DLIO_PROFILER_VERSION_MAJOR}.${DLIO_PROFILER_VERSION_MINOR}.${DLIO_PROFILER_VERSION_PATCH}")
@@ -101,21 +101,6 @@ if (NOT DLIO_PROFILER_EXTERNALLY_CONFIGURED)
 endif ()
 
 
-if(DLIO_PROFILER_ENABLE_TESTS)
-    message("-- " "[DLIO Profiler] Enabling Testing")
-    if(CMAKE_BUILD_TYPE STREQUAL "PROFILE")
-        message("-- " "[DLIO Profiler] building with CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE}")
-        set(CMAKE_C_FLAGS_PROFILE --coverage)
-        set(CMAKE_CXX_FLAGS_PROFILE --coverage)
-    endif()
-    enable_testing()
-    add_subdirectory(test)
-    if(CMAKE_BUILD_TYPE STREQUAL "PROFILE")
-        get_property(COVERAGE_FILE_LIST GLOBAL PROPERTY COVERAGE_FILES)
-        add_custom_command(OUTPUT default.profdata COMMAND llvm-profdata merge -sparse ${COVERAGE_FILE_LIST} -o default.profdata VERBATIM)
-        add_custom_target(merged_coverage DEPENDS default.profdata)
-    endif()
-endif()
 
 
 
@@ -179,7 +164,7 @@ if (${yaml-cpp_FOUND})
 else ()
     message(FATAL_ERROR "-- [DLIO_PROFILER] yaml-cpp is needed for ${PROJECT_NAME} build")
 endif ()
-
+set(DLIO_PROFILER_PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(DLIO_PROFILER_PRELOAD_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler_preload.cpp)
@@ -193,17 +178,17 @@ set(DLIO_PROFILER_CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/dlio_profiler_main.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/configuration_manager.cpp)
 set(DLIO_PROFILER_CORE_PUBLIC_INCLUDE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler.h)
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/constants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/typedef.h)
 set(DLIO_PROFILER_CORE_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/posix_internal.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/utils.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/posix.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/stdio.h
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/dlio_profiler_main.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/constants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/macro.h
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/singleton.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/typedef.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/configuration_manager.h)
 add_library(${PROJECT_NAME} SHARED)
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCY_LIB})
@@ -269,7 +254,7 @@ endif ()
 # by other projects.
 #-----------------------------------------------------------------------------
 if (NOT DLIO_PROFILER_EXPORTED_TARGETS)
-    set(DLIO_PROFILER_EXPORTED_TARGETS "dlio-profiler-targets")
+    set(DLIO_PROFILER_EXPORTED_TARGETS "dlio_profiler-targets")
 endif ()
 
 set(DLIO_PROFILER_LIBTYPE SHARED)
@@ -380,3 +365,20 @@ install(EXPORT
         FILE
         ${DLIO_PROFILER_EXPORTED_TARGETS}.cmake
         )
+
+
+if(DLIO_PROFILER_ENABLE_TESTS)
+    message("-- " "[DLIO Profiler] Enabling Testing")
+    if(CMAKE_BUILD_TYPE STREQUAL "PROFILE")
+        message("-- " "[DLIO Profiler] building with CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE}")
+        set(CMAKE_C_FLAGS_PROFILE --coverage)
+        set(CMAKE_CXX_FLAGS_PROFILE --coverage)
+    endif()
+    enable_testing()
+    add_subdirectory(test)
+    if(CMAKE_BUILD_TYPE STREQUAL "PROFILE")
+        get_property(COVERAGE_FILE_LIST GLOBAL PROPERTY COVERAGE_FILES)
+        add_custom_command(OUTPUT default.profdata COMMAND llvm-profdata merge -sparse ${COVERAGE_FILE_LIST} -o default.profdata VERBATIM)
+        add_custom_target(merged_coverage DEPENDS default.profdata)
+    endif()
+endif()

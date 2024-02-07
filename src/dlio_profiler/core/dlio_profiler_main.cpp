@@ -20,6 +20,7 @@ dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileTy
                                                   const char *data_dirs, const int *process_id) :
              is_initialized(false), bind(false), include_metadata(false){
   conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
+  DLIO_PROFILER_LOGINFO("Loading DLIO Profiler with ProfilerStage %d ProfileType %d and process %d", stage, type, process_id);
   switch (type) {
     case ProfileType::PROFILER_ANY:
     case ProfileType::PROFILER_PRELOAD: {
@@ -35,15 +36,13 @@ dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileTy
     case ProfileType::PROFILER_PY_APP:
     case ProfileType::PROFILER_C_APP:
     case ProfileType::PROFILER_CPP_APP: {
-      if (stage == ProfilerStage::PROFILER_INIT) {
-        bool bind = false;
-        if (conf->init_type == ProfileInitType::PROFILER_INIT_FUNCTION) {
+      bool bind = false;
+      if (stage == ProfilerStage::PROFILER_INIT && conf->init_type == ProfileInitType::PROFILER_INIT_FUNCTION) {
           bind = true;
-        }
-        initialize(bind, log_file, data_dirs, process_id);
-        DLIO_PROFILER_LOGINFO("App Initializing DLIO Profiler with log_file %s data_dir %s and process %d",
-                              this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
       }
+      initialize(bind, log_file, data_dirs, process_id);
+      DLIO_PROFILER_LOGINFO("App Initializing DLIO Profiler with log_file %s data_dir %s and process %d",
+                            this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
       break;
     }
     default: {  // GCOVR_EXCL_START
@@ -158,7 +157,9 @@ dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, c
         if (conf->io) {
           auto trie = dlio_profiler::Singleton<Trie>::get_instance();
           const char* ignore_extensions[2] = {"pfw", "py"};
-          const char* ignore_prefix[3] = {"/pipe", "/socket", "/proc"};
+          const char* ignore_prefix[8] = {"/pipe", "/socket", "/proc",
+                                          "/sys", "/collab",
+                                          "anon_inode", "socket", "/var/tmp"};
           for(const char* folder: ignore_prefix) {
             trie->exclude(folder, strlen(folder));
           }
@@ -175,6 +176,9 @@ dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, c
               }  // GCOV_EXCL_STOP
             } else {
               this->data_dirs = _data_dirs;
+              if (!conf->data_dirs.empty()) {
+                this->data_dirs += ":" + conf->data_dirs;
+              }
             }
             DLIO_PROFILER_LOGDEBUG("Setting data_dirs to %s",
                                    this->data_dirs.c_str());
