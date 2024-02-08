@@ -337,6 +337,8 @@ For logging ``__init__`` function within a class, applications can use ``log_ini
         def log_events(self, index):
             sleep(1)
 
+For logging ``@staticmethod`` function within a class, applications can use ``log_static`` function.
+
 
 Iteration/Loop Profiling
 ****************************************
