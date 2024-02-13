@@ -27,6 +27,7 @@ option(BUILD_PYTHON_BINDINGS "Build python bindings." ON)
 option(DLIO_PROFILER_ENABLE_TESTS "Enable internal tests" Off)
 option(ENABLE_DLIO_BENCHMARK_TESTS "Enable dlio_benchmark tests" Off)
 option(ENABLE_PAPER_TESTS "Enable paper tests" Off)
+option(DISABLE_HWLOC "Disable HWLOC" On)
 #------------------------------------------------------------------------------
 # Setup install and output Directories
 #------------------------------------------------------------------------------
@@ -100,8 +101,16 @@ if (NOT DLIO_PROFILER_EXTERNALLY_CONFIGURED)
             )
 endif ()
 
-
-
+#------------------------------------------------------------------------------
+# Set CXX FLAGS
+#------------------------------------------------------------------------------
+if (DISABLE_HWLOC)
+    message(STATUS "[DLIO_PROFILER] disabling HWLOC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISABLE_HWLOC=0")
+else()
+    message(STATUS "[DLIO_PROFILER] enabling HWLOC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISABLE_HWLOC=1")
+endif()
 
 
 if (BUILD_PYTHON_BINDINGS)
@@ -127,7 +136,10 @@ export(EXPORT gotcha-targets
 #add_dependencies(brahma gotcha)
 link_directories(${CMAKE_BINARY_DIR}/lib)
 link_directories(${CMAKE_BINARY_DIR})
-set(DEPENDENCY_LIB stdc++fs -lhwloc)
+set(DEPENDENCY_LIB stdc++fs)
+if (NOT DISABLE_HWLOC)
+    set(DEPENDENCY_LIB ${DEPENDENCY_LIB} -lhwloc)
+endif()
 
 if (${CPP_LOGGER_FOUND})
     include_directories(${CPP_LOGGER_INCLUDE_DIRS})

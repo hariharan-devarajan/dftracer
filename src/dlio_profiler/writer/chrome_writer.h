@@ -10,7 +10,10 @@
 #include <dlio_profiler/utils/configuration_manager.h>
 #include <dlio_profiler/utils/posix_internal.h>
 #include <dlio_profiler/utils/utils.h>
+#if DISABLE_HWLOC == 1
 #include <hwloc.h>
+#endif
+#include <assert.h>
 #include <unistd.h>
 
 #include <any>
@@ -31,8 +34,12 @@ namespace dlio_profiler {
         bool throw_error;
         std::string filename;
     private:
-        bool enable_core_affinity, include_metadata, enable_compression;
+        bool include_metadata, enable_compression;
+
+        bool enable_core_affinity;
+#if DISABLE_HWLOC == 1
         hwloc_topology_t topology;
+#endif
         FILE* fh;
         std::atomic_int index;
         char hostname[256];
@@ -57,6 +64,7 @@ namespace dlio_profiler {
         std::vector<unsigned> core_affinity() {
           DLIO_PROFILER_LOGDEBUG("ChromeWriter.core_affinity","");
           auto cores = std::vector<unsigned>();
+#if DISABLE_HWLOC == 1
           if (enable_core_affinity) {
             hwloc_cpuset_t set = hwloc_bitmap_alloc();
             hwloc_get_cpubind(topology, set, HWLOC_CPUBIND_PROCESS);
@@ -65,6 +73,7 @@ namespace dlio_profiler {
             }
             hwloc_bitmap_free(set);
           }
+#endif
           return cores;
         }
 
@@ -83,8 +92,10 @@ namespace dlio_profiler {
           enable_core_affinity = conf->core_affinity;
           enable_compression = conf->compression;
           if (enable_core_affinity) {
+#if DISABLE_HWLOC == 1
             hwloc_topology_init(&topology);  // initialization
             hwloc_topology_load(topology);   // actual detection
+#endif
           }
         }
         ~ChromeWriter(){DLIO_PROFILER_LOGDEBUG("Destructing ChromeWriter","");}
