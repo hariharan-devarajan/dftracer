@@ -98,6 +98,24 @@ Download the latest DLIO Profiler release from the Releases_ page or clone the d
 branch ('develop') from the DLIO Profiler repository
 `https://github.com/hariharan-devarajan/dlio-profiler <https://github.com/hariharan-devarajan/dlio-profiler>`_.
 
+------------------------------------------
+Build ENV Variables
+------------------------------------------
+For pip based installations we can enable HWLOC using
+.. code-block:: Bash
+
+    export DLIO_PROFILER_DISABLE_HWLOC=Off
+
+------------------------------------------
+Build CMAKE Variables
+------------------------------------------
+For Cmake based build, we can enable HWLOC using
+.. code-block:: Bash
+
+    cmake -DDISABLE_HWLOC=Off <source dir>
+
+
+
 Build DLIO Profiler Dependencies
 ********************************
 

@@ -93,7 +93,9 @@ void dlio_profiler::ChromeWriter::finalize() {
     }
   }
   if (enable_core_affinity) {
+#if DISABLE_HWLOC == 1
     hwloc_topology_destroy(topology);
+#endif
   }
   DLIO_PROFILER_LOGDEBUG("Finished writer finalization", "");
 }
