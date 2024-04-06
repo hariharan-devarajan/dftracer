@@ -20,47 +20,47 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.7','3.8','3.9','3.10']
-        os: [ubuntu-20.04, ubuntu-22.04]
+        python: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
     name: ${{ matrix.python }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python }}
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y gcc g++ libtool-bin openmpi-bin libopenmpi-dev
-        python -m pip install --upgrade pip
-        pip install build wheel auditwheel pybind11 patchelf
-    - name: Build wheel package
-      run: |
-        export DLIO_PROFILER_WHEEL=1
-        python setup.py bdist_wheel
-        python setup.py sdist
-        gotcha_so=$(find . -name libgotcha.so.2)
-        path=`dirname $gotcha_so`
-        path=`dirname $path`
-        echo $path
-        export LD_LIBRARY_PATH=$PWD/$path/lib:$PWD/$path/lib64:$LD_LIBRARY_PATH
-        echo $LD_LIBRARY_PATH
-        auditwheel show dist/*.whl
-        platform=$(auditwheel show dist/*.whl | grep manylinux_ | awk -F'"' '{print $2}')
-        echo $platform
-        auditwheel repair --plat $platform dist/*.whl -w dist/
-        rm dist/*linux_x86_64.whl
-        rm dist/*.tar.gz
-    - name: Build source package
-      if: matrix.os == 'ubuntu-20.04' && matrix.python == '3.7'
-      run: |
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc g++ libtool-bin openmpi-bin libopenmpi-dev
+          python -m pip install --upgrade pip
+          pip install build wheel auditwheel pybind11 patchelf
+      - name: Build wheel package
+        run: |
+          export DLIO_PROFILER_WHEEL=1
+          python setup.py bdist_wheel
+          python setup.py sdist
+          gotcha_so=$(find . -name libgotcha.so.2)
+          path=`dirname $gotcha_so`
+          path=`dirname $path`
+          echo $path
+          export LD_LIBRARY_PATH=$PWD/$path/lib:$PWD/$path/lib64:$LD_LIBRARY_PATH
+          echo $LD_LIBRARY_PATH
+          auditwheel show dist/*.whl
+          platform=$(auditwheel show dist/*.whl | grep manylinux_ | awk -F'"' '{print $2}')
+          echo $platform
+          auditwheel repair --plat $platform dist/*.whl -w dist/
+          rm dist/*linux_x86_64.whl
+          rm dist/*.tar.gz
+      - name: Build source package
+        if: matrix.os == 'ubuntu-20.04' && matrix.python == '3.7'
+        run: |
           export DLIO_PROFILER_WHEEL=1
           python setup.py sdist
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_TOKEN }}
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
