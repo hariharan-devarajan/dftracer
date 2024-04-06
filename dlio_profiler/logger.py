@@ -249,3 +249,23 @@ class fn_interceptor(object):
                                                          duration=end - start)
 
         return new_init
+
+    def log_static(self, func):
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if DLIO_PROFILER_ENABLE:
+                start = dlio_logger.get_instance().get_time()
+            x = func(*args, **kwargs)
+            if DLIO_PROFILER_ENABLE:
+                end = dlio_logger.get_instance().get_time()
+                if len(self._arguments) > 0:
+                    dlio_logger.get_instance().log_event(name=func.__qualname__, cat=self._cat, start_time=start,
+                                                         duration=end - start,
+                                                         string_args=self._arguments)
+                else:
+                    dlio_logger.get_instance().log_event(name=func.__qualname__, cat=self._cat, start_time=start,
+                                                         duration=end - start)
+            return x
+
+        return wrapper

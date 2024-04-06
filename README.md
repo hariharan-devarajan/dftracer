@@ -2,7 +2,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/hariharan-devarajan/dlio-profiler/badge.svg?branch=feature/apis)](https://coveralls.io/github/hariharan-devarajan/dlio-profiler?branch=dev)
 [![Documentation Status](https://readthedocs.org/projects/dlio-profiler/badge/?version=latest)](https://dlio-profiler.readthedocs.io/en/latest/?badge=latest)
 
-# DLIO Profiler v0.0.4
+# DLIO Profiler v0.0.5
 A multi-level profiler for capturing application functions and low-level system I/O calls from deep learning workloads.
 
 Requirements for profiler

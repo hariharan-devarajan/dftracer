@@ -72,6 +72,8 @@ class CMakeBuild(build_ext):
         # auxiliary "native" libs
         build_type = os.environ.get("CMAKE_BUILD_TYPE", "Release")
         cmake_args += [f"-DCMAKE_BUILD_TYPE={build_type}"]
+        enable_hwloc = os.environ.get("DLIO_PROFILER_DISABLE_HWLOC", "On")
+        cmake_args += [f"-DDISABLE_HWLOC={enable_hwloc}"]
         enable_tests = os.environ.get("DLIO_PROFILER_ENABLE_TESTS", "Off")
         cmake_args += [f"-DDLIO_PROFILER_ENABLE_TESTS={enable_tests}"]
         enable_dlio_tests = os.environ.get("ENABLE_DLIO_BENCHMARK_TESTS", "Off")
@@ -127,7 +129,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="dlio_profiler_py",
-    version="0.0.4",
+    version="0.0.5",
     description="I/O profiler for deep learning python apps. Specifically for dlio_benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
