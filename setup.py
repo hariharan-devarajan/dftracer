@@ -41,46 +41,52 @@ class CMakeBuild(build_ext):
         if "DLIO_LOGGER_USER" in os.environ:
             install_prefix=f"{site.USER_SITE}/dlio_profiler"
             # cmake_args += [f"-DUSER_INSTALL=ON"]
-        if "DLIO_PROFILER_DIR" in os.environ:
-            install_prefix = os.environ['DLIO_PROFILER_DIR']
+        if "DLIO_PROFILER_INSTALL_DIR" in os.environ:
+            install_prefix = os.environ['DLIO_PROFILER_INSTALL_DIR']
+        
+        python_site = extdir
+
         if is_wheel:
             install_prefix = f"{extdir}/dlio_profiler"
-            cmake_args += [f"-DDLIO_PYTHON_SITE={extdir}"]
 
-        cmake_args += [f"-DCMAKE_INSTALL_PREFIX={install_prefix}"]
-        if "DLIO_PYTHON_SITE" in os.environ:
-            dlio_site = os.environ['DLIO_PYTHON_SITE']
-            cmake_args += [f"-DDLIO_PYTHON_SITE={dlio_site}"]
+        if "DLIO_PROFILER_PYTHON_SITE" in os.environ:
+            python_site = os.environ['DLIO_PROFILER_PYTHON_SITE']
 
-        if "DLIO_BUILD_DEPENDENCIES" not in os.environ or os.environ['DLIO_BUILD_DEPENDENCIES'] == "1":
-            dependency_file = open(f"{project_dir}/dependency/cpp.requirements.txt", 'r')
-            dependencies = dependency_file.readlines()
-            for dependency in dependencies:
-                parts = dependency.split(",")
-                clone_dir = f"{project_dir}/dependency/{parts[0]}"
-                need_install = parts[3]
-                print(f"Installing {parts[0]} into {install_prefix}")
-                os.system(f"bash {project_dir}/dependency/install_dependency.sh {parts[1]} {clone_dir} {install_prefix} {parts[2]} {need_install} {parts[4]} {parts[5]}")
+        # if "DLIO_BUILD_DEPENDENCIES" not in os.environ or os.environ['DLIO_BUILD_DEPENDENCIES'] == "1":
+        #     dependency_file = open(f"{project_dir}/dependency/cpp.requirements.txt", 'r')
+        #     dependencies = dependency_file.readlines()
+        #     for dependency in dependencies:
+        #         parts = dependency.split(",")
+        #         clone_dir = f"{project_dir}/dependency/{parts[0]}"
+        #         need_install = parts[3]
+        #         print(f"Installing {parts[0]} into {install_prefix}")
+        #         os.system(f"bash {project_dir}/dependency/install_dependency.sh {parts[1]} {clone_dir} {install_prefix} {parts[2]} {need_install} {parts[4]} {parts[5]}")
 
         import pybind11 as py
         py_cmake_dir = py.get_cmake_dir()
         # py_cmake_dir = os.popen('python3 -c " import pybind11 as py; print(py.get_cmake_dir())"').read() #python("-c", "import pybind11 as py; print(py.get_cmake_dir())", output=str).strip()
-        cmake_args += [f"-DCMAKE_PREFIX_PATH={install_prefix}", f"-Dpybind11_DIR={py_cmake_dir}"]
-        print(cmake_args)
+        
+        
 
         # Using this requires trailing slash for auto-detection & inclusion of
         # auxiliary "native" libs
-        build_type = os.environ.get("CMAKE_BUILD_TYPE", "Release")
+        build_type = os.environ.get("DLIO_PROFILER_BUILD_TYPE", "Release")
         cmake_args += [f"-DCMAKE_BUILD_TYPE={build_type}"]
-        enable_hwloc = os.environ.get("DLIO_PROFILER_DISABLE_HWLOC", "On")
-        cmake_args += [f"-DDISABLE_HWLOC={enable_hwloc}"]
-        enable_tests = os.environ.get("DLIO_PROFILER_ENABLE_TESTS", "Off")
+        disable_hwloc = os.environ.get("DLIO_PROFILER_DISABLE_HWLOC", "ON")
+        cmake_args += [f"-DDLIO_PROFILER_DISABLE_HWLOC={disable_hwloc}"]
+        cmake_args += [f"-DDLIO_PROFILER_PYTHON_EXE={sys.executable}"]
+        cmake_args += [f"-DDLIO_PROFILER_PYTHON_SITE={python_site}"]
+        cmake_args += [f"-DCMAKE_INSTALL_PREFIX={install_prefix}"]
+        cmake_args += [f"-DCMAKE_PREFIX_PATH={install_prefix}", f"-Dpybind11_DIR={py_cmake_dir}"]
+        cmake_args += ["-DDLIO_PROFILER_BUILD_PYTHON_BINDINGS=ON"]
+        # Test related flags
+
+        enable_tests = os.environ.get("DLIO_PROFILER_ENABLE_TESTS", "OFF")
         cmake_args += [f"-DDLIO_PROFILER_ENABLE_TESTS={enable_tests}"]
-        enable_dlio_tests = os.environ.get("ENABLE_DLIO_BENCHMARK_TESTS", "Off")
-        cmake_args += [f"-DENABLE_DLIO_BENCHMARK_TESTS={enable_dlio_tests}"]
-        enable_dlio_tests = os.environ.get("ENABLE_PAPER_TESTS", "Off")
-        cmake_args += [f"-DENABLE_PAPER_TESTS={enable_dlio_tests}"]
-        cmake_args += [f"-DPYTHON_EXECUTABLE={sys.executable}"]
+        enable_dlio_tests = os.environ.get("DLIO_PROFILER_ENABLE_DLIO_BENCHMARK_TESTS", "OFF")
+        cmake_args += [f"-DDLIO_PROFILER_ENABLE_DLIO_BENCHMARK_TESTS={enable_dlio_tests}"]
+        enable_dlio_tests = os.environ.get("DLIO_PROFILER_ENABLE_PAPER_TESTS", "OFF")
+        cmake_args += [f"-DDLIO_PROFILER_ENABLE_PAPER_TESTS={enable_dlio_tests}"]
 
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.
@@ -112,6 +118,22 @@ class CMakeBuild(build_ext):
         if not build_temp.exists():
             build_temp.mkdir(parents=True)
         print("cmake", ext.sourcedir, cmake_args)
+
+        if "DLIO_BUILD_DEPENDENCIES" not in os.environ or os.environ['DLIO_BUILD_DEPENDENCIES'] == "1":
+            print("Installing dependencies.")
+            install_cmake_args = cmake_args
+            install_cmake_args += ["-DDLIO_PROFILER_INSTALL_DEPENDENCIES=ON"]
+
+            subprocess.run(
+                ["cmake", ext.sourcedir, *install_cmake_args], cwd=build_temp, check=True
+            )
+            subprocess.run(
+                ["cmake", "--build", ".", *build_args], cwd=build_temp, check=True
+            )
+        cmake_args += ["-DDLIO_PROFILER_INSTALL_DEPENDENCIES=OFF"]
+        # link correct depedencies
+        cmake_args += [f"-Dyaml-cpp_DIR={install_prefix}", f"-Dpybind11_DIR={py_cmake_dir}"]
+
         subprocess.run(
             ["cmake", ext.sourcedir, *cmake_args], cwd=build_temp, check=True
         )
