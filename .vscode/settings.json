@@ -1,0 +1,6 @@
+{
+    "cmake.configureArgs": [
+        "-DDLIO_PROFILER_INSTALL_DEPENDENCIES=OFF",
+        "-DCMAKE_INSTALL_PREFIX=/usr/workspace/haridev/dlio-profiler-1/install"
+    ]
+}

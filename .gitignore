@@ -64,3 +64,6 @@ dependency/spack.lock
 /*.core
 /env.txt
 /STDERR
+install
+__pycache__
+dlio_profiler/__pycache__
