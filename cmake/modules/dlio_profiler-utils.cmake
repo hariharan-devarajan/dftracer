@@ -100,7 +100,7 @@ endmacro ()
 # Install Public includes
 ################################################################
 
-function(dlio_profiler_install_headers public_headers current_dir)
+function(dlio_profiler_install_headers public_headers)
     message("-- [${PROJECT_NAME}] " "installing headers ${public_headers}")
     foreach (header ${public_headers})
         file(RELATIVE_PATH header_file_path "${PROJECT_SOURCE_DIR}/src" "${header}")
