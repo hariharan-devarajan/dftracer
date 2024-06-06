@@ -288,7 +288,7 @@ set_target_properties(${PROJECT_NAME}
         SOVERSION ${LIB_VERSION}
         )
 
-dlio_profiler_install_headers(${DLIO_PROFILER_CORE_PUBLIC_INCLUDE})
+dlio_profiler_install_headers("${DLIO_PROFILER_CORE_PUBLIC_INCLUDE}")
 install(
         TARGETS ${PROJECT_NAME}
         EXPORT ${DLIO_PROFILER_EXPORTED_TARGETS}
