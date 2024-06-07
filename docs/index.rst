@@ -15,6 +15,7 @@ DLIO Profiler: is a library for profiling I/O calls and application functions.
    definitions
    limitations
    build
+   building_applications
    api
 
 .. toctree::
