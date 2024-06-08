@@ -13,6 +13,12 @@
 #include <sstream>
 #include <thread>
 
+template <>
+std::shared_ptr<dlio_profiler::ChromeWriter>
+    dlio_profiler::Singleton<dlio_profiler::ChromeWriter>::instance = nullptr;
+template <>
+bool dlio_profiler::Singleton<
+    dlio_profiler::ChromeWriter>::stop_creating_instances = false;
 void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
   this->throw_error = throw_error;
   this->filename = filename;

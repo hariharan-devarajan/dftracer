@@ -29,9 +29,19 @@ os.makedirs(f"{args.data_dir}/{args.format}", exist_ok=True)
 
 
 @dlio_log.log
-def log_events(val):
+def log_events(index):
     sleep(1)
 
+
+def custom_events():
+    log_inst.enter_event()
+    start = log_inst.get_time()
+    sleep(1)
+    end = log_inst.get_time()
+    log_inst.log_event("test", "cat2", start, end - start)
+    log_inst.exit_event()
+    for i in dlio_log.iter(range(2)):
+        sleep(1)
 
 
 def posix_calls(val):
@@ -135,6 +145,7 @@ def init():
 def main():
     posix_calls((20, False))
     t1 = threading.Thread(target=posix_calls, args=((10, False),))
+    custom_events()
     t2 = threading.Thread(target=npz_calls, args=(1,))
     t3 = threading.Thread(target=jpeg_calls, args=(2,))
     t4 = threading.Thread(target=log_events, args=(3,))

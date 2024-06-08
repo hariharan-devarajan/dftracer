@@ -2,7 +2,13 @@
 // Created by haridev on 10/8/23.
 //
 #include <dlio_profiler/core/dlio_profiler_main.h>
-
+template <>
+std::shared_ptr<dlio_profiler::DLIOProfilerCore>
+    dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::instance =
+        nullptr;
+template <>
+bool dlio_profiler::Singleton<
+    dlio_profiler::DLIOProfilerCore>::stop_creating_instances = false;
 void dlio_finalize() {
   DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore.dlio_finalize", "");
   auto conf = dlio_profiler::Singleton<
@@ -22,7 +28,10 @@ dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage,
                                                   const char *log_file,
                                                   const char *data_dirs,
                                                   const int *process_id)
-    : is_initialized(false), bind(false), include_metadata(false) {
+    : is_initialized(false),
+      bind(false),
+      log_file_suffix(),
+      include_metadata(false) {
   conf = dlio_profiler::Singleton<
       dlio_profiler::ConfigurationManager>::get_instance();
   DLIO_PROFILER_LOGINFO(
@@ -33,6 +42,7 @@ dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage,
     case ProfileType::PROFILER_ANY:
     case ProfileType::PROFILER_PRELOAD: {
       if (stage == ProfilerStage::PROFILER_INIT) {
+        log_file_suffix = "preload";
         if (conf->init_type == ProfileInitType::PROFILER_INIT_LD_PRELOAD) {
           initialize(true, log_file, data_dirs, process_id);
         }
@@ -46,6 +56,7 @@ dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage,
     case ProfileType::PROFILER_PY_APP:
     case ProfileType::PROFILER_C_APP:
     case ProfileType::PROFILER_CPP_APP: {
+      log_file_suffix = "app";
       bool bind = false;
       if (stage == ProfilerStage::PROFILER_INIT &&
           conf->init_type == ProfileInitType::PROFILER_INIT_FUNCTION) {
@@ -161,7 +172,8 @@ void dlio_profiler::DLIOProfilerCore::initialize(bool _bind,
         DLIO_PROFILER_LOGINFO("Extracted process_name %s", exec_name.c_str());
         if (!conf->log_file.empty()) {
           this->log_file = std::string(conf->log_file) + "-" + exec_name + "-" +
-                           std::to_string(this->process_id) + ".pfw";
+                           std::to_string(this->process_id) + "-" +
+                           log_file_suffix + ".pfw";
         } else {  // GCOV_EXCL_START
           DLIO_PROFILER_LOGERROR(UNDEFINED_LOG_FILE.message, "");
           throw std::runtime_error(UNDEFINED_LOG_FILE.code);

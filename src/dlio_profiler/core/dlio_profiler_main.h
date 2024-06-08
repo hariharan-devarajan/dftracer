@@ -33,6 +33,7 @@ class DLIOProfilerCore {
   ProcessID process_id;
   bool is_initialized;
   bool bind;
+  std::string log_file_suffix;
   std::shared_ptr<DLIOLogger> logger;
   void initialize(bool _bind, const char *_log_file = nullptr,
                   const char *_data_dirs = nullptr,
