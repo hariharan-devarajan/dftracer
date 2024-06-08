@@ -17,6 +17,7 @@ DLIOProfiler::DLIOProfiler(ConstEventType _name, ConstEventType _cat)
       metadata = new std::unordered_map<std::string, std::any>();
     start_time = dlio_profiler_core->get_time();
   }
+  dlio_profiler_core->enter_event();
 }
 void DLIOProfiler::update(const char *key, int value) {
   DLIO_PROFILER_LOGDEBUG(
@@ -48,6 +49,8 @@ void DLIOProfiler::finalize() {
     TimeResolution end_time = dlio_profiler_core->get_time();
     dlio_profiler_core->log(name, cat, start_time, end_time - start_time,
                             metadata);
+
+    dlio_profiler_core->exit_event();
     if (dlio_profiler_core->include_metadata) delete (metadata);
   }
   this->initialized = false;

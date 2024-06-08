@@ -15,6 +15,7 @@
 
 #include <any>
 #include <chrono>
+#include <cstdint>
 #include <cstring>
 #include <unordered_map>
 
@@ -26,11 +27,15 @@ class DLIOLogger {
   bool is_init, dlio_profiler_tid;
   ProcessID process_id;
   std::shared_ptr<dlio_profiler::ChromeWriter> writer;
+  uint32_t level;
 
  public:
   bool include_metadata;
   DLIOLogger(bool init_log = false)
-      : is_init(false), dlio_profiler_tid(false), include_metadata(false) {
+      : is_init(false),
+        dlio_profiler_tid(false),
+        level(0),
+        include_metadata(false) {
     DLIO_PROFILER_LOGDEBUG("DLIOLogger.DLIOLogger", "");
     auto conf = dlio_profiler::Singleton<
         dlio_profiler::ConfigurationManager>::get_instance();
@@ -52,6 +57,10 @@ class DLIOLogger {
     DLIO_PROFILER_LOGINFO("Writing trace to %s", log_file.c_str());
   }
 
+  inline void enter_event() { level++; }
+
+  inline void exit_event() { level--; }
+
   inline TimeResolution get_time() {
     DLIO_PROFILER_LOGDEBUG("DLIOLogger.get_time", "");
     struct timeval tv {};
@@ -67,6 +76,9 @@ class DLIOLogger {
     ThreadID tid = 0;
     if (dlio_profiler_tid) {
       tid = dlp_gettid() + this->process_id;
+    }
+    if (metadata != nullptr) {
+      metadata->insert_or_assign("level", level);
     }
     if (this->writer != nullptr) {
       this->writer->log(event_name, category, start_time, duration, metadata,
@@ -104,6 +116,7 @@ class DLIOLogger {
       metadata = new std::unordered_map<std::string, std::any>(); \
       DLIO_LOGGER_UPDATE(fname);                                  \
     }                                                             \
+    this->logger->enter_event();                                  \
     start_time = this->logger->get_time();                        \
   }
 #define DLIO_LOGGER_END()                                         \
@@ -111,6 +124,7 @@ class DLIOLogger {
     TimeResolution end_time = this->logger->get_time();           \
     this->logger->log((char *)__FUNCTION__, CATEGORY, start_time, \
                       end_time - start_time, metadata);           \
+    this->logger->exit_event();                                   \
     if (this->logger->include_metadata) delete (metadata);        \
   }
 
