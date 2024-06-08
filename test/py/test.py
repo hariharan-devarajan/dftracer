@@ -24,43 +24,31 @@ parser.add_argument("--num_files", default=1, type=int, help="Number of files")
 parser.add_argument("--niter", default=1, type=int, help="Number of iterations for the experiment")
 parser.add_argument("--record_size", default=1048576, type=int, help="size of the record to be written to the file")
 args = parser.parse_args()
+data_dir=args.data_dir
 os.makedirs(f"{args.data_dir}/{args.format}", exist_ok=True)
 
 
 @dlio_log.log
-def log_events(index):
+def log_events(val):
     sleep(1)
 
-
-def custom_events():
-    args = {
-        "epoch": "1",
-        "index": "1",
-    }
-    start = log_inst.get_time()
-    sleep(1)
-    end = log_inst.get_time()
-    log_inst.log_event("test", "cat2", start, end - start, string_args=args)
-    for i in dlio_log.iter(range(2)):
-        sleep(1)
 
 
 def posix_calls(val):
     index, is_spawn = val
-    path = f"{cwd}/data/demofile{index}.txt"
+    path = f"{data_dir}/demofile{index}.txt"
     f = open(path, "w+")
     f.write("Now the file has more content!")
     f.close()
     if is_spawn:
         print(f"Calling spawn on {index} with pid {os.getpid()}")
-        log_inst.finalize()
     else:
         print(f"Not calling spawn on {index} with pid {os.getpid()}")
 
 
 def npz_calls(index):
     # print(f"{cwd}/data/demofile2.npz")
-    path = f"{cwd}/data/demofile{index}.npz"
+    path = f"{data_dir}/demofile{index}.npz"
     if os.path.exists(path):
         os.remove(path)
     records = np.random.randint(255, size=(8, 8, 1024), dtype=np.uint8)
@@ -71,7 +59,7 @@ def npz_calls(index):
 def jpeg_calls(index):
     records = np.random.randint(255, size=(1024, 1024), dtype=np.uint8)
     img = im.fromarray(records)
-    out_path_spec = f"{cwd}/data/test.jpeg"
+    out_path_spec = f"{data_dir}/test.jpeg"
     img.save(out_path_spec, format="JPEG", bits=8)
     with open(out_path_spec, "rb") as f:
         image = im.open(f)
@@ -147,7 +135,6 @@ def init():
 def main():
     posix_calls((20, False))
     t1 = threading.Thread(target=posix_calls, args=((10, False),))
-    custom_events()
     t2 = threading.Thread(target=npz_calls, args=(1,))
     t3 = threading.Thread(target=jpeg_calls, args=(2,))
     t4 = threading.Thread(target=log_events, args=(3,))

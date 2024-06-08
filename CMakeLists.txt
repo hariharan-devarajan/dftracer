@@ -247,9 +247,9 @@ set(DLIO_PROFILER_CORE_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/utils.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/posix.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/stdio.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/dlio_profiler_main.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/macro.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/singleton.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/dlio_profiler_main.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/macro.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/singleton.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/configuration_manager.h)
 add_library(${PROJECT_NAME} SHARED)
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCY_LIB})
