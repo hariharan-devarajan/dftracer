@@ -82,6 +82,16 @@ class dlio_logger:
             logging.debug(f"logger.get_time {t}")
             return t
         return 0
+    
+    def enter_event(self):
+        if DLIO_PROFILER_ENABLE and self.logger:
+            self.logger.enter_event()
+            logging.debug(f"logger.enter_event")
+
+    def exit_event(self):
+        if DLIO_PROFILER_ENABLE and self.logger:
+            self.logger.exit_event()
+            logging.debug(f"logger.exit_event")
 
     def log_event(self, name, cat, start_time, duration, string_args=None):
         if DLIO_PROFILER_ENABLE and self.logger:
@@ -114,6 +124,7 @@ class fn_interceptor(object):
     def __enter__(self):
         if DLIO_PROFILER_ENABLE:
             self._t1 = dlio_logger.get_instance().get_time()
+            dlio_logger.get_instance().enter_event()
         return self
 
     def update(self, epoch=None, step=None, image_idx=None, image_size=None, args={}):
@@ -128,7 +139,7 @@ class fn_interceptor(object):
 
     def flush(self):
         if DLIO_PROFILER_ENABLE:
-            self._t2 = dlio_logger.get_instance().get_time()
+            self._t2 = dlio_logger.get_instance().get_time()            
             if len(self._arguments) > 0:
                 dlio_logger.get_instance().log_event(name=self._name, cat=self._cat, start_time=self._t1,
                                                      duration=self._t2 - self._t1,
@@ -136,12 +147,14 @@ class fn_interceptor(object):
             else:
                 dlio_logger.get_instance().log_event(name=self._name, cat=self._cat, start_time=self._t1,
                                                      duration=self._t2 - self._t1)
+            dlio_logger.get_instance().exit_event()
             self._flush = True
         return self
 
     def reset(self):
         if DLIO_PROFILER_ENABLE:
             self._t1 = dlio_logger.get_instance().get_time()
+            dlio_logger.get_instance().enter_event()
             self._t2 = self._t1
             self._flush = False
         return self
@@ -181,6 +194,7 @@ class fn_interceptor(object):
                                 self._arguments["image_size"] = str(value)
 
                 start = dlio_logger.get_instance().get_time()
+                dlio_logger.get_instance().enter_event()
             x = func(*args, **kwargs)
             if DLIO_PROFILER_ENABLE:
                 end = dlio_logger.get_instance().get_time()
@@ -191,6 +205,7 @@ class fn_interceptor(object):
                 else:
                     dlio_logger.get_instance().log_event(name=func.__qualname__, cat=self._cat, start_time=start,
                                                          duration=end - start)
+                dlio_logger.get_instance().exit_event()
             return x
 
         return wrapper
@@ -201,6 +216,7 @@ class fn_interceptor(object):
             name = f"{self._name}.iter"
             kernal_name = f"{self._name}.yield"
             start = dlio_logger.get_instance().get_time()
+            dlio_logger.get_instance().enter_event()
         for v in func:
             if DLIO_PROFILER_ENABLE:
                 end = dlio_logger.get_instance().get_time()
@@ -221,8 +237,10 @@ class fn_interceptor(object):
                                                          duration=end - start)
                     dlio_logger.get_instance().log_event(name=kernal_name, cat=self._cat, start_time=t0,
                                                          duration=t1 - t0)
+                dlio_logger.get_instance().exit_event()
                 iter_val += 1
                 start = dlio_logger.get_instance().get_time()
+                dlio_logger.get_instance().enter_event()
 
     def log_init(self, init):
         if DLIO_PROFILER_ENABLE:
@@ -237,6 +255,7 @@ class fn_interceptor(object):
                     arg_values["epoch"] = str(arg_values["epoch"])
                 self._arguments = {k: str(v) for k, v in arg_values.items()} # enforce string for all values
                 start = dlio_logger.get_instance().get_time()
+                dlio_logger.get_instance().enter_event()
             init(*args, **kwargs)
             if DLIO_PROFILER_ENABLE:
                 end = dlio_logger.get_instance().get_time()
@@ -248,7 +267,7 @@ class fn_interceptor(object):
                 else:
                     dlio_logger.get_instance().log_event(name=init.__qualname__, cat=self._cat, start_time=start,
                                                          duration=end - start)
-
+                dlio_logger.get_instance().exit_event()
         return new_init
 
     def log_static(self, func):
@@ -257,6 +276,7 @@ class fn_interceptor(object):
         def wrapper(*args, **kwargs):
             if DLIO_PROFILER_ENABLE:
                 start = dlio_logger.get_instance().get_time()
+                dlio_logger.get_instance().enter_event()
             x = func(*args, **kwargs)
             if DLIO_PROFILER_ENABLE:
                 end = dlio_logger.get_instance().get_time()
@@ -267,6 +287,7 @@ class fn_interceptor(object):
                 else:
                     dlio_logger.get_instance().log_event(name=func.__qualname__, cat=self._cat, start_time=start,
                                                          duration=end - start)
+                dlio_logger.get_instance().exit_event()
             return x
 
         return wrapper
