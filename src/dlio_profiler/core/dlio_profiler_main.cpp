@@ -94,8 +94,7 @@ void dlio_profiler::DLIOProfilerCore::log(
 
 bool dlio_profiler::DLIOProfilerCore::finalize() {
   DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::finalize", "");
-  if (this->is_initialized && conf->enable &&
-      conf->init_type == ProfileInitType::PROFILER_INIT_FUNCTION) {
+  if (this->is_initialized && conf->enable) {
     DLIO_PROFILER_LOGINFO("Calling finalize on pid %d", this->process_id);
     auto trie = dlio_profiler::Singleton<Trie>::get_instance();
     if (trie != nullptr) {
