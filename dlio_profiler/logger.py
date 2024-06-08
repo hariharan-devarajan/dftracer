@@ -167,6 +167,7 @@ class fn_interceptor(object):
     def log(self, func):
         if DLIO_PROFILER_ENABLE:
             arg_names = inspect.getfullargspec(func)[0]
+            self._arguments = {}
 
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -216,7 +217,8 @@ class fn_interceptor(object):
             name = f"{self._name}.iter"
             kernal_name = f"{self._name}.yield"
             start = dlio_logger.get_instance().get_time()
-            dlio_logger.get_instance().enter_event()
+            self._arguments = {}
+            
         for v in func:
             if DLIO_PROFILER_ENABLE:
                 end = dlio_logger.get_instance().get_time()
@@ -226,25 +228,33 @@ class fn_interceptor(object):
                 t1 = dlio_logger.get_instance().get_time()
                 self._arguments[iter_name] = str(iter_val)
                 if len(self._arguments) > 0:
+                    dlio_logger.get_instance().enter_event()
                     dlio_logger.get_instance().log_event(name=name, cat=self._cat, start_time=start,
                                                          duration=end - start,
                                                          string_args=self._arguments)
+                    dlio_logger.get_instance().exit_event()
+                    dlio_logger.get_instance().enter_event()
                     dlio_logger.get_instance().log_event(name=kernal_name, cat=self._cat, start_time=t0,
                                                          duration=t1 - t0,
                                                          string_args=self._arguments)
+                    dlio_logger.get_instance().exit_event()
                 else:
+                    dlio_logger.get_instance().enter_event()
                     dlio_logger.get_instance().log_event(name=name, cat=self._cat, start_time=start,
                                                          duration=end - start)
+                    dlio_logger.get_instance().exit_event()
+                    dlio_logger.get_instance().enter_event()
                     dlio_logger.get_instance().log_event(name=kernal_name, cat=self._cat, start_time=t0,
                                                          duration=t1 - t0)
-                dlio_logger.get_instance().exit_event()
+                    dlio_logger.get_instance().exit_event()
+                
                 iter_val += 1
                 start = dlio_logger.get_instance().get_time()
-                dlio_logger.get_instance().enter_event()
 
     def log_init(self, init):
         if DLIO_PROFILER_ENABLE:
             arg_names = inspect.getfullargspec(init)[0]
+            self._arguments = {}
 
         @wraps(init)
         def new_init(*args, **kwargs):
@@ -252,8 +262,14 @@ class fn_interceptor(object):
                 arg_values = dict(zip(arg_names[1:], args))
                 arg_values.update(kwargs)
                 if "epoch" in arg_values:
-                    arg_values["epoch"] = str(arg_values["epoch"])
-                self._arguments = {k: str(v) for k, v in arg_values.items()} # enforce string for all values
+                    self._arguments["epoch"] = str(arg_values["epoch"])
+                elif "image_idx" in arg_values:
+                    self._arguments["image_idx"] = str(arg_values["image_idx"])
+                elif "image_size" in arg_values:
+                    self._arguments["image_size"] = str(arg_values["image_size"])
+                elif "step" in arg_values:
+                    self._arguments["step"] = str(arg_values["step"])
+                #self._arguments = {k: str(v).replace("\n", "") for k, v in arg_values.items()} # enforce string for all values
                 start = dlio_logger.get_instance().get_time()
                 dlio_logger.get_instance().enter_event()
             init(*args, **kwargs)
