@@ -29,7 +29,7 @@ void dlio_profiler::ChromeWriter::initialize(char *filename, bool throw_error) {
 }
 
 void dlio_profiler::ChromeWriter::log(
-    ConstEventType event_name, ConstEventType category,
+    int index, ConstEventType event_name, ConstEventType category,
     TimeResolution &start_time, TimeResolution &duration,
     std::unordered_map<std::string, std::any> *metadata, ProcessID process_id,
     ThreadID thread_id) {
@@ -37,7 +37,7 @@ void dlio_profiler::ChromeWriter::log(
   if (fh != nullptr) {
     int size;
     char data[MAX_LINE_SIZE];
-    convert_json(event_name, category, start_time, duration, metadata,
+    convert_json(index, event_name, category, start_time, duration, metadata,
                  process_id, thread_id, &size, data);
     write_buffer_op(data, size);
   } else {
@@ -46,7 +46,7 @@ void dlio_profiler::ChromeWriter::log(
   is_first_write = false;
 }
 
-void dlio_profiler::ChromeWriter::finalize() {
+void dlio_profiler::ChromeWriter::finalize(int index) {
   DLIO_PROFILER_LOGDEBUG("ChromeWriter.finalize", "");
   if (fh != nullptr) {
     DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s", filename.c_str());
@@ -112,7 +112,7 @@ void dlio_profiler::ChromeWriter::finalize() {
 }
 
 void dlio_profiler::ChromeWriter::convert_json(
-    ConstEventType event_name, ConstEventType category,
+    int index, ConstEventType event_name, ConstEventType category,
     TimeResolution start_time, TimeResolution duration,
     std::unordered_map<std::string, std::any> *metadata, ProcessID process_id,
     ThreadID thread_id, int *size, char *data) {
@@ -188,7 +188,7 @@ void dlio_profiler::ChromeWriter::convert_json(
         "%s{\"id\":\"%d\",\"name\":\"%s\",\"cat\":\"%s\",\"pid\":\"%lu\","
         "\"tid\":\"%lu\",\"ts\":\"%llu\",\"dur\":\"%llu\",\"ph\":\"X\","
         "\"args\":{%s}}\n",
-        is_first_char.c_str(), index.load(), event_name, category, process_id,
+        is_first_char.c_str(), index, event_name, category, process_id,
         thread_id, start_time, duration, metadata_line);
   } else {
     *size = snprintf(
@@ -196,10 +196,9 @@ void dlio_profiler::ChromeWriter::convert_json(
         "%s{\"id\":\"%d\",\"name\":\"%s\",\"cat\":\"%s\",\"pid\":\"%lu\","
         "\"tid\":\"%lu\",\"ts\":\"%llu\",\"dur\":\"%llu\",\"ph\":\"X\","
         "\"args\":{}}\n",
-        is_first_char.c_str(), index.load(), event_name, category, process_id,
+        is_first_char.c_str(), index, event_name, category, process_id,
         thread_id, start_time, duration);
   }
   DLIO_PROFILER_LOGDEBUG("ChromeWriter.convert_json %s on %s", data,
                          this->filename.c_str());
-  index++;
 }

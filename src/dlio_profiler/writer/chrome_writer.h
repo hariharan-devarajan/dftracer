@@ -43,12 +43,12 @@ class ChromeWriter {
   hwloc_topology_t topology;
 #endif
   FILE *fh;
-  std::atomic_int index;
   char hostname[256];
   static const int MAX_LINE_SIZE = 4096;
   static const int MAX_META_LINE_SIZE = 3000;
-  void convert_json(ConstEventType event_name, ConstEventType category,
-                    TimeResolution start_time, TimeResolution duration,
+  void convert_json(int index, ConstEventType event_name,
+                    ConstEventType category, TimeResolution start_time,
+                    TimeResolution duration,
                     std::unordered_map<std::string, std::any> *metadata,
                     ProcessID process_id, ThreadID thread_id, int *size,
                     char *data);
@@ -99,7 +99,6 @@ class ChromeWriter {
         enable_compression(false),
         enable_core_affinity(false),
         fh(nullptr),
-        index(0),
         is_first_write(true) {
     DLIO_PROFILER_LOGDEBUG("ChromeWriter.ChromeWriter", "");
     auto conf = dlio_profiler::Singleton<
@@ -118,12 +117,12 @@ class ChromeWriter {
   ~ChromeWriter() { DLIO_PROFILER_LOGDEBUG("Destructing ChromeWriter", ""); }
   void initialize(char *filename, bool throw_error);
 
-  void log(ConstEventType event_name, ConstEventType category,
+  void log(int index, ConstEventType event_name, ConstEventType category,
            TimeResolution &start_time, TimeResolution &duration,
            std::unordered_map<std::string, std::any> *metadata,
            ProcessID process_id, ThreadID tid);
 
-  void finalize();
+  void finalize(int index);
 };
 }  // namespace dlio_profiler
 
