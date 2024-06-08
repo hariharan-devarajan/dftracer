@@ -30,6 +30,7 @@ class DLIOLogger {
   uint32_t level;
   std::vector<int> index_stack;
   std::atomic_int index;
+  bool has_entry;
 
  public:
   bool include_metadata;
@@ -39,6 +40,7 @@ class DLIOLogger {
         level(0),
         index_stack(),
         index(0),
+        has_entry(false),
         include_metadata(false) {
     DLIO_PROFILER_LOGDEBUG("DLIOLogger.DLIOLogger", "");
     auto conf = dlio_profiler::Singleton<
@@ -102,6 +104,7 @@ class DLIOLogger {
     if (this->writer != nullptr) {
       this->writer->log(index_stack[level - 1], event_name, category,
                         start_time, duration, metadata, this->process_id, tid);
+      has_entry = true;
     } else {
       DLIO_PROFILER_LOGERROR("DLIOLogger.log writer not initialized", "");
     }
@@ -110,7 +113,7 @@ class DLIOLogger {
   inline void finalize() {
     DLIO_PROFILER_LOGDEBUG("DLIOLogger.finalize", "");
     if (this->writer != nullptr) {
-      writer->finalize();
+      writer->finalize(has_entry);
       DLIO_PROFILER_LOGINFO("Released Logger", "");
     } else {
       DLIO_PROFILER_LOGWARN("DLIOLogger.finalize writer not initialized", "");

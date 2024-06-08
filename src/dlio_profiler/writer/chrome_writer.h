@@ -122,7 +122,7 @@ class ChromeWriter {
            std::unordered_map<std::string, std::any> *metadata,
            ProcessID process_id, ThreadID tid);
 
-  void finalize();
+  void finalize(bool has_entry);
 };
 }  // namespace dlio_profiler
 

@@ -47,7 +47,7 @@ void dlio_profiler::ChromeWriter::log(
   is_first_write = false;
 }
 
-void dlio_profiler::ChromeWriter::finalize() {
+void dlio_profiler::ChromeWriter::finalize(bool has_entry) {
   DLIO_PROFILER_LOGDEBUG("ChromeWriter.finalize", "");
   if (fh != nullptr) {
     DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s", filename.c_str());
@@ -58,7 +58,7 @@ void dlio_profiler::ChromeWriter::finalize() {
       ERROR(status != 0, "unable to close log file %d for a+",
             filename.c_str());  // GCOVR_EXCL_LINE
     }
-    if (last_off == 0) {
+    if (!has_entry) {
       DLIO_PROFILER_LOGINFO(
           "No trace data written as offset is %d. Deleting file %s", last_off,
           filename.c_str());
