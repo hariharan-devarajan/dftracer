@@ -15,6 +15,7 @@
 
 #include <any>
 #include <chrono>
+#include <cstdint>
 #include <cstring>
 #include <unordered_map>
 
@@ -26,11 +27,21 @@ class DLIOLogger {
   bool is_init, dlio_profiler_tid;
   ProcessID process_id;
   std::shared_ptr<dlio_profiler::ChromeWriter> writer;
+  uint32_t level;
+  std::vector<int> index_stack;
+  std::atomic_int index;
+  bool has_entry;
 
  public:
   bool include_metadata;
   DLIOLogger(bool init_log = false)
-      : is_init(false), dlio_profiler_tid(false), include_metadata(false) {
+      : is_init(false),
+        dlio_profiler_tid(false),
+        level(0),
+        index_stack(),
+        index(0),
+        has_entry(false),
+        include_metadata(false) {
     DLIO_PROFILER_LOGDEBUG("DLIOLogger.DLIOLogger", "");
     auto conf = dlio_profiler::Singleton<
         dlio_profiler::ConfigurationManager>::get_instance();
@@ -39,7 +50,10 @@ class DLIOLogger {
     throw_error = conf->throw_error;
     this->is_init = true;
   }
-  ~DLIOLogger() { DLIO_PROFILER_LOGDEBUG("Destructing DLIOLogger", ""); }
+  ~DLIOLogger() {
+    index_stack.clear();
+    DLIO_PROFILER_LOGDEBUG("Destructing DLIOLogger", "");
+  }
   inline void update_log_file(std::string log_file, ProcessID process_id = -1) {
     DLIO_PROFILER_LOGDEBUG("DLIOLogger.update_log_file %s", log_file.c_str());
     this->process_id = process_id;
@@ -50,6 +64,17 @@ class DLIOLogger {
     }
     this->is_init = true;
     DLIO_PROFILER_LOGINFO("Writing trace to %s", log_file.c_str());
+  }
+
+  inline void enter_event() {
+    index++;
+    level++;
+    index_stack.push_back(index.load());
+  }
+
+  inline void exit_event() {
+    level--;
+    index_stack.pop_back();
   }
 
   inline TimeResolution get_time() {
@@ -68,9 +93,18 @@ class DLIOLogger {
     if (dlio_profiler_tid) {
       tid = dlp_gettid() + this->process_id;
     }
+    if (metadata != nullptr) {
+      metadata->insert_or_assign("level", level);
+      int parent_index_value = -1;
+      if (level > 1) {
+        parent_index_value = index_stack[level - 2];
+      }
+      metadata->insert_or_assign("p_idx", parent_index_value);
+    }
     if (this->writer != nullptr) {
-      this->writer->log(event_name, category, start_time, duration, metadata,
-                        this->process_id, tid);
+      this->writer->log(index_stack[level - 1], event_name, category,
+                        start_time, duration, metadata, this->process_id, tid);
+      has_entry = true;
     } else {
       DLIO_PROFILER_LOGERROR("DLIOLogger.log writer not initialized", "");
     }
@@ -79,7 +113,7 @@ class DLIOLogger {
   inline void finalize() {
     DLIO_PROFILER_LOGDEBUG("DLIOLogger.finalize", "");
     if (this->writer != nullptr) {
-      writer->finalize();
+      writer->finalize(has_entry);
       DLIO_PROFILER_LOGINFO("Released Logger", "");
     } else {
       DLIO_PROFILER_LOGWARN("DLIOLogger.finalize writer not initialized", "");
@@ -104,6 +138,7 @@ class DLIOLogger {
       metadata = new std::unordered_map<std::string, std::any>(); \
       DLIO_LOGGER_UPDATE(fname);                                  \
     }                                                             \
+    this->logger->enter_event();                                  \
     start_time = this->logger->get_time();                        \
   }
 #define DLIO_LOGGER_END()                                         \
@@ -111,6 +146,7 @@ class DLIOLogger {
     TimeResolution end_time = this->logger->get_time();           \
     this->logger->log((char *)__FUNCTION__, CATEGORY, start_time, \
                       end_time - start_time, metadata);           \
+    this->logger->exit_event();                                   \
     if (this->logger->include_metadata) delete (metadata);        \
   }
 

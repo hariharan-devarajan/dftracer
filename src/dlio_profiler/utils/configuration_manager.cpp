@@ -34,7 +34,13 @@
 #define DLP_YAML_INTERNAL_SIGNALS "bind_signals"
 #define DLP_YAML_INTERNAL_THROW_ERROR "throw_error"
 #define DLP_YAML_INTERNAL_WRITE_BUFFER_SIZE "write_buffer_size"
-
+template <>
+std::shared_ptr<dlio_profiler::ConfigurationManager>
+    dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::instance =
+        nullptr;
+template <>
+bool dlio_profiler::Singleton<
+    dlio_profiler::ConfigurationManager>::stop_creating_instances = false;
 dlio_profiler::ConfigurationManager::ConfigurationManager()
     : enable(false),
       init_type(PROFILER_INIT_FUNCTION),

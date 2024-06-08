@@ -237,7 +237,9 @@ set(DLIO_PROFILER_CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/posix_internal.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_profiler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/dlio_profiler_main.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/configuration_manager.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/configuration_manager.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/dlio_logger.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/utils.cpp)
 set(DLIO_PROFILER_CORE_PUBLIC_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/dlio_profiler.h
         ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/constants.h
@@ -247,9 +249,9 @@ set(DLIO_PROFILER_CORE_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/utils.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/posix.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/brahma/stdio.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/dlio_profiler_main.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/macro.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/dlio_profiler/core/singleton.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/dlio_profiler_main.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/macro.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/core/singleton.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dlio_profiler/utils/configuration_manager.h)
 add_library(${PROJECT_NAME} SHARED)
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCY_LIB})
@@ -280,12 +282,12 @@ target_include_directories(${PROJECT_NAME}
         )
 set_target_properties(${PROJECT_NAME}
         PROPERTIES
-        DEBUG_OUTPUT_NAME ${LIB_DEBUG_NAME}
-        RELEASE_OUTPUT_NAME ${LIB_RELEASE_NAME}
-        MINSIZEREL_OUTPUT_NAME ${LIB_RELEASE_NAME}
-        RELWITHDEBINFO_OUTPUT_NAME ${LIB_RELEASE_NAME}
-        VERSION ${LIB_VERSION}
-        SOVERSION ${LIB_VERSION}
+        DEBUG_OUTPUT_NAME ${PROJECT_NAME}
+        RELEASE_OUTPUT_NAME ${PROJECT_NAME}
+        MINSIZEREL_OUTPUT_NAME ${PROJECT_NAME}
+        RELWITHDEBINFO_OUTPUT_NAME ${PROJECT_NAME}
+        VERSION ${DLIO_PROFILER_PACKAGE_VERSION}
+        SOVERSION ${DLIO_PROFILER_PACKAGE_VERSION}
         )
 
 dlio_profiler_install_headers("${DLIO_PROFILER_CORE_PUBLIC_INCLUDE}")
