@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstdio>
 #include <sstream>
 #include <thread>
 
@@ -46,19 +47,21 @@ void dlio_profiler::ChromeWriter::log(
   is_first_write = false;
 }
 
-void dlio_profiler::ChromeWriter::finalize(int index) {
+void dlio_profiler::ChromeWriter::finalize() {
   DLIO_PROFILER_LOGDEBUG("ChromeWriter.finalize", "");
   if (fh != nullptr) {
     DLIO_PROFILER_LOGINFO("Profiler finalizing writer %s", filename.c_str());
     fflush(fh);
+    int last_off = ftell(fh);
     int status = fclose(fh);
     if (status != 0) {
       ERROR(status != 0, "unable to close log file %d for a+",
             filename.c_str());  // GCOVR_EXCL_LINE
     }
-    if (index == 0) {
-      DLIO_PROFILER_LOGINFO("No trace data written. Deleting file %s",
-                            filename.c_str());
+    if (last_off == 0) {
+      DLIO_PROFILER_LOGINFO(
+          "No trace data written as offset is %d. Deleting file %s", last_off,
+          filename.c_str());
       dlp_unlink(filename.c_str());
     } else {
       DLIO_PROFILER_LOGINFO("Profiler writing the final symbol", "");

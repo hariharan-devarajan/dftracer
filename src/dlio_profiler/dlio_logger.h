@@ -48,7 +48,10 @@ class DLIOLogger {
     throw_error = conf->throw_error;
     this->is_init = true;
   }
-  ~DLIOLogger() { DLIO_PROFILER_LOGDEBUG("Destructing DLIOLogger", ""); }
+  ~DLIOLogger() {
+    index_stack.clear();
+    DLIO_PROFILER_LOGDEBUG("Destructing DLIOLogger", "");
+  }
   inline void update_log_file(std::string log_file, ProcessID process_id = -1) {
     DLIO_PROFILER_LOGDEBUG("DLIOLogger.update_log_file %s", log_file.c_str());
     this->process_id = process_id;
@@ -107,7 +110,7 @@ class DLIOLogger {
   inline void finalize() {
     DLIO_PROFILER_LOGDEBUG("DLIOLogger.finalize", "");
     if (this->writer != nullptr) {
-      writer->finalize(index);
+      writer->finalize();
       DLIO_PROFILER_LOGINFO("Released Logger", "");
     } else {
       DLIO_PROFILER_LOGWARN("DLIOLogger.finalize writer not initialized", "");
