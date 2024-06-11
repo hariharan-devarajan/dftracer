@@ -183,7 +183,7 @@ void dlio_profiler::ChromeWriter::convert_json(
                     << std::any_cast<off64_t>(item.second) << "\"";
         if (i < meta_size - 1) meta_stream << ",";
       } else {
-        DLIO_PROFILER_LOGINFO("No conversion for type %s", item.first);
+        DLIO_PROFILER_LOGINFO("No conversion for type %s", item.first.c_str());
       }
       i++;
     }
