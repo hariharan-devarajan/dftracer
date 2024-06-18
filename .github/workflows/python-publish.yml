@@ -52,7 +52,8 @@ jobs:
           echo $LD_LIBRARY_PATH
           auditwheel show dist/*.whl
           platform=$(auditwheel show dist/*.whl | grep manylinux_ | awk -F'"' '{print $2}')
-          echo $platform
+          auditwheel show dist/*.whl | grep manylinux_
+          echo "Platform selected is $platform"
           auditwheel repair --plat $platform dist/*.whl -w dist/
           rm dist/*linux_x86_64.whl
           rm dist/*.tar.gz
