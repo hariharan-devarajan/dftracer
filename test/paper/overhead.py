@@ -3,9 +3,9 @@ import logging
 import os
 from mpi4py import MPI
 from time import time
-from dlio_profiler.logger import dlio_logger, fn_interceptor
+from dftracer.logger import dftracer, dft_fn
 
-log_inst = dlio_logger.initialize_log(logfile=None, data_dir=None, process_id=-1)
+log_inst = dftracer.initialize_log(logfile=None, data_dir=None, process_id=-1)
 
 class Timer:
     def __init__(self):
@@ -43,7 +43,7 @@ def main(argc, argv):
     total_time = 0.0
     total_time = MPI.COMM_WORLD.allreduce(operation_time.elapsed_time, op=MPI.SUM)
     if MPI.COMM_WORLD.rank == 0:
-        print(f"[DLIO PRINT],{MPI.COMM_WORLD.size},{num_operations},{transfer_size},{total_time}")
+        print(f"[DFTRACER PRINT],{MPI.COMM_WORLD.size},{num_operations},{transfer_size},{total_time}")
     MPI.COMM_WORLD.barrier()
     os.remove(path)
     log_inst.finalize()

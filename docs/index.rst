@@ -1,10 +1,10 @@
-.. DLIO Profiler documentation master file, created by
+.. DFTracer documentation master file, created by
    sphinx-quickstart on Sun Nov 26 20:15:18 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
 ===============================================================================
-DLIO Profiler: is a library for profiling I/O calls and application functions.
+DFTracer: is a library for profiling I/O calls and application functions.
 ===============================================================================
 
 .. toctree::

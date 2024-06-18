@@ -1,4 +1,4 @@
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/dlio_profiler-utils.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/dftracer-utils.cmake)
 install_external_project(cpp-logger https://github.com/hariharan-devarajan/cpp-logger.git v0.0.4 ${CMAKE_INSTALL_PREFIX} "")
 install_external_project(gotcha https://github.com/LLNL/GOTCHA.git 1.0.7 ${CMAKE_INSTALL_PREFIX} "")
 install_external_project(brahma https://github.com/hariharan-devarajan/brahma.git v0.0.5 ${CMAKE_INSTALL_PREFIX} "")

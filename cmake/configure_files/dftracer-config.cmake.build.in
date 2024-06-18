@@ -1,0 +1,61 @@
+# This will create IMPORTED targets for DFTRACER. The executables will be
+# dftracer::<exe-name>-bin (e.g., dftracer::dftracer-bin) and the library will
+# be dftracer::dftracer.
+
+include("${CMAKE_CURRENT_LIST_DIR}/DFTRACERConfigVersion.cmake")
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/modules")
+list(APPEND CMAKE_MODULE_PATH "@EXTRA_CMAKE_MODULE_DIR@")
+
+#include(GNUInstallDirs)
+include(ExternalProject)
+include(DFTRACERCMakeUtilities)
+include(CMakePackageConfigHelpers)
+
+
+set(DFTRACER_VERSION ${PACKAGE_VERSION})
+
+# Record compiler information
+set(DFTRACER_C_COMPILER "@CMAKE_C_COMPILER@")
+set(DFTRACER_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
+
+set(DFTRACER_C_FLAGS "@CMAKE_C_FLAGS@")
+set(DFTRACER_CXX_FLAGS "@CMAKE_CXX_FLAGS@")
+
+set(DFTRACER_C_STANDARD "@CMAKE_C_STANDARD@")
+set(DFTRACER_CXX_STANDARD "@CMAKE_CXX_STANDARD@")
+
+set(CMAKE_C_STANDARD_REQUIRED TRUE)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+
+# Record the various flags and switches accumlated in DFTRACER
+set(DFTRACER_GNU_LINUX @DFTRACER_GNU_LINUX@)
+set(DFTRACER_HAS_STD_FILESYSTEM @DFTRACER_HAS_STD_FILESYSTEM@)
+set(DFTRACER_HAS_STD_FSTREAM_FD @DFTRACER_HAS_STD_FSTREAM_FD@)
+
+# Setup dependencies
+
+
+@PACKAGE_INIT@
+
+# Now actually import the DFTRACER target
+set(_TMP_INCLUDE_DIRS "@CMAKE_INCLUDE_OUTPUT_DIRECTORY@")
+foreach (_DIR ${_TMP_INCLUDE_DIRS})
+  set_and_check(_INCLUDE_DIR "${_DIR}")
+  list(APPEND DFTRACER_INCLUDE_DIRS "${_INCLUDE_DIR}")
+endforeach (_DIR "${_TMP_INCLUDE_DIRS}")
+
+set(_TMP_LIBRARY_DIRS "@CMAKE_LIBRARY_OUTPUT_DIRECTORY@")
+foreach (_DIR ${_TMP_LIBRARY_DIRS})
+  set_and_check(_LIBRARY_DIR "${_DIR}")
+  list(APPEND DFTRACER_LIBRARY_DIRS "${_LIBRARY_DIR}")
+endforeach (_DIR ${_TMP_LIBRARY_DIRS})
+
+if (NOT TARGET dftracer::dftracer)
+  include(${CMAKE_CURRENT_LIST_DIR}/DFTRACERTargets.cmake)
+endif (NOT TARGET dftracer::dftracer)
+
+check_required_components(DFTRACER)
+
+set(DFTRACER_LIBRARIES dftracer::dftracer)

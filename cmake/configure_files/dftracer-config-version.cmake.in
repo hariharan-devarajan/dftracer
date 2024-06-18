@@ -1,0 +1,12 @@
+
+#-----------------------------------------------------------------------------
+# Version file for install directory
+#-----------------------------------------------------------------------------
+set(PACKAGE_VERSION @DFTRACER_PACKAGE_VERSION@)
+
+if ("${PACKAGE_FIND_VERSION_MAJOR}" EQUAL @DFTRACER_VERSION_MAJOR@)
+    set(PACKAGE_VERSION_COMPATIBLE 1)
+    if ("${PACKAGE_FIND_VERSION_PATCH}" EQUAL @DFTRACER_VERSION_PATCH@)
+        set(PACKAGE_VERSION_EXACT 1)
+    endif ()
+endif ()

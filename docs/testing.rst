@@ -9,4 +9,4 @@ greatly appreciated.
 Unit Tests
 ----------
 
-Testing new core features within DLIO Profiler should be implemented in the ``test`` using simple programs
+Testing new core features within DFTracer should be implemented in the ``test`` using simple programs
