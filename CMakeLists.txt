@@ -180,8 +180,8 @@ else()
 # Required Dependencies
 # =============================================================================
 set(DEPENDENCY_LIB "")
-find_package(cpp-logger REQUIRED)
-if (${CPP_LOGGER_FOUND})
+find_package(cpp-logger 1.0.0 REQUIRED)
+if (${cpp-logger_FOUND})
     include_directories(${CPP_LOGGER_INCLUDE_DIRS})
     set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${CPP_LOGGER_LIBRARIES})
     message(STATUS "[CPP_LOGGER] found cpp-logger at ${CPP_LOGGER_INCLUDE_DIRS}")
