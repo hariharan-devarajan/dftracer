@@ -2,13 +2,20 @@
 // Created by haridev on 10/8/23.
 //
 #include <dlio_profiler/core/dlio_profiler_main.h>
-
+template <>
+std::shared_ptr<dlio_profiler::DLIOProfilerCore>
+    dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::instance =
+        nullptr;
+template <>
+bool dlio_profiler::Singleton<
+    dlio_profiler::DLIOProfilerCore>::stop_creating_instances = false;
 void dlio_finalize() {
-  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore.dlio_finalize","");
-  auto conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
+  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore.dlio_finalize", "");
+  auto conf = dlio_profiler::Singleton<
+      dlio_profiler::ConfigurationManager>::get_instance();
   if (conf->init_type == ProfileInitType::PROFILER_INIT_FUNCTION) {
-    auto dlio_profiler = DLIO_PROFILER_MAIN_SINGLETON(ProfilerStage::PROFILER_FINI,
-                                                      ProfileType::PROFILER_ANY);
+    auto dlio_profiler = DLIO_PROFILER_MAIN_SINGLETON(
+        ProfilerStage::PROFILER_FINI, ProfileType::PROFILER_ANY);
     if (dlio_profiler != nullptr) {
       dlio_profiler->finalize();
       dlio_profiler::Singleton<dlio_profiler::DLIOProfilerCore>::finalize();
@@ -16,33 +23,50 @@ void dlio_finalize() {
   }
 }
 
-dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileType type, const char *log_file,
-                                                  const char *data_dirs, const int *process_id) :
-             is_initialized(false), bind(false), include_metadata(false){
-  conf = dlio_profiler::Singleton<dlio_profiler::ConfigurationManager>::get_instance();
-  DLIO_PROFILER_LOGINFO("Loading DLIO Profiler with ProfilerStage %d ProfileType %d and process %d", stage, type, process_id);
+dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage,
+                                                  ProfileType type,
+                                                  const char *log_file,
+                                                  const char *data_dirs,
+                                                  const int *process_id)
+    : is_initialized(false),
+      bind(false),
+      log_file_suffix(),
+      include_metadata(false) {
+  conf = dlio_profiler::Singleton<
+      dlio_profiler::ConfigurationManager>::get_instance();
+  DLIO_PROFILER_LOGINFO(
+      "Loading DLIO Profiler with ProfilerStage %d ProfileType %d and process "
+      "%d",
+      stage, type, process_id);
   switch (type) {
     case ProfileType::PROFILER_ANY:
     case ProfileType::PROFILER_PRELOAD: {
       if (stage == ProfilerStage::PROFILER_INIT) {
+        log_file_suffix = "preload";
         if (conf->init_type == ProfileInitType::PROFILER_INIT_LD_PRELOAD) {
           initialize(true, log_file, data_dirs, process_id);
         }
-        DLIO_PROFILER_LOGINFO("Preloading DLIO Profiler with log_file %s data_dir %s and process %d",
-                              this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
+        DLIO_PROFILER_LOGINFO(
+            "Preloading DLIO Profiler with log_file %s data_dir %s and process "
+            "%d",
+            this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
       }
       break;
     }
     case ProfileType::PROFILER_PY_APP:
     case ProfileType::PROFILER_C_APP:
     case ProfileType::PROFILER_CPP_APP: {
+      log_file_suffix = "app";
       bool bind = false;
-      if (stage == ProfilerStage::PROFILER_INIT && conf->init_type == ProfileInitType::PROFILER_INIT_FUNCTION) {
-          bind = true;
+      if (stage == ProfilerStage::PROFILER_INIT &&
+          conf->init_type == ProfileInitType::PROFILER_INIT_FUNCTION) {
+        bind = true;
       }
       initialize(bind, log_file, data_dirs, process_id);
-      DLIO_PROFILER_LOGINFO("App Initializing DLIO Profiler with log_file %s data_dir %s and process %d",
-                            this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
+      DLIO_PROFILER_LOGINFO(
+          "App Initializing DLIO Profiler with log_file %s data_dir %s and "
+          "process %d",
+          this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
       break;
     }
     default: {  // GCOVR_EXCL_START
@@ -50,35 +74,37 @@ dlio_profiler::DLIOProfilerCore::DLIOProfilerCore(ProfilerStage stage, ProfileTy
       throw std::runtime_error(UNKNOWN_PROFILER_TYPE.code);
     }  // GCOVR_EXCL_STOP
   }
-  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::DLIOProfilerCore type %d",type);
+  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::DLIOProfilerCore type %d", type);
 }
 
-void dlio_profiler::DLIOProfilerCore::log(ConstEventType event_name, ConstEventType category,
-                                          TimeResolution start_time, TimeResolution duration,
-                                          std::unordered_map<std::string, std::any> *metadata) {
-  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::log","");
+void dlio_profiler::DLIOProfilerCore::log(
+    ConstEventType event_name, ConstEventType category,
+    TimeResolution start_time, TimeResolution duration,
+    std::unordered_map<std::string, std::any> *metadata) {
+  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::log", "");
   if (this->is_initialized && conf->enable) {
     if (logger != nullptr) {
       logger->log(event_name, category, start_time, duration, metadata);
-    } else  {
-      DLIO_PROFILER_LOGERROR("DLIOProfilerCore::log logger not initialized","");
+    } else {
+      DLIO_PROFILER_LOGERROR("DLIOProfilerCore::log logger not initialized",
+                             "");
     }
   }
 }
 
 bool dlio_profiler::DLIOProfilerCore::finalize() {
-  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::finalize","");
+  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::finalize", "");
   if (this->is_initialized && conf->enable) {
     DLIO_PROFILER_LOGINFO("Calling finalize on pid %d", this->process_id);
     auto trie = dlio_profiler::Singleton<Trie>::get_instance();
     if (trie != nullptr) {
-      DLIO_PROFILER_LOGINFO("Release Prefix Tree","");
+      DLIO_PROFILER_LOGINFO("Release Prefix Tree", "");
       trie->finalize();
       dlio_profiler::Singleton<Trie>::finalize();
     }
     if (bind && conf->io) {
-      DLIO_PROFILER_LOGINFO("Release I/O bindings","");
-      free_bindings();
+      DLIO_PROFILER_LOGINFO("Release I/O bindings", "");
+      brahma_free_bindings();
       auto posix_instance = brahma::POSIXDLIOProfiler::get_instance();
       if (posix_instance != nullptr) {
         posix_instance->finalize();
@@ -98,10 +124,11 @@ bool dlio_profiler::DLIOProfilerCore::finalize() {
   return false;
 }
 
-void
-dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, const char *_data_dirs,
-                                             const int *_process_id) {
-  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::initialize","");
+void dlio_profiler::DLIOProfilerCore::initialize(bool _bind,
+                                                 const char *_log_file,
+                                                 const char *_data_dirs,
+                                                 const int *_process_id) {
+  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::initialize", "");
   if (conf->bind_signals) set_signal();
   if (!is_initialized) {
     this->bind = _bind;
@@ -143,11 +170,13 @@ dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, c
         }
         DLIO_PROFILER_LOGINFO("Extracted process_name %s", exec_name.c_str());
         if (!conf->log_file.empty()) {
-            this->log_file = std::string(conf->log_file) + "-" + exec_name + "-" + std::to_string(this->process_id) + ".pfw" ;
+          this->log_file = std::string(conf->log_file) + "-" + exec_name + "-" +
+                           std::to_string(this->process_id) + "-" +
+                           log_file_suffix + ".pfw";
         } else {  // GCOV_EXCL_START
           DLIO_PROFILER_LOGERROR(UNDEFINED_LOG_FILE.message, "");
           throw std::runtime_error(UNDEFINED_LOG_FILE.code);
-        } // GCOV_EXCL_STOP
+        }  // GCOV_EXCL_STOP
       } else {
         this->log_file = _log_file;
       }
@@ -156,14 +185,14 @@ dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, c
       if (bind) {
         if (conf->io) {
           auto trie = dlio_profiler::Singleton<Trie>::get_instance();
-          const char* ignore_extensions[2] = {"pfw", "py"};
-          const char* ignore_prefix[8] = {"/pipe", "/socket", "/proc",
-                                          "/sys", "/collab",
-                                          "anon_inode", "socket", "/var/tmp"};
-          for(const char* folder: ignore_prefix) {
+          const char *ignore_extensions[2] = {"pfw", "py"};
+          const char *ignore_prefix[8] = {"/pipe",  "/socket", "/proc",
+                                          "/sys",   "/collab", "anon_inode",
+                                          "socket", "/var/tmp"};
+          for (const char *folder : ignore_prefix) {
             trie->exclude(folder, strlen(folder));
           }
-          for(const char* ext: ignore_extensions) {
+          for (const char *ext : ignore_extensions) {
             trie->exclude_reverse(ext, strlen(ext));
           }
           if (!conf->trace_all_files) {
@@ -183,11 +212,13 @@ dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, c
             DLIO_PROFILER_LOGDEBUG("Setting data_dirs to %s",
                                    this->data_dirs.c_str());
           } else {
-            DLIO_PROFILER_LOGDEBUG("Ignoring data_dirs as tracing all files","");
+            DLIO_PROFILER_LOGDEBUG("Ignoring data_dirs as tracing all files",
+                                   "");
           }
           brahma_gotcha_wrap("dlio_profiler", conf->gotcha_priority);
           if (!conf->trace_all_files) {
-            auto paths = split(this->data_dirs, DLIO_PROFILER_DATA_DIR_DELIMITER);
+            auto paths =
+                split(this->data_dirs, DLIO_PROFILER_DATA_DIR_DELIMITER);
             for (const auto &path : paths) {
               DLIO_PROFILER_LOGDEBUG("Profiler will trace %s\n", path.c_str());
               trie->include(path.c_str(), path.size());
@@ -207,11 +238,12 @@ dlio_profiler::DLIOProfilerCore::initialize(bool _bind, const char *_log_file, c
 }
 
 TimeResolution dlio_profiler::DLIOProfilerCore::get_time() {
-  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::get_time","");
+  DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::get_time", "");
   if (this->is_initialized && conf->enable && logger != nullptr) {
     return logger->get_time();
-  } else  {
-    DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::get_time logger not initialized","");
+  } else {
+    DLIO_PROFILER_LOGDEBUG("DLIOProfilerCore::get_time logger not initialized",
+                           "");
   }
   return -1;
 }

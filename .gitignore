@@ -31,36 +31,54 @@
 *.out
 *.app
 
-
-venv*
-build
-logs/*.log
+# IDE
 .idea
-dlio_profiler_py.egg-info
+.vscode/*
+.cache
+
+# Environment and Dependency
+venv*
 dependency/.spack-env
 dependency/spack.lock
+/build_env/
+/venv-new/
+/env.txt
+
+# Build directories
+build
 /build-dlio/
 /build_dlio/
 /cmake_example.egg-info/
-/examples/.ipynb_checkpoints/
-/examples/dlp_analyzer/.ipynb_checkpoints/
+/cmake-build-debug/
+/cmake-build-debug-1/
+/temp/dlio_profiler/
+/Testing/Temporary/
+
+# Additional aux files
+logs/*.log
 /examples/dlp_analyzer/dlp.log
 /examples/dlp_analyzer/dlp_analyzer_main.log
 /dlp_analyzer/test.pfw.gz.zindex
 /dlp_analyzer/dask/run_dir/*.pid
 /dlp_analyzer/dask/run_dir/*.json
-/build_env/
-/cmake-build-debug/
-/cmake-build-debug-1/
 /data/unet3d/
-/dist/
 /dlp_analyzer/dask/logs/*.log
-/output/
 /dlp_analyzer/.nfs*
 /hydra_log/unet3d/
-/temp/dlio_profiler/
-/Testing/Temporary/
-/venv-new/
-/*.core
-/env.txt
 /STDERR
+install
+__pycache__
+dlio_profiler/__pycache__
+
+# Install files
+dlio_profiler_py.egg-info
+/dist/
+/output/
+
+# Python checkpoints
+/examples/.ipynb_checkpoints/
+/examples/dlp_analyzer/.ipynb_checkpoints/
+
+# Debug files
+/*.core
+
