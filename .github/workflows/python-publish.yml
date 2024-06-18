@@ -38,7 +38,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc g++ libtool-bin openmpi-bin libopenmpi-dev
           python -m pip install --upgrade pip
-          pip install build wheel auditwheel pybind11 patchelf
+          pip install build wheel auditwheel pybind11 patchelf setuptools
       - name: Build wheel package
         run: |
           export DLIO_PROFILER_WHEEL=1
