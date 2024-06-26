@@ -1,5 +1,5 @@
 graft src
-graft CMake
+graft cmake
 graft dependency
 graft include
 
