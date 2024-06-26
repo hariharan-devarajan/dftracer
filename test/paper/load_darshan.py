@@ -64,6 +64,13 @@ client = Client(cluster)  # Connect to distributed cluster and override default
 args = parser.parse_args()
 filename = args.trace_file
 
+cluster = LocalCluster(n_workers=args.workers)  # Launches a scheduler and workers locally
+client = Client(cluster)  # Connect to distributed cluster and override default
+
+args = parser.parse_args()
+filename = args.trace_file
+
+
 file_pattern = glob(filename)
 
 all_records = []
