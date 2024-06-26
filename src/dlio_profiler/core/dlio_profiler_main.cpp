@@ -161,7 +161,7 @@ void dlio_profiler::DLIOProfilerCore::initialize(bool _bind,
           }
           DLIO_PROFILER_LOGDEBUG("Exec command line %s", exec_file_name);
           auto items = split(exec_file_name, SEPARATOR);
-          for (const auto item : items) {
+          for (const auto &item : items) {
             if (strstr(item.c_str(), "python") == nullptr) {
               exec_name = basename(item.c_str());
               break;
@@ -185,7 +185,7 @@ void dlio_profiler::DLIOProfilerCore::initialize(bool _bind,
       if (bind) {
         if (conf->io) {
           auto trie = dlio_profiler::Singleton<Trie>::get_instance();
-          const char *ignore_extensions[2] = {"pfw", "py"};
+          const char *ignore_extensions[3] = {".pfw", ".py",".pfw.gz"};
           const char *ignore_prefix[8] = {"/pipe",  "/socket", "/proc",
                                           "/sys",   "/collab", "anon_inode",
                                           "socket", "/var/tmp"};

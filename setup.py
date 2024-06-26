@@ -178,7 +178,7 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
     ],
     install_requires=["pybind11"],
-    requires=["pybind11"],
+    requires=["pybind11","setuptools"],
     keywords="profiler, deep learning, I/O, benchmark, NPZ, pytorch benchmark, tensorflow benchmark",
     project_urls={  # Optional
         "Bug Reports": "https://github.com/hariharan-devarajan/dlio-profiler/issues",
