@@ -1,15 +1,21 @@
 from glob import glob
 import pandas as pd
 print(f"pd {pd.__version__}")
+import dask
+import dask.dataframe as dd
+from dask.distributed import Client, LocalCluster, progress, wait
+print(f"dask {dask.__version__}")
+import pyarrow as pa
+print(f"pa {pa.__version__}")
 import logging
 from glob import glob
 import argparse
 import time
 
-import recorder_viz
-from recorder_viz import RecorderReader
+import otf2
+from otf2.events import *
 
-logging.basicConfig(filename='darshan_main.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename='recorder_main.log', encoding='utf-8', level=logging.DEBUG)
 
 def get_json(func, ts, dur, rank):
     d = {}
@@ -42,18 +48,28 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 parser.add_argument("trace_file", help="Trace file to load", type=str)
+parser.add_argument("--workers", help="Number of workers", type=int, default=1)
 args = parser.parse_args()
 filename = args.trace_file
+
+cluster = LocalCluster(n_workers=args.workers)  # Launches a scheduler and workers locally
+client = Client(cluster)  # Connect to distributed cluster and override default
 
 file_pattern = glob(filename)
 
 all_records = []
 start = time.time()
-for file in file_pattern:
-    for record in read_trace(file):
-        all_records.append(all_records)
-
-pd.DataFrame.from_dict(all_records, orient='columns')
+create_bag = dask.bag.from_delayed([dask.delayed(read_trace)(file) 
+                                                for file in file_pattern])
+columns = {'name':"string", 'cat': "string",
+           'pid': "string",'tid': "string",
+           'dur': "uint64", 'ts': "uint64"}
+events = create_bag.to_dataframe(meta=columns)
+#events.head()
+n_partition = 1
+events = events.repartition(npartitions=n_partition).persist()
+progress(events)
+_ = wait(events)
 
 end = time.time()
 print(f"Loading Recorder trace took {end-start} seconds.")
