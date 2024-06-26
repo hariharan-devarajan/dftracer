@@ -180,7 +180,7 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
       if (bind) {
         if (conf->io) {
           auto trie = dftracer::Singleton<Trie>::get_instance();
-          const char *ignore_extensions[2] = {"pfw", "py"};
+          const char *ignore_extensions[3] = {".pfw", ".py",".pfw.gz"};
           const char *ignore_prefix[8] = {"/pipe",  "/socket", "/proc",
                                           "/sys",   "/collab", "anon_inode",
                                           "socket", "/var/tmp"};
