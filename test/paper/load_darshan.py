@@ -1,15 +1,23 @@
 from glob import glob
 import pandas as pd
 print(f"pd {pd.__version__}")
+import dask
+import dask.dataframe as dd
+from dask.distributed import Client, LocalCluster, progress, wait
+print(f"dask {dask.__version__}")
+import pyarrow as pa
+print(f"pa {pa.__version__}")
 import logging
-import darshan
 from glob import glob
 import argparse
 import time
 
-print(f"darshan {darshan.__version__}")
 
-logging.basicConfig(filename='darshan_main.log', encoding='utf-8', level=logging.DEBUG)
+import otf2
+from otf2.events import *
+
+logging.basicConfig(filename='recorder_main.log', encoding='utf-8', level=logging.DEBUG)
+
 
 def generate_darshan_records(log_file):
     def get_dict(row):
@@ -50,18 +58,38 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 parser.add_argument("trace_file", help="Trace file to load", type=str)
+
+parser.add_argument("--workers", help="Number of workers", type=int, default=1)
 args = parser.parse_args()
 filename = args.trace_file
+
+cluster = LocalCluster(n_workers=args.workers)  # Launches a scheduler and workers locally
+client = Client(cluster)  # Connect to distributed cluster and override default
+
+args = parser.parse_args()
+filename = args.trace_file
+
 
 file_pattern = glob(filename)
 
 all_records = []
 start = time.time()
-for file in file_pattern:
-    for record in generate_darshan_records(file):
-        all_records.append(all_records)
 
-pd.DataFrame.from_dict(all_records, orient='columns')
+create_bag = dask.bag.from_delayed([dask.delayed(generate_darshan_records)(file) 
+                                                for file in file_pattern])
+columns = {'name':"string[pyarrow]", 'cat': "string[pyarrow]",
+            'pid': "uint64[pyarrow]",'tid': "uint64[pyarrow]",
+            'dur': "uint64[pyarrow]", 'tinterval': "string[pyarrow]",
+            'trange': "uint64[pyarrow]", 'hostname': "string[pyarrow]",
+            'compute_time': "string[pyarrow]", 'io_time': "string[pyarrow]",
+            'filename': "string[pyarrow]", 'phase': "uint16[pyarrow]",
+            'size': "uint64[pyarrow]"}
+events = create_bag.to_dataframe(meta=columns)
+
+n_partition = 1
+events = events.repartition(npartitions=n_partition).persist()
+progress(events)
+_ = wait(events)
 
 end = time.time()
 print(f"Loading Darshan trace took {end-start} seconds.")
