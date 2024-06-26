@@ -1,21 +1,24 @@
 from glob import glob
 import pandas as pd
 print(f"pd {pd.__version__}")
+
 import dask
 import dask.dataframe as dd
 from dask.distributed import Client, LocalCluster, progress, wait
 print(f"dask {dask.__version__}")
 import pyarrow as pa
 print(f"pa {pa.__version__}")
+
 import logging
 from glob import glob
 import argparse
 import time
 
-import otf2
-from otf2.events import *
+import recorder_viz
+from recorder_viz import RecorderReader
 
-logging.basicConfig(filename='recorder_main.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename='darshan_main.log', encoding='utf-8', level=logging.DEBUG)
+
 
 def get_json(func, ts, dur, rank):
     d = {}
@@ -48,6 +51,7 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 parser.add_argument("trace_file", help="Trace file to load", type=str)
+
 parser.add_argument("--workers", help="Number of workers", type=int, default=1)
 args = parser.parse_args()
 filename = args.trace_file
@@ -59,6 +63,7 @@ file_pattern = glob(filename)
 
 all_records = []
 start = time.time()
+
 create_bag = dask.bag.from_delayed([dask.delayed(read_trace)(file) 
                                                 for file in file_pattern])
 columns = {'name':"string", 'cat': "string",

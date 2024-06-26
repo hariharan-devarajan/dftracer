@@ -1,12 +1,14 @@
 from glob import glob
 import pandas as pd
 print(f"pd {pd.__version__}")
+
 import dask
 import dask.dataframe as dd
 from dask.distributed import Client, LocalCluster, progress, wait
 print(f"dask {dask.__version__}")
 import pyarrow as pa
 print(f"pa {pa.__version__}")
+
 import logging
 from glob import glob
 import argparse
@@ -14,6 +16,7 @@ import time
 
 import otf2
 from otf2.events import *
+
 
 logging.basicConfig(filename='score-p_main.log', encoding='utf-8', level=logging.DEBUG)
 
@@ -82,6 +85,9 @@ filename = args.trace_file
 
 cluster = LocalCluster(n_workers=args.workers)  # Launches a scheduler and workers locally
 client = Client(cluster)  # Connect to distributed cluster and override default
+
+args = parser.parse_args()
+filename = args.trace_file
 
 file_pattern = glob(filename)
 

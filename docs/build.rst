@@ -36,7 +36,7 @@ From Github
 
 .. code-block:: Bash
 
-  DFT_VERSION=dev
+  DFT_VERSION=v1.0.0
   pip install git+https://github.com/hariharan-devarajan/dftracer.git@${DFT_VERSION}
 
 .. attention::

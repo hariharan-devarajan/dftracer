@@ -12,10 +12,12 @@ from glob import glob
 import argparse
 import time
 
+
 import otf2
 from otf2.events import *
 
 logging.basicConfig(filename='recorder_main.log', encoding='utf-8', level=logging.DEBUG)
+
 
 def generate_darshan_records(log_file):
     def get_dict(row):
@@ -51,12 +53,12 @@ def generate_darshan_records(log_file):
                 d.update(get_dict(row))
                 yield d
 
-
 parser = argparse.ArgumentParser(
     description="Time functions and print time spent in each function",
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 parser.add_argument("trace_file", help="Trace file to load", type=str)
+
 parser.add_argument("--workers", help="Number of workers", type=int, default=1)
 args = parser.parse_args()
 filename = args.trace_file
@@ -64,10 +66,15 @@ filename = args.trace_file
 cluster = LocalCluster(n_workers=args.workers)  # Launches a scheduler and workers locally
 client = Client(cluster)  # Connect to distributed cluster and override default
 
+args = parser.parse_args()
+filename = args.trace_file
+
+
 file_pattern = glob(filename)
 
 all_records = []
 start = time.time()
+
 create_bag = dask.bag.from_delayed([dask.delayed(generate_darshan_records)(file) 
                                                 for file in file_pattern])
 columns = {'name':"string[pyarrow]", 'cat': "string[pyarrow]",
@@ -78,7 +85,7 @@ columns = {'name':"string[pyarrow]", 'cat': "string[pyarrow]",
             'filename': "string[pyarrow]", 'phase': "uint16[pyarrow]",
             'size': "uint64[pyarrow]"}
 events = create_bag.to_dataframe(meta=columns)
-#events.head()
+
 n_partition = 1
 events = events.repartition(npartitions=n_partition).persist()
 progress(events)
