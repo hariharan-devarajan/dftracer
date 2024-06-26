@@ -8,7 +8,6 @@ print(f"dask {dask.__version__}")
 import pyarrow as pa
 print(f"pa {pa.__version__}")
 import logging
-
 from glob import glob
 import argparse
 import time
@@ -64,7 +63,6 @@ client = Client(cluster)  # Connect to distributed cluster and override default
 
 args = parser.parse_args()
 filename = args.trace_file
-
 
 file_pattern = glob(filename)
 

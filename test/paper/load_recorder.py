@@ -1,6 +1,10 @@
 from glob import glob
 import pandas as pd
 print(f"pd {pd.__version__}")
+<<<<<<< HEAD
+=======
+
+>>>>>>> d419e7e (Paper/ad ae (#100))
 import dask
 import dask.dataframe as dd
 from dask.distributed import Client, LocalCluster, progress, wait
@@ -17,6 +21,7 @@ import recorder_viz
 from recorder_viz import RecorderReader
 
 logging.basicConfig(filename='darshan_main.log', encoding='utf-8', level=logging.DEBUG)
+
 
 def get_json(func, ts, dur, rank):
     d = {}
@@ -49,6 +54,10 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 parser.add_argument("trace_file", help="Trace file to load", type=str)
+<<<<<<< HEAD
+=======
+
+>>>>>>> d419e7e (Paper/ad ae (#100))
 parser.add_argument("--workers", help="Number of workers", type=int, default=1)
 args = parser.parse_args()
 filename = args.trace_file
