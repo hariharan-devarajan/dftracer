@@ -43,6 +43,7 @@ dependency/spack.lock
 /build_env/
 /venv-new/
 /env.txt
+spack-env
 
 # Build directories
 build
@@ -51,33 +52,33 @@ build
 /cmake_example.egg-info/
 /cmake-build-debug/
 /cmake-build-debug-1/
-/temp/dlio_profiler/
+/temp/dftracer/
 /Testing/Temporary/
 
 # Additional aux files
 logs/*.log
-/examples/dlp_analyzer/dlp.log
-/examples/dlp_analyzer/dlp_analyzer_main.log
-/dlp_analyzer/test.pfw.gz.zindex
-/dlp_analyzer/dask/run_dir/*.pid
-/dlp_analyzer/dask/run_dir/*.json
+/examples/df_analyzer/df.log
+/examples/df_analyzer/df_analyzer_main.log
+/df_analyzer/test.pfw.gz.zindex
+/df_analyzer/dask/run_dir/*.pid
+/df_analyzer/dask/run_dir/*.json
 /data/unet3d/
-/dlp_analyzer/dask/logs/*.log
-/dlp_analyzer/.nfs*
+/df_analyzer/dask/logs/*.log
+/df_analyzer/.nfs*
 /hydra_log/unet3d/
 /STDERR
 install
 __pycache__
-dlio_profiler/__pycache__
+dftracer/__pycache__
 
 # Install files
-dlio_profiler_py.egg-info
+dftracer_py.egg-info
 /dist/
 /output/
 
 # Python checkpoints
 /examples/.ipynb_checkpoints/
-/examples/dlp_analyzer/.ipynb_checkpoints/
+/examples/df_analyzer/.ipynb_checkpoints/
 
 # Debug files
 /*.core

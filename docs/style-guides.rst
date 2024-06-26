@@ -5,7 +5,7 @@ Style Guides
 Coding Conventions
 ==================
 
-DLIO Profiler follows the `Google coding style
+DFTracer follows the `Google coding style
 <https://google.github.io/styleguide/cppguide.html>`_. Please run
 ``git clang-format --diff HEAD~1 -q`` to check your patch for style problems before submitting it
 for review.
@@ -22,7 +22,7 @@ the project.
     clang-format --style=Google --Werror foo.c
 
 The `.clang-format file
-<https://github.com/hariharan-devarajan/dlio-profiler/blob/develop/.clang-format>`_ specifies
+<https://github.com/hariharan-devarajan/dftracer/blob/develop/.clang-format>`_ specifies
 the options used for this project. For a full list of available clang-format options,
 see https://clang.llvm.org/docs/ClangFormat.html.
 

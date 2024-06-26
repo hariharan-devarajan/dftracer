@@ -7,15 +7,15 @@ from time import sleep
 import h5py
 import numpy as np
 import PIL.Image as im
-from dlio_profiler.logger import dlio_logger, fn_interceptor
+from dftracer.logger import dftracer, dft_fn
 
 cwd = os.getcwd()
 log_file = os.getenv("LOG_FILE", f"{cwd}/test_py-app.pwf")
-log_inst = dlio_logger.initialize_log(logfile=None, data_dir=None, process_id=-1)
-dlio_log = fn_interceptor("COMPUTE")
+log_inst = dftracer.initialize_log(logfile=None, data_dir=None, process_id=-1)
+dft_fn = dft_fn("COMPUTE")
 
 parser = argparse.ArgumentParser(
-    prog='DLIO testing',
+    prog='DFTracer testing',
     description='What the program does',
     epilog='Text at the bottom of help')
 parser.add_argument("--data_dir", default="./data", type=str, help="The directory to save and load data")
@@ -28,7 +28,7 @@ data_dir=args.data_dir
 os.makedirs(f"{args.data_dir}/{args.format}", exist_ok=True)
 
 
-@dlio_log.log
+@dft_fn.log
 def log_events(index):
     sleep(1)
 
@@ -40,7 +40,7 @@ def custom_events():
     end = log_inst.get_time()
     log_inst.log_event("test", "cat2", start, end - start)
     log_inst.exit_event()
-    for i in dlio_log.iter(range(2)):
+    for i in dft_fn.iter(range(2)):
         sleep(1)
 
 
@@ -77,9 +77,9 @@ def jpeg_calls(index):
     # image = im.open(out_path_spec)
 
 
-@dlio_log.log
+@dft_fn.log
 def data_gen(num_files, data_dir, format, data):
-    for i in dlio_log.iter(range(num_files)):
+    for i in dft_fn.iter(range(num_files)):
         i = IOWriter(
             filename=f"{data_dir}/{format}/{i}-of-{num_files}.{format}",
             format=format,
@@ -87,9 +87,9 @@ def data_gen(num_files, data_dir, format, data):
         )
 
 
-@dlio_log.log
+@dft_fn.log
 def read_data(num_files, data_dir, format):
-    for i in dlio_log.iter(range(num_files)):
+    for i in dft_fn.iter(range(num_files)):
         io = IOReader(
             filename=f"{data_dir}/{format}/{i}-of-{num_files}.{format}",
             format=format,
@@ -104,7 +104,7 @@ class IOHandler:
 
 
 class IOReader(IOHandler):
-    @dlio_log.log_init
+    @dft_fn.log_init
     def __init__(self, filename, format):
         super().__init__(filename=filename, format=format)
         if self.format == "jpeg" or self.format == "png":
@@ -121,7 +121,7 @@ class IOReader(IOHandler):
 
 
 class IOWriter(IOHandler):
-    @dlio_log.log_init
+    @dft_fn.log_init
     def __init__(self, filename, format, data):
         super().__init__(filename=filename, format=format)
         if self.format == "jpeg" or self.format == "png":

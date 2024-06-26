@@ -16,17 +16,17 @@ Application Level Example:
 .. code-block:: c
    :linenos:
 
-    #include <dlio_profiler/dlio_profiler.h>
+    #include <dftracer/dftracer.h>
 
     void foo() {
-      DLIO_PROFILER_CPP_FUNCTION(); // Add at the begining of each function
+      DFTRACER_CPP_FUNCTION(); // Add at the begining of each function
       sleep(1);
       {
-        DLIO_PROFILER_CPP_REGION(CUSTOM); // Add at the beginning of code block. keep name unique
+        DFTRACER_CPP_REGION(CUSTOM); // Add at the beginning of code block. keep name unique
         sleep(1);
-        DLIO_PROFILER_CPP_REGION_START(CUSTOM_BLOCK); // add start. keep name unique
+        DFTRACER_CPP_REGION_START(CUSTOM_BLOCK); // add start. keep name unique
         sleep(1);
-        DLIO_PROFILER_CPP_REGION_END(CUSTOM_BLOCK); // add end. Match name from START.
+        DFTRACER_CPP_REGION_END(CUSTOM_BLOCK); // add end. Match name from START.
       }
     }
 
@@ -36,7 +36,7 @@ Application Level Example:
       if (argc > 2) {
         if (strcmp(argv[2], "1") == 0) {
           // Initialize Application Profiler
-          DLIO_PROFILER_CPP_INIT(nullptr, nullptr, nullptr);
+          DFTRACER_CPP_INIT(nullptr, nullptr, nullptr);
           init = 1;
         }
       }
@@ -53,14 +53,14 @@ Application Level Example:
       }
       if (init == 1) {
         // Finalize Application Profiler
-        DLIO_PROFILER_CPP_FINI();
+        DFTRACER_CPP_FINI();
       }
       return 0;
     }
 
-For this example, link with libdlio_profiler.so at compile time.
-As the DLIO_PROFILER_CPP_INIT do not pass log file or data dir, we need to set ``DLIO_PROFILER_LOG_FILE`` and ``DLIO_PROFILER_DATA_DIR``.
-By default the DLIO Profiler mode is set to FUNCTION.
+For this example, link with libdftracer.so at compile time.
+As the DFTRACER_CPP_INIT do not pass log file or data dir, we need to set ``DFTRACER_LOG_FILE`` and ``DFTRACER_DATA_DIR``.
+By default the DFTracer mode is set to FUNCTION.
 Example of running this configurations are:
 
 .. code-block:: bash
@@ -68,11 +68,11 @@ Example of running this configurations are:
 
     # the process id, app_name and .pfw will be appended by the profiler for each app and process.
     # name of final log file is ~/log_file-<APP_NAME>-<PID>.pfw
-    DLIO_PROFILER_LOG_FILE=~/log_file
+    DFTRACER_LOG_FILE=~/log_file
     # Colon separated paths for including for profiler
-    DLIO_PROFILER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
+    DFTRACER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
     # Enable profiler
-    DLIO_PROFILER_ENABLE=1
+    DFTRACER_ENABLE=1
 
 
 LD_PRELOAD Example:
@@ -81,7 +81,7 @@ LD_PRELOAD Example:
 .. code-block:: c
    :linenos:
 
-    #include <dlio_profiler/dlio_profiler.h>
+    #include <dftracer/dftracer.h>
 
     int main(int argc, char *argv[]) {
       char filename[1024];
@@ -96,8 +96,8 @@ LD_PRELOAD Example:
       return 0;
     }
 
-For this example, LD_PRELOAD the executable with libdlio_profiler_preload.so at runtime.
-We need to set ``DLIO_PROFILER_LOG_FILE`` and ``DLIO_PROFILER_DATA_DIR``.
+For this example, LD_PRELOAD the executable with libdftracer_preload.so at runtime.
+We need to set ``DFTRACER_LOG_FILE`` and ``DFTRACER_DATA_DIR``.
 Example of running this configurations are:
 
 .. code-block:: bash
@@ -105,13 +105,13 @@ Example of running this configurations are:
 
     # the process id, app_name and .pfw will be appended by the profiler for each app and process.
     # name of final log file is ~/log_file-<APP_NAME>-<PID>.pfw
-    export DLIO_PROFILER_LOG_FILE=~/log_file
+    export DFTRACER_LOG_FILE=~/log_file
     # Colon separated paths for including for profiler
-    export DLIO_PROFILER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
+    export DFTRACER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
     # Set the mode to PRELOAD
-    export DLIO_PROFILER_INIT=PRELOAD
+    export DFTRACER_INIT=PRELOAD
     # Enable profiler
-    export DLIO_PROFILER_ENABLE=1
+    export DFTRACER_ENABLE=1
 
 
 Hybrid Example:
@@ -120,17 +120,17 @@ Hybrid Example:
 .. code-block:: c
    :linenos:
 
-    #include <dlio_profiler/dlio_profiler.h>
+    #include <dftracer/dftracer.h>
 
     void foo() {
-      DLIO_PROFILER_CPP_FUNCTION(); // Add at the begining of each function
+      DFTRACER_CPP_FUNCTION(); // Add at the begining of each function
       sleep(1);
       {
-        DLIO_PROFILER_CPP_REGION(CUSTOM); // Add at the beginning of code block. keep name unique
+        DFTRACER_CPP_REGION(CUSTOM); // Add at the beginning of code block. keep name unique
         sleep(1);
-        DLIO_PROFILER_CPP_REGION_START(CUSTOM_BLOCK); // add start. keep name unique
+        DFTRACER_CPP_REGION_START(CUSTOM_BLOCK); // add start. keep name unique
         sleep(1);
-        DLIO_PROFILER_CPP_REGION_END(CUSTOM_BLOCK); // add end. Match name from START.
+        DFTRACER_CPP_REGION_END(CUSTOM_BLOCK); // add end. Match name from START.
       }
     }
 
@@ -140,7 +140,7 @@ Hybrid Example:
       if (argc > 2) {
         if (strcmp(argv[2], "1") == 0) {
           // Initialize Application Profiler
-          DLIO_PROFILER_CPP_INIT(nullptr, nullptr, nullptr);
+          DFTRACER_CPP_INIT(nullptr, nullptr, nullptr);
           init = 1;
         }
       }
@@ -157,14 +157,14 @@ Hybrid Example:
       }
       if (init == 1) {
         // Finalize Application Profiler
-        DLIO_PROFILER_CPP_FINI();
+        DFTRACER_CPP_FINI();
       }
       return 0;
     }
 
-For this example, link with libdlio_profiler.so at compile time and LD_PRELOAD the executable with libdlio_profiler_preload.soat runtime.
-As the DLIO_PROFILER_CPP_INIT do not pass log file or data dir, we need to set ``DLIO_PROFILER_LOG_FILE`` and ``DLIO_PROFILER_DATA_DIR``.
-By default the DLIO Profiler mode is set to FUNCTION.
+For this example, link with libdftracer.so at compile time and LD_PRELOAD the executable with libdftracer_preload.soat runtime.
+As the DFTRACER_CPP_INIT do not pass log file or data dir, we need to set ``DFTRACER_LOG_FILE`` and ``DFTRACER_DATA_DIR``.
+By default the DFTracer mode is set to FUNCTION.
 Example of running this configurations are:
 
 .. code-block:: bash
@@ -172,13 +172,13 @@ Example of running this configurations are:
 
     # the process id, app_name and .pfw will be appended by the profiler for each app and process.
     # name of final log file is ~/log_file-<APP_NAME>-<PID>.pfw
-    DLIO_PROFILER_LOG_FILE=~/log_file
+    DFTRACER_LOG_FILE=~/log_file
     # Colon separated paths for including for profiler
-    DLIO_PROFILER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
+    DFTRACER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
     # Set the mode to PRELOAD
-    export DLIO_PROFILER_INIT=PRELOAD
+    export DFTRACER_INIT=PRELOAD
     # Enable profiler
-    DLIO_PROFILER_ENABLE=1
+    DFTRACER_ENABLE=1
 
 ------------
 C Example
@@ -190,21 +190,21 @@ Application Level Example:
 .. code-block:: c
    :linenos:
 
-    #include <dlio_profiler/dlio_profiler.h>
+    #include <dftracer/dftracer.h>
 
     void foo() {
-      DLIO_PROFILER_C_FUNCTION_START();
+      DFTRACER_C_FUNCTION_START();
       sleep(1);
       if (<CONDITION>) {
-        DLIO_PROFILER_C_FUNCTION_END();
-        return; // Define DLIO_PROFILER_C_FUNCTION_END on every branch
+        DFTRACER_C_FUNCTION_END();
+        return; // Define DFTRACER_C_FUNCTION_END on every branch
       }
       {
-        DLIO_PROFILER_C_REGION_START(CUSTOM);
+        DFTRACER_C_REGION_START(CUSTOM);
         sleep(1);
-        DLIO_PROFILER_C_REGION_END(CUSTOM); // END region CUSTOM.
+        DFTRACER_C_REGION_END(CUSTOM); // END region CUSTOM.
       }
-      DLIO_PROFILER_C_FUNCTION_END(); // Define DLIO_PROFILER_C_FUNCTION_END on every branch
+      DFTRACER_C_FUNCTION_END(); // Define DFTRACER_C_FUNCTION_END on every branch
     }
 
     int main(int argc, char *argv[]) {
@@ -213,7 +213,7 @@ Application Level Example:
       if (argc > 2) {
         if (strcmp(argv[2], "1") == 0) {
           // Initialize Application Profiler
-          DLIO_PROFILER_C_INIT(nullptr, nullptr, nullptr);
+          DFTRACER_C_INIT(nullptr, nullptr, nullptr);
           init = 1;
         }
       }
@@ -230,14 +230,14 @@ Application Level Example:
       }
       if (init == 1) {
         // Finalize Application Profiler
-        DLIO_PROFILER_C_FINI();
+        DFTRACER_C_FINI();
       }
       return 0;
     }
 
-For this example, link with libdlio_profiler.so at compile time.
-As the DLIO_PROFILER_CPP_INIT do not pass log file or data dir, we need to set ``DLIO_PROFILER_LOG_FILE`` and ``DLIO_PROFILER_DATA_DIR``.
-By default the DLIO Profiler mode is set to FUNCTION.
+For this example, link with libdftracer.so at compile time.
+As the DFTRACER_CPP_INIT do not pass log file or data dir, we need to set ``DFTRACER_LOG_FILE`` and ``DFTRACER_DATA_DIR``.
+By default the DFTracer mode is set to FUNCTION.
 Example of running this configurations are:
 
 .. code-block:: bash
@@ -245,11 +245,11 @@ Example of running this configurations are:
 
     # the process id, app_name and .pfw will be appended by the profiler for each app and process.
     # name of final log file is ~/log_file-<APP_NAME>-<PID>.pfw
-    DLIO_PROFILER_LOG_FILE=~/log_file
+    DFTRACER_LOG_FILE=~/log_file
     # Colon separated paths for including for profiler
-    DLIO_PROFILER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
+    DFTRACER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
     # Enable profiler
-    DLIO_PROFILER_ENABLE=1
+    DFTRACER_ENABLE=1
 
 
 LD_PRELOAD Example:
@@ -258,7 +258,7 @@ LD_PRELOAD Example:
 .. code-block:: c
    :linenos:
 
-    #include <dlio_profiler/dlio_profiler.h>
+    #include <dftracer/dftracer.h>
 
     int main(int argc, char *argv[]) {
       char filename[1024];
@@ -273,8 +273,8 @@ LD_PRELOAD Example:
       return 0;
     }
 
-For this example, LD_PRELOAD the executable with libdlio_profiler_preload.so at runtime.
-We need to set ``DLIO_PROFILER_LOG_FILE`` and ``DLIO_PROFILER_DATA_DIR``.
+For this example, LD_PRELOAD the executable with libdftracer_preload.so at runtime.
+We need to set ``DFTRACER_LOG_FILE`` and ``DFTRACER_DATA_DIR``.
 Example of running this configurations are:
 
 .. code-block:: bash
@@ -282,13 +282,13 @@ Example of running this configurations are:
 
     # the process id, app_name and .pfw will be appended by the profiler for each app and process.
     # name of final log file is ~/log_file-<APP_NAME>-<PID>.pfw
-    export DLIO_PROFILER_LOG_FILE=~/log_file
+    export DFTRACER_LOG_FILE=~/log_file
     # Colon separated paths for including for profiler
-    export DLIO_PROFILER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
+    export DFTRACER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
     # Set the mode to PRELOAD
-    export DLIO_PROFILER_INIT=PRELOAD
+    export DFTRACER_INIT=PRELOAD
     # Enable profiler
-    export DLIO_PROFILER_ENABLE=1
+    export DFTRACER_ENABLE=1
 
 
 Hybrid Example:
@@ -297,21 +297,21 @@ Hybrid Example:
 .. code-block:: c
    :linenos:
 
-    #include <dlio_profiler/dlio_profiler.h>
+    #include <dftracer/dftracer.h>
 
     void foo() {
-      DLIO_PROFILER_C_FUNCTION_START();
+      DFTRACER_C_FUNCTION_START();
       sleep(1);
       if (<CONDITION>) {
-        DLIO_PROFILER_C_FUNCTION_END();
-        return; // Define DLIO_PROFILER_C_FUNCTION_END on every branch
+        DFTRACER_C_FUNCTION_END();
+        return; // Define DFTRACER_C_FUNCTION_END on every branch
       }
       {
-        DLIO_PROFILER_C_REGION_START(CUSTOM);
+        DFTRACER_C_REGION_START(CUSTOM);
         sleep(1);
-        DLIO_PROFILER_C_REGION_END(CUSTOM); // END region CUSTOM.
+        DFTRACER_C_REGION_END(CUSTOM); // END region CUSTOM.
       }
-      DLIO_PROFILER_C_FUNCTION_END(); // Define DLIO_PROFILER_C_FUNCTION_END on every branch
+      DFTRACER_C_FUNCTION_END(); // Define DFTRACER_C_FUNCTION_END on every branch
     }
 
     int main(int argc, char *argv[]) {
@@ -320,7 +320,7 @@ Hybrid Example:
       if (argc > 2) {
         if (strcmp(argv[2], "1") == 0) {
           // Initialize Application Profiler
-          DLIO_PROFILER_C_INIT(nullptr, nullptr, nullptr);
+          DFTRACER_C_INIT(nullptr, nullptr, nullptr);
           init = 1;
         }
       }
@@ -337,14 +337,14 @@ Hybrid Example:
       }
       if (init == 1) {
         // Finalize Application Profiler
-        DLIO_PROFILER_C_FINI();
+        DFTRACER_C_FINI();
       }
       return 0;
     }
 
-For this example, link with libdlio_profiler.so at compile time and LD_PRELOAD the executable with libdlio_profiler_preload.so at runtime.
-As the DLIO_PROFILER_CPP_INIT do not pass log file or data dir, we need to set ``DLIO_PROFILER_LOG_FILE`` and ``DLIO_PROFILER_DATA_DIR``.
-By default the DLIO Profiler mode is set to FUNCTION.
+For this example, link with libdftracer.so at compile time and LD_PRELOAD the executable with libdftracer_preload.so at runtime.
+As the DFTRACER_CPP_INIT do not pass log file or data dir, we need to set ``DFTRACER_LOG_FILE`` and ``DFTRACER_DATA_DIR``.
+By default the DFTracer mode is set to FUNCTION.
 Example of running this configurations are:
 
 .. code-block:: bash
@@ -352,13 +352,13 @@ Example of running this configurations are:
 
     # the process id, app_name and .pfw will be appended by the profiler for each app and process.
     # name of final log file is ~/log_file-<APP_NAME>-<PID>.pfw
-    DLIO_PROFILER_LOG_FILE=~/log_file
+    DFTRACER_LOG_FILE=~/log_file
     # Colon separated paths for including for profiler
-    DLIO_PROFILER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
+    DFTRACER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
     # Set the mode to PRELOAD
-    export DLIO_PROFILER_INIT=PRELOAD
+    export DFTRACER_INIT=PRELOAD
     # Enable profiler
-    DLIO_PROFILER_ENABLE=1
+    DFTRACER_ENABLE=1
 
 
 
@@ -372,12 +372,12 @@ Application Level Example:
 .. code-block:: python
    :linenos:
 
-    from dlio_profiler.logger import dlio_logger, fn_interceptor
-    log_inst = dlio_logger.initialize_log(logfile=None, data_dir=None, process_id=-1)
-    dlio_log = fn_interceptor("COMPUTE")
+    from dftracer.logger import dftracer, dft_fn
+    log_inst = dftracer.initialize_log(logfile=None, data_dir=None, process_id=-1)
+    dft_fn = dft_fn("COMPUTE")
 
     # Example of using function decorators
-    @dlio_log.log
+    @dft_fn.log
     def log_events(index):
         sleep(1)
 
@@ -390,7 +390,7 @@ Application Level Example:
         f.close()
         if is_spawn:
             print(f"Calling spawn on {index} with pid {os.getpid()}")
-            log_inst.finalize() # This need to be called to correctly finalize DLIO Profiler.
+            log_inst.finalize() # This need to be called to correctly finalize DFTracer.
         else:
             print(f"Not calling spawn on {index} with pid {os.getpid()}")
 
@@ -415,8 +415,8 @@ Application Level Example:
     if __name__ == "__main__":
         main()
 
-For this example, as the DLIO_PROFILER_CPP_INIT do not pass log file or data dir, we need to set ``DLIO_PROFILER_LOG_FILE`` and ``DLIO_PROFILER_DATA_DIR``.
-By default the DLIO Profiler mode is set to FUNCTION.
+For this example, as the DFTRACER_CPP_INIT do not pass log file or data dir, we need to set ``DFTRACER_LOG_FILE`` and ``DFTRACER_DATA_DIR``.
+By default the DFTracer mode is set to FUNCTION.
 Example of running this configurations are:
 
 .. code-block:: bash
@@ -424,11 +424,11 @@ Example of running this configurations are:
 
     # the process id, app_name and .pfw will be appended by the profiler for each app and process.
     # name of final log file is ~/log_file-<APP_NAME>-<PID>.pfw
-    DLIO_PROFILER_LOG_FILE=~/log_file
+    DFTRACER_LOG_FILE=~/log_file
     # Colon separated paths for including for profiler
-    DLIO_PROFILER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset:$PWD/data
+    DFTRACER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset:$PWD/data
     # Enable profiler
-    DLIO_PROFILER_ENABLE=1
+    DFTRACER_ENABLE=1
 
 
 LD_PRELOAD Example:
@@ -467,8 +467,8 @@ LD_PRELOAD Example:
     if __name__ == "__main__":
         main()
 
-For this example, LD_PRELOAD the executable with libdlio_profiler_preload.so at runtime.
-We need to set ``DLIO_PROFILER_LOG_FILE`` and ``DLIO_PROFILER_DATA_DIR``.
+For this example, LD_PRELOAD the executable with libdftracer_preload.so at runtime.
+We need to set ``DFTRACER_LOG_FILE`` and ``DFTRACER_DATA_DIR``.
 Example of running this configurations are:
 
 .. code-block:: bash
@@ -476,13 +476,13 @@ Example of running this configurations are:
 
     # the process id, app_name and .pfw will be appended by the profiler for each app and process.
     # name of final log file is ~/log_file-<APP_NAME>-<PID>.pfw
-    export DLIO_PROFILER_LOG_FILE=~/log_file
+    export DFTRACER_LOG_FILE=~/log_file
     # Colon separated paths for including for profiler
-    export DLIO_PROFILER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
+    export DFTRACER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
     # Set the mode to PRELOAD
-    export DLIO_PROFILER_INIT=PRELOAD
+    export DFTRACER_INIT=PRELOAD
     # Enable profiler
-    export DLIO_PROFILER_ENABLE=1
+    export DFTRACER_ENABLE=1
 
 
 .. _python-hybrid-mode:
@@ -493,12 +493,12 @@ Hybrid Example:
 .. code-block:: python
    :linenos:
 
-    from dlio_profiler.logger import dlio_logger, fn_interceptor
-    log_inst = dlio_logger.initialize_log(logfile=None, data_dir=None, process_id=-1)
-    dlio_log = fn_interceptor("COMPUTE")
+    from dftracer.logger import dftracer, dft_fn
+    log_inst = dftracer.initialize_log(logfile=None, data_dir=None, process_id=-1)
+    dft_fn = dft_fn("COMPUTE")
 
     # Example of using function decorators
-    @dlio_log.log
+    @dft_fn.log
     def log_events(index):
         sleep(1)
 
@@ -511,7 +511,7 @@ Hybrid Example:
         f.close()
         if is_spawn:
             print(f"Calling spawn on {index} with pid {os.getpid()}")
-            log_inst.finalize() # This need to be called to correctly finalize DLIO Profiler.
+            log_inst.finalize() # This need to be called to correctly finalize DFTracer.
         else:
             print(f"Not calling spawn on {index} with pid {os.getpid()}")
 
@@ -536,9 +536,9 @@ Hybrid Example:
     if __name__ == "__main__":
         main()
 
-For this example, use LD_PRELOAD the executable with libdlio_profiler_preload.soat runtime.
-As the DLIO_PROFILER_CPP_INIT do not pass log file or data dir, we need to set ``DLIO_PROFILER_LOG_FILE`` and ``DLIO_PROFILER_DATA_DIR``.
-By default the DLIO Profiler mode is set to FUNCTION.
+For this example, use LD_PRELOAD the executable with libdftracer_preload.soat runtime.
+As the DFTRACER_CPP_INIT do not pass log file or data dir, we need to set ``DFTRACER_LOG_FILE`` and ``DFTRACER_DATA_DIR``.
+By default the DFTracer mode is set to FUNCTION.
 Example of running this configurations are:
 
 .. code-block:: bash
@@ -546,20 +546,20 @@ Example of running this configurations are:
 
     # the process id, app_name and .pfw will be appended by the profiler for each app and process.
     # name of final log file is ~/log_file-<APP_NAME>-<PID>.pfw
-    DLIO_PROFILER_LOG_FILE=~/log_file
+    DFTRACER_LOG_FILE=~/log_file
     # Colon separated paths for including for profiler
-    DLIO_PROFILER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
+    DFTRACER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
     # Set the mode to PRELOAD
-    export DLIO_PROFILER_INIT=PRELOAD
+    export DFTRACER_INIT=PRELOAD
     # Enable profiler
-    DLIO_PROFILER_ENABLE=1
+    DFTRACER_ENABLE=1
 
 
 ----------------------------------------------------------------
 Resnet50 with pytorch and torchvision example from ALCF Polaris:
 ----------------------------------------------------------------
 
-Create a separate conda environment for the application and install dlio-profiler
+Create a separate conda environment for the application and install dftracer
 
 .. code-block:: bash
    :linenos:
@@ -578,38 +578,38 @@ Create a separate conda environment for the application and install dlio-profile
          conda create  -p $ML_ENV --clone  /soft/datascience/conda/2023-10-04/mconda3/
          conda activate $ML_ENV
          yes | MPICC="cc -shared -target-accel=nvidia80" pip install --force-reinstall --no-cache-dir --no-binary=mpi4py mpi4py
-         yes | pip install --no-cache-dir git+https://github.com/hariharan-devarajan/dlio-profiler.git
+         yes | pip install --no-cache-dir git+https://github.com/hariharan-devarajan/dftracer.git
          pip uninstall -y torch horovod 
          yes | pip install --no-cache-dir horovod
          #INSTALL OTHER MISSING FILES    
      fi
 
-Since, torchvision.datasets.ImageFolder spawns separate python processes to help the parallel data loading in torch, we will be using the `HYBRID MODE` of the DLIO Profiler (e.g., see 
+Since, torchvision.datasets.ImageFolder spawns separate python processes to help the parallel data loading in torch, we will be using the `HYBRID MODE` of the DFTracer (e.g., see 
 :ref:`Python Hybrid mode <python-hybrid-mode>`), so that the application can use both APP and PRELOAD Mode to log I/O from all dynamically spawned processes and function profiling from application. 
 
-The following dlio_profiler code is added to profile the application at the function level.
-Note: dlio-profiler python level log file location is provided inside the python code in the dlio_logger.initialize_log() function and the POSIX or STDIO calls level log file location is provided in the job scirpt environment variable `DLIO_PROFILER_LOG_FILE`
+The following dftracer code is added to profile the application at the function level.
+Note: dftracer python level log file location is provided inside the python code in the dftracer.initialize_log() function and the POSIX or STDIO calls level log file location is provided in the job scirpt environment variable `DFTRACER_LOG_FILE`
 
 .. code-block:: python
    :linenos:
 
      ...
      # From the preamble
-     from dlio_profiler.logger import dlio_logger as logger, fn_interceptor as dlp_event_logging
-     dlp_pid=os.getpid()
-     log_inst=logger.initialize_log(f"./resnet50/dlio_log_py_level-{dlp_pid}.pfw", "", dlp_pid)
-     compute_dlp = dlp_event_logging("Compute")
-     io_dlp = dlp_event_logging("IO", name="real_IO")
+     from dftracer.logger import dftracer as logger, dft_fn as dft_event_logging
+     dft_pid=os.getpid()
+     log_inst=logger.initialize_log(f"./resnet50/dft_fn_py_level-{dft_pid}.pfw", "", dft_pid)
+     compute_dft = dft_event_logging("Compute")
+     io_dft = dft_event_logging("IO", name="real_IO")
      ...
      # From the train() function
-     for i, (images, target) in io_dlp.iter(enumerate(train_loader)):
-           with dlp_event_logging("communication-except-io", name="cpu-gpu-transfer", step=i, epoch=epoch) as transfer:
+     for i, (images, target) in io_dft.iter(enumerate(train_loader)):
+           with dft_event_logging("communication-except-io", name="cpu-gpu-transfer", step=i, epoch=epoch) as transfer:
                images = images.to(device)
                target = target.to(device)
-           with dlp_event_logging("compute", name="model-compute-forward-prop", step=i, epoch=epoch) as compute:
+           with dft_event_logging("compute", name="model-compute-forward-prop", step=i, epoch=epoch) as compute:
                output = model(images)
                loss = criterion(output, target)
-           with dlp_event_logging("compute", name="model-compute-backward-prop", step=i, epoch=epoch) as compute:
+           with dft_event_logging("compute", name="model-compute-backward-prop", step=i, epoch=epoch) as compute:
                acc1, acc5 = accuracy(output, target, topk=(1, 5))
                losses.update(loss.item(), images.size(0))
                top1.update(acc1[0], images.size(0))
@@ -629,14 +629,14 @@ Job submition script
      conda activate./dlio_ml_workloads/PolarisAT/conda-envs/ml_workload_latest_conda
    
      export LD_LIBRARY_PATH=$env_path/lib/:$LD_LIBRARY_PATH
-     export DLIO_PROFILER_LOG_LEVEL=ERROR
-     export DLIO_PROFILER_ENABLE=1
-     export DLIO_PROFILER_INC_METADATA=1
-     export DLIO_PROFILER_INIT=PRELOAD
-     export DLIO_PROFILER_DATA_DIR=./resnet_original_data #Path to the orignal resnet 50 dataset 
-     export DLIO_PROFILER_LOG_FILE=./dlio_log_posix_level.pfw
+     export DFTRACER_LOG_LEVEL=ERROR
+     export DFTRACER_ENABLE=1
+     export DFTRACER_INC_METADATA=1
+     export DFTRACER_INIT=PRELOAD
+     export DFTRACER_DATA_DIR=./resnet_original_data #Path to the orignal resnet 50 dataset 
+     export DFTRACER_LOG_FILE=./dft_fn_posix_level.pfw
    
-     LD_PRELOAD=./dlio_ml_workloads/PolarisAT/conda-envs/ml_workload_latest_conda/lib/python*/site-packages/dlio_profiler/lib/libdlio_profiler_preload.so aprun -n 4 -N 4 python resnet_hvd_dlio.py --batch-size 64 --epochs 1 > dlio_log 2>&1
+     LD_PRELOAD=./dlio_ml_workloads/PolarisAT/conda-envs/ml_workload_latest_conda/lib/python*/site-packages/dftracer/lib/libdftracer_preload.so aprun -n 4 -N 4 python resnet_hvd_dlio.py --batch-size 64 --epochs 1 > dft_fn 2>&1
    
      cat *.pfw > combined_logs.pfw # To combine to a single pfw file. 
 
@@ -645,7 +645,7 @@ Job submition script
 Integrated Applications
 -----------------------
 
-Here is the list applications that currently use DLIO Profiler.
+Here is the list applications that currently use DFTracer.
 
 1. `DLIO Benchmark <https://github.com/argonne-lcf/dlio_benchmark>`_
 2. MuMMI

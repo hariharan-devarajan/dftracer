@@ -38,7 +38,7 @@ jobs:
           pip install build wheel auditwheel pybind11 patchelf setuptools
       - name: Build wheel package
         run: |
-          export DLIO_PROFILER_WHEEL=1
+          export DFTRACER_WHEEL=1
           python setup.py bdist_wheel
           python setup.py sdist
           gotcha_so=$(find . -name libgotcha.so.2)
@@ -57,7 +57,7 @@ jobs:
       - name: Build source package
         if: matrix.os == 'ubuntu-20.04' && matrix.python == '3.7'
         run: |
-          export DLIO_PROFILER_WHEEL=1
+          export DFTRACER_WHEEL=1
           python setup.py sdist
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29

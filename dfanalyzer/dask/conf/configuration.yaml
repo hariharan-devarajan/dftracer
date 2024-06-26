@@ -1,0 +1,2 @@
+app: /usr/WS2/haridev/dftracer
+env: ${DFTRACER_APP}/venv

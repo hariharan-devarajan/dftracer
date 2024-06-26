@@ -28,7 +28,7 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def build_extension(self, ext: CMakeExtension) -> None:
-        is_wheel = os.getenv("DLIO_PROFILER_WHEEL", "0") == "1"
+        is_wheel = os.getenv("DFTRACER_WHEEL", "0") == "1"
         cmake_args = []
         from distutils.sysconfig import get_python_lib
         project_dir = Path.cwd()
@@ -37,22 +37,22 @@ class CMakeBuild(build_ext):
         extdir = ext_fullpath.parent.parent.resolve()
         sourcedir = extdir.parent.resolve()
         print(f"{extdir}")
-        install_prefix = f"{get_python_lib()}/dlio_profiler"
-        if "DLIO_LOGGER_USER" in os.environ:
-            install_prefix=f"{site.USER_SITE}/dlio_profiler"
+        install_prefix = f"{get_python_lib()}/dftracer"
+        if "DFT_LOGGER_USER" in os.environ:
+            install_prefix=f"{site.USER_SITE}/dftracer"
             # cmake_args += [f"-DUSER_INSTALL=ON"]
-        if "DLIO_PROFILER_INSTALL_DIR" in os.environ:
-            install_prefix = os.environ['DLIO_PROFILER_INSTALL_DIR']
+        if "DFTRACER_INSTALL_DIR" in os.environ:
+            install_prefix = os.environ['DFTRACER_INSTALL_DIR']
         
         python_site = extdir
 
         if is_wheel:
-            install_prefix = f"{extdir}/dlio_profiler"
+            install_prefix = f"{extdir}/dftracer"
 
-        if "DLIO_PROFILER_PYTHON_SITE" in os.environ:
-            python_site = os.environ['DLIO_PROFILER_PYTHON_SITE']
+        if "DFTRACER_PYTHON_SITE" in os.environ:
+            python_site = os.environ['DFTRACER_PYTHON_SITE']
 
-        # if "DLIO_BUILD_DEPENDENCIES" not in os.environ or os.environ['DLIO_BUILD_DEPENDENCIES'] == "1":
+        # if "DFTRACER_BUILD_DEPENDENCIES" not in os.environ or os.environ['DFTRACER_BUILD_DEPENDENCIES'] == "1":
         #     dependency_file = open(f"{project_dir}/dependency/cpp.requirements.txt", 'r')
         #     dependencies = dependency_file.readlines()
         #     for dependency in dependencies:
@@ -70,23 +70,23 @@ class CMakeBuild(build_ext):
 
         # Using this requires trailing slash for auto-detection & inclusion of
         # auxiliary "native" libs
-        build_type = os.environ.get("DLIO_PROFILER_BUILD_TYPE", "Release")
+        build_type = os.environ.get("DFTRACER_BUILD_TYPE", "Release")
         cmake_args += [f"-DCMAKE_BUILD_TYPE={build_type}"]
-        disable_hwloc = os.environ.get("DLIO_PROFILER_DISABLE_HWLOC", "ON")
-        cmake_args += [f"-DDLIO_PROFILER_DISABLE_HWLOC={disable_hwloc}"]
-        cmake_args += [f"-DDLIO_PROFILER_PYTHON_EXE={sys.executable}"]
-        cmake_args += [f"-DDLIO_PROFILER_PYTHON_SITE={python_site}"]
+        disable_hwloc = os.environ.get("DFTRACER_DISABLE_HWLOC", "ON")
+        cmake_args += [f"-DDFTRACER_DISABLE_HWLOC={disable_hwloc}"]
+        cmake_args += [f"-DDFTRACER_PYTHON_EXE={sys.executable}"]
+        cmake_args += [f"-DDFTRACER_PYTHON_SITE={python_site}"]
         cmake_args += [f"-DCMAKE_INSTALL_PREFIX={install_prefix}"]
         cmake_args += [f"-DCMAKE_PREFIX_PATH={install_prefix}", f"-Dpybind11_DIR={py_cmake_dir}"]
-        cmake_args += ["-DDLIO_PROFILER_BUILD_PYTHON_BINDINGS=ON"]
+        cmake_args += ["-DDFTRACER_BUILD_PYTHON_BINDINGS=ON"]
         # Test related flags
 
-        enable_tests = os.environ.get("DLIO_PROFILER_ENABLE_TESTS", "OFF")
-        cmake_args += [f"-DDLIO_PROFILER_ENABLE_TESTS={enable_tests}"]
-        enable_dlio_tests = os.environ.get("DLIO_PROFILER_ENABLE_DLIO_BENCHMARK_TESTS", "OFF")
-        cmake_args += [f"-DDLIO_PROFILER_ENABLE_DLIO_BENCHMARK_TESTS={enable_dlio_tests}"]
-        enable_dlio_tests = os.environ.get("DLIO_PROFILER_ENABLE_PAPER_TESTS", "OFF")
-        cmake_args += [f"-DDLIO_PROFILER_ENABLE_PAPER_TESTS={enable_dlio_tests}"]
+        enable_tests = os.environ.get("DFTRACER_ENABLE_TESTS", "OFF")
+        cmake_args += [f"-DDFTRACER_ENABLE_TESTS={enable_tests}"]
+        enable_dlio_tests = os.environ.get("DFTRACER_ENABLE_DLIO_BENCHMARK_TESTS", "OFF")
+        cmake_args += [f"-DDFTRACER_ENABLE_DLIO_BENCHMARK_TESTS={enable_dlio_tests}"]
+        enable_dlio_tests = os.environ.get("DFTRACER_ENABLE_PAPER_TESTS", "OFF")
+        cmake_args += [f"-DDFTRACER_ENABLE_PAPER_TESTS={enable_dlio_tests}"]
 
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.
@@ -119,10 +119,10 @@ class CMakeBuild(build_ext):
             build_temp.mkdir(parents=True)
         print("cmake", ext.sourcedir, cmake_args)
 
-        if "DLIO_BUILD_DEPENDENCIES" not in os.environ or os.environ['DLIO_BUILD_DEPENDENCIES'] == "1":
+        if "DFTRACER_BUILD_DEPENDENCIES" not in os.environ or os.environ['DFTRACER_BUILD_DEPENDENCIES'] == "1":
             print("Installing dependencies.")
             install_cmake_args = cmake_args
-            install_cmake_args += ["-DDLIO_PROFILER_INSTALL_DEPENDENCIES=ON"]
+            install_cmake_args += ["-DDFTRACER_INSTALL_DEPENDENCIES=ON"]
 
             subprocess.run(
                 ["cmake", ext.sourcedir, *install_cmake_args], cwd=build_temp, check=True
@@ -130,7 +130,7 @@ class CMakeBuild(build_ext):
             subprocess.run(
                 ["cmake", "--build", ".", *build_args], cwd=build_temp, check=True
             )
-        cmake_args += ["-DDLIO_PROFILER_INSTALL_DEPENDENCIES=OFF"]
+        cmake_args += ["-DDFTRACER_INSTALL_DEPENDENCIES=OFF"]
         # link correct depedencies
         cmake_args += [f"-Dyaml-cpp_DIR={install_prefix}", f"-Dpybind11_DIR={py_cmake_dir}"]
 
@@ -150,12 +150,12 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
-    name="dlio_profiler_py",
+    name="pydftracer",
     version="0.0.6",
     description="I/O profiler for deep learning python apps. Specifically for dlio_benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/hariharan-devarajan/dlio-profiler",
+    url="https://github.com/hariharan-devarajan/dftracer",
     author="Hariharan Devarajan (Hari)",
     classifiers=[  # Optional
         # How mature is this project? Common values are
@@ -181,17 +181,17 @@ setup(
     requires=["pybind11","setuptools"],
     keywords="profiler, deep learning, I/O, benchmark, NPZ, pytorch benchmark, tensorflow benchmark",
     project_urls={  # Optional
-        "Bug Reports": "https://github.com/hariharan-devarajan/dlio-profiler/issues",
-        "Source": "https://github.com/hariharan-devarajan/dlio-profiler",
+        "Bug Reports": "https://github.com/hariharan-devarajan/dftracer/issues",
+        "Source": "https://github.com/hariharan-devarajan/dftracer",
     },
-    packages=(find_namespace_packages(include=['dlio_profiler', 'dlp_analyzer'])),
-    package_dir={"dlio_profiler": "dlio_profiler",
-                 "dlp_analyzer": "dlp_analyzer"},
-    ext_modules=[CMakeExtension("dlio_profiler.dlio_profiler_py"),],
+    packages=(find_namespace_packages(include=['dftracer', 'dfanalyzer'])),
+    package_dir={"dftracer": "dftracer",
+                 "dfanalyzer": "dfanalyzer"},
+    ext_modules=[CMakeExtension("dftracer.pydftracer"),],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"],
-                    "dlp_analyzer": [
+                    "dfanalyzer": [
                         "bokeh>=2.4.2",
                         "pybind11",
                         "zindex_py==0.0.1",

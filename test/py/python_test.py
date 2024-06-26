@@ -5,9 +5,9 @@ import time
 import numpy as np
 from PIL import Image
 import h5py
-from dlio_profiler.logger import dlio_logger, fn_interceptor as Profile
+from dftracer.logger import dftracer, dft_fn as Profile
 parser = argparse.ArgumentParser(
-    prog='DLIO testing',
+    prog='DFTracer testing',
     description='What the program does',
     epilog='Text at the bottom of help')
 parser.add_argument('--log_dir', default="./pfw_logs", type=str, help="The log directory to save to the tracing")
@@ -19,15 +19,15 @@ parser.add_argument("--record_size", default=1048576, type=int, help="size of th
 args = parser.parse_args()
 os.makedirs(f"{args.log_dir}/{args.format}", exist_ok=True)
 os.makedirs(f"{args.data_dir}/{args.format}", exist_ok=True)
-dlp = Profile("dlio")
-@dlp.log
+df = Profile("dft")
+@df.log
 def data_gen(data):
-    for i in dlp.iter(range(args.num_files)):
+    for i in df.iter(range(args.num_files)):
         io.write(f"{args.data_dir}/{args.format}/{i}-of-{args.num_files}.{args.format}", data)
 
-@dlp.log
+@df.log
 def read_data(epoch):
-    for i in dlp.iter(range(args.num_files)):
+    for i in df.iter(range(args.num_files)):
         d = io.read(f"{args.data_dir}/{args.format}/{i}-of-{args.num_files}.{args.format}")
 class IOHandler:
     def __init__(self, format):
@@ -57,9 +57,9 @@ if __name__ == "__main__":
     io = IOHandler(args.format)
     # Writing data
     data = np.ones((args.record_size, 1), dtype=np.uint8)
-    dlp_logger = dlio_logger.initialize_log(f"{args.log_dir}_{args.format}.pfw", None, -1)
+    df_logger = dftracer.initialize_log(f"{args.log_dir}_{args.format}.pfw", None, -1)
     data_gen(data)
     for n in range(args.niter):
         read_data(n)
-    dlp_logger.finalize()
+    df_logger.finalize()
 

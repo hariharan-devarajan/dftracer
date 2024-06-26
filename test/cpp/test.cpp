@@ -2,31 +2,32 @@
 // Created by hariharan on 8/8/22.
 //
 
-#include <string>
-#include <dlio_profiler/dlio_profiler.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <assert.h>
+#include <dftracer/dftracer.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <utime.h>
 
-void foo() {
-  DLIO_PROFILER_CPP_FUNCTION();
+#include <string>
 
-  DLIO_PROFILER_CPP_FUNCTION_UPDATE("key", 0);
-  DLIO_PROFILER_CPP_FUNCTION_UPDATE("key", "0");
+void foo() {
+  DFTRACER_CPP_FUNCTION();
+
+  DFTRACER_CPP_FUNCTION_UPDATE("key", 0);
+  DFTRACER_CPP_FUNCTION_UPDATE("key", "0");
   sleep(1);
   {
-    DLIO_PROFILER_CPP_REGION(CUSTOM);
-    DLIO_PROFILER_CPP_REGION_UPDATE(CUSTOM, "key", "0");
+    DFTRACER_CPP_REGION(CUSTOM);
+    DFTRACER_CPP_REGION_UPDATE(CUSTOM, "key", "0");
     sleep(1);
-    DLIO_PROFILER_CPP_REGION_START(CUSTOM_BLOCK);
-    DLIO_PROFILER_CPP_REGION_UPDATE(CUSTOM, "key", 0);
-    DLIO_PROFILER_CPP_REGION_DYN_UPDATE(CUSTOM_BLOCK, "key", 0);
+    DFTRACER_CPP_REGION_START(CUSTOM_BLOCK);
+    DFTRACER_CPP_REGION_UPDATE(CUSTOM, "key", 0);
+    DFTRACER_CPP_REGION_DYN_UPDATE(CUSTOM_BLOCK, "key", 0);
     sleep(1);
-    DLIO_PROFILER_CPP_REGION_END(CUSTOM_BLOCK);
+    DFTRACER_CPP_REGION_END(CUSTOM_BLOCK);
   }
 }
 
@@ -34,7 +35,7 @@ int main(int argc, char *argv[]) {
   int init = 0;
   if (argc > 2) {
     if (strcmp(argv[2], "1") == 0) {
-      DLIO_PROFILER_CPP_INIT(nullptr, nullptr, nullptr);
+      DFTRACER_CPP_INIT(nullptr, nullptr, nullptr);
       init = 1;
     }
   }
@@ -64,7 +65,7 @@ int main(int argc, char *argv[]) {
   fcntl(dd, F_DUPFD);
   fcntl(dd, F_GETFD);
   fcntl(dd, F_GETOWN_EX);
-  int dd2;
+  int dd2 = -1;
   dup2(dd, dd2);
   umask(0);
   mkfifo(filename, 0);
@@ -82,6 +83,7 @@ int main(int argc, char *argv[]) {
   if (fd != -1) close(fd);
   fd = open(filename, O_RDWR);
   int set_offset = lseek(fd, 1, SEEK_SET);
+  (void)set_offset;
   char buf[1];
   pread(fd, buf, 1, 1);
   pread64(fd, buf, 1, 1);
@@ -96,7 +98,7 @@ int main(int argc, char *argv[]) {
   remove(filename_link);
   remove("demofile_link2.txt");
   if (init == 1) {
-    DLIO_PROFILER_CPP_FINI();
+    DFTRACER_CPP_FINI();
   }
   return 0;
 }
