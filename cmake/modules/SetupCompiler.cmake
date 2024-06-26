@@ -42,7 +42,7 @@ ENDMACRO (CHECK_GLIBC_VERSION)
 
 CHECK_GLIBC_VERSION()
 
-# MACRO dlio_profiler_add_c|cxx_flags
+# MACRO dftracer_add_c|cxx_flags
 #
 # Purpose: checks that all flags are valid and appends them to the
 #   given list. Valid means that the cxx compiler does not throw an
@@ -53,7 +53,7 @@ CHECK_GLIBC_VERSION()
 #   ARGN The flags to check
 #
 # Note: If flag is not valid, it is not appended.
-macro(dlio_profiler_add_cxx_flags MY_FLAGS)
+macro(dftracer_add_cxx_flags MY_FLAGS)
   foreach(flag ${ARGN})
     string(FIND "${${MY_FLAGS}}" "${flag}" flag_already_set)
     if(flag_already_set EQUAL -1)
@@ -71,7 +71,7 @@ macro(dlio_profiler_add_cxx_flags MY_FLAGS)
   endforeach()
 endmacro()
 
-macro(dlio_profiler_add_c_flags MY_FLAGS)
+macro(dftracer_add_c_flags MY_FLAGS)
   foreach(flag ${ARGN})
     string(FIND "${${MY_FLAGS}}" "${flag}" flag_already_set)
     if(flag_already_set EQUAL -1)
@@ -89,11 +89,11 @@ macro(dlio_profiler_add_c_flags MY_FLAGS)
   endforeach()
 endmacro()
 
-dlio_profiler_add_cxx_flags(CMAKE_CXX_FLAGS
+dftracer_add_cxx_flags(CMAKE_CXX_FLAGS
   -fPIC -Wall -Wextra -pedantic -Wno-unused-parameter -Wnon-virtual-dtor
   -Wno-deprecated-declarations)
 
-dlio_profiler_add_c_flags(CMAKE_C_FLAGS
+dftracer_add_c_flags(CMAKE_C_FLAGS
   -fPIC -Wall -Wextra -pedantic -Wno-unused-parameter
   -Wno-deprecated-declarations)
 
@@ -106,21 +106,21 @@ endif ()
 # Promote a compiler warning as an error for project targets
 ################################################################
 
-if (DLIO_PROFILER_WARNINGS_AS_ERRORS)
-  dlio_profiler_add_cxx_flags(_WERROR_FLAGS -Werror)
+if (DFTRACER_WARNINGS_AS_ERRORS)
+  dftracer_add_cxx_flags(_WERROR_FLAGS -Werror)
   separate_arguments(_WERROR_FLAGS NATIVE_COMMAND "${_WERROR_FLAGS}")
-  if (NOT TARGET DLIO_PROFILER_CXX_FLAGS_werror)
-    add_library(DLIO_PROFILER_CXX_FLAGS_werror INTERFACE)
-    set_property(TARGET DLIO_PROFILER_CXX_FLAGS_werror PROPERTY
+  if (NOT TARGET DFTRACER_CXX_FLAGS_werror)
+    add_library(DFTRACER_CXX_FLAGS_werror INTERFACE)
+    set_property(TARGET DFTRACER_CXX_FLAGS_werror PROPERTY
       INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CXX>:${_WERROR_FLAGS}>)
 
-    add_library(DLIO_PROFILER_C_FLAGS_werror INTERFACE)
-    set_property(TARGET DLIO_PROFILER_C_FLAGS_werror PROPERTY
+    add_library(DFTRACER_C_FLAGS_werror INTERFACE)
+    set_property(TARGET DFTRACER_C_FLAGS_werror PROPERTY
       INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:C>:${_WERROR_FLAGS}>)
 
     # Add the "library" to the export
-    install(TARGETS DLIO_PROFILER_C_FLAGS_werror EXPORT ${DLIO_PROFILER_EXPORTED_TARGETS})
-    install(TARGETS DLIO_PROFILER_CXX_FLAGS_werror EXPORT ${DLIO_PROFILER_EXPORTED_TARGETS})
+    install(TARGETS DFTRACER_C_FLAGS_werror EXPORT ${DFTRACER_EXPORTED_TARGETS})
+    install(TARGETS DFTRACER_CXX_FLAGS_werror EXPORT ${DFTRACER_EXPORTED_TARGETS})
   endif ()
 endif ()
 
@@ -145,22 +145,22 @@ endif ()
 #   libraries pre-built using gcc
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   if (USE_CLANG_LIBCXX)
-    dlio_profiler_add_cxx_flags(CMAKE_CXX_FLAGS "--stdlib=libc++")
+    dftracer_add_cxx_flags(CMAKE_CXX_FLAGS "--stdlib=libc++")
   else (USE_CLANG_LIBCXX)
     if (GCC_TOOLCHAIN)
-      dlio_profiler_add_cxx_flags(CMAKE_CXX_FLAGS "--gcc-toolchain=${GCC_TOOLCHAIN}")
+      dftracer_add_cxx_flags(CMAKE_CXX_FLAGS "--gcc-toolchain=${GCC_TOOLCHAIN}")
     endif (GCC_TOOLCHAIN)
   endif (USE_CLANG_LIBCXX)
 
   if (CMAKE_BUILD_TYPE MATCHES Debug)
-    dlio_profiler_add_cxx_flags(CMAKE_CXX_FLAGS
+    dftracer_add_cxx_flags(CMAKE_CXX_FLAGS
       -fsanitize=address -fno-omit-frame-pointer -fsanitize-recover=address)
-    dlio_profiler_add_c_flags(CMAKE_C_FLAGS
+    dftracer_add_c_flags(CMAKE_C_FLAGS
       -fsanitize=address -fno-omit-frame-pointer -fsanitize-recover=address)
     add_link_options(-fsanitize=address)
   else()
-    dlio_profiler_add_cxx_flags(CMAKE_CXX_FLAGS -fno-omit-frame-pointer)
-    dlio_profiler_add_c_flags(CMAKE_C_FLAGS -fno-omit-frame-pointer)
+    dftracer_add_cxx_flags(CMAKE_CXX_FLAGS -fno-omit-frame-pointer)
+    dftracer_add_c_flags(CMAKE_C_FLAGS -fno-omit-frame-pointer)
   endif ()
 endif ()
 
@@ -173,8 +173,8 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Intel")
     set(GCC_INTEROP "-gcc-name=${GCC_PATH}")
   endif (GCC_PATH)
   # -openmp_profile
-  dlio_profiler_add_cxx_flags(CMAKE_CXX_FLAGS -diag-disable=2196 -wd1011 -wd1875 -diag-disable=11074 -diag-disable=11076 ${GCC_INTEROP})
-  dlio_profiler_add_cxx_flags(CMAKE_C_FLAGS -diag-disable=2196 -wd1011 -wd1875 -diag-disable=11074 -diag-disable=11076 ${GCC_INTEROP})
+  dftracer_add_cxx_flags(CMAKE_CXX_FLAGS -diag-disable=2196 -wd1011 -wd1875 -diag-disable=11074 -diag-disable=11076 ${GCC_INTEROP})
+  dftracer_add_cxx_flags(CMAKE_C_FLAGS -diag-disable=2196 -wd1011 -wd1875 -diag-disable=11074 -diag-disable=11076 ${GCC_INTEROP})
 endif ()
 
 
@@ -197,23 +197,23 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 # which point to directories outside the build tree to the install RPATH
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-if (NOT DLIO_PROFILER_LIBDIR)
+if (NOT DFTRACER_LIBDIR)
   if (CMAKE_INSTALL_LIBDIR)
-    set(DLIO_PROFILER_LIBDIR ${CMAKE_INSTALL_LIBDIR})
+    set(DFTRACER_LIBDIR ${CMAKE_INSTALL_LIBDIR})
   else ()
-    set(DLIO_PROFILER_LIBDIR "lib")
+    set(DFTRACER_LIBDIR "lib")
   endif ()
 endif ()
 
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib64:${PYTHON_SITE_PACKAGES}/lib:${PYTHON_SITE_PACKAGES}/lib64:../lib:../lib64:dlio_profiler/lib:dlio_profiler/lib64")
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib64:${PYTHON_SITE_PACKAGES}/lib:${PYTHON_SITE_PACKAGES}/lib64:../lib:../lib64:dftracer/lib:dftracer/lib64")
 
 list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES
-    "${CMAKE_INSTALL_PREFIX}/${DLIO_PROFILER_LIBDIR}" _IS_SYSTEM_DIR)
+    "${CMAKE_INSTALL_PREFIX}/${DFTRACER_LIBDIR}" _IS_SYSTEM_DIR)
 
 if (${_IS_SYSTEM_DIR} STREQUAL "-1")
     # Set the install RPATH correctly
     list(APPEND CMAKE_INSTALL_RPATH
-      "${CMAKE_INSTALL_PREFIX}/${DLIO_PROFILER_LIBDIR}")
+      "${CMAKE_INSTALL_PREFIX}/${DFTRACER_LIBDIR}")
 endif ()
 
 
@@ -224,22 +224,22 @@ endif ()
 # Testing for compiler feature supports
 #include(CheckCXXSourceCompiles)
 
-try_compile(DLIO_PROFILER_HAS_STD_FILESYSTEM "${CMAKE_BINARY_DIR}/temp"
+try_compile(DFTRACER_HAS_STD_FILESYSTEM "${CMAKE_BINARY_DIR}/temp"
             "${CMAKE_SOURCE_DIR}/cmake/tests/has_filesystem.cpp"
             CMAKE_FLAGS ${CMAKE_CXX_FLAGS}
             LINK_LIBRARIES stdc++fs)
-if (DLIO_PROFILER_HAS_STD_FILESYSTEM)
+if (DFTRACER_HAS_STD_FILESYSTEM)
   message(STATUS "Compiler has std::filesystem support")
 else ()
   message(STATUS "Compiler does not have std::filesystem support. Use boost::filesystem")
-endif (DLIO_PROFILER_HAS_STD_FILESYSTEM)
+endif (DFTRACER_HAS_STD_FILESYSTEM)
 
-try_compile(DLIO_PROFILER_HAS_STD_FSTREAM_FD "${CMAKE_BINARY_DIR}/temp"
+try_compile(DFTRACER_HAS_STD_FSTREAM_FD "${CMAKE_BINARY_DIR}/temp"
             "${CMAKE_SOURCE_DIR}/cmake/tests/has_fd.cpp"
             CMAKE_FLAGS ${CMAKE_CXX_FLAGS}
             LINK_LIBRARIES stdc++fs)
-if (DLIO_PROFILER_HAS_STD_FSTREAM_FD)
+if (DFTRACER_HAS_STD_FSTREAM_FD)
   message(STATUS "Compiler exposes the internal file descriptor of std::fstream")
 else ()
   message(STATUS "Compiler does not expose the internal file descriptor of std::fstream")
-endif (DLIO_PROFILER_HAS_STD_FSTREAM_FD)
+endif (DFTRACER_HAS_STD_FSTREAM_FD)

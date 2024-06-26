@@ -1,2 +1,0 @@
-app: /usr/WS2/haridev/dlio-profiler
-env: ${DLIO_PROFILER_APP}/venv

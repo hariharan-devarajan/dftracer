@@ -1,4 +1,4 @@
-name: DLIO Profiler Build and Test
+name: DFTracer Build and Test
 
 on:
   pull_request:
@@ -49,12 +49,12 @@ jobs:
         run: |
           export CMAKE_BUILD_TYPE=PROFILE
           if [ $OS == 'ubuntu-22.04' ] && [ $DIR == 'clone' ] && [ $PERM == 'venv' ]; then
-            export DLIO_PROFILER_ENABLE_TESTS=On
+            export DFTRACER_ENABLE_TESTS=On
           fi
-          echo Install variables DLIO_PROFILER_ENABLE_TESTS $DLIO_PROFILER_ENABLE_TESTS
-          LOC=.[dlp_analyzer]
+          echo Install variables DFTRACER_ENABLE_TESTS $DFTRACER_ENABLE_TESTS
+          LOC=.[analyzer]
           if [[ $PERM == 'user' ]]; then
-            export DLIO_LOGGER_USER=1
+            export DFTRACER_LOGGER_USER=1
             echo pip install --user ${LOC}
             pip install -v ${LOC}
           elif [[ $PERM == 'venv' ]]; then
@@ -71,7 +71,7 @@ jobs:
         run: |
           source ../venv/bin/activate
           pip install -r test/py/requirements.txt
-          cd build/temp*/*dlio_profiler_py*/
+          cd build/temp*/*pydftracer*/
           ctest -E dlio -VV
       - name: Create Coverage
         if: matrix.os == 'ubuntu-22.04' && matrix.dir == 'clone' && matrix.perm == 'venv'

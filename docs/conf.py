@@ -19,14 +19,14 @@
 
 # -- Project information -----------------------------------------------------
 
-project = u'dlio-profiler'
+project = u'dftracer'
 copyright = u'2018, Lawrence Livermore National Security, LLC'
 author = u'Hariharan Devarajan'
 
 # The short X.Y version
 version = u'0.0'
 # The full version, including alpha/beta/rc tags
-release = u'0.0.6'
+release = u'1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -92,7 +92,7 @@ html_static_path = ['_static']
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = 'images/dlio-profiler-logo.png'
+html_logo = 'images/dftracer-logo.png'
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -110,7 +110,7 @@ todo_include_todos = False
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'dlio-profiler-doc'
+htmlhelp_basename = 'dftracer-doc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -137,13 +137,13 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'dlio-profiler.tex', u'DLIO Profiler Documentation',
+    (master_doc, 'dftracer.tex', u'DFTracer Documentation',
      author, 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-latex_logo = 'images/dlio-profiler-logo.png'
+latex_logo = 'images/dftracer-logo.png'
 
 
 # -- Options for manual page output ------------------------------------------
@@ -151,7 +151,7 @@ latex_logo = 'images/dlio-profiler-logo.png'
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'dlio-profiler', u'DLIO Profiler Documentation',
+    (master_doc, 'dftracer', u'DFTracer Documentation',
      [author], 1)
 ]
 
@@ -162,7 +162,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'dlio-profiler', u'DLIO Profiler Documentation',
-     author, 'dlio-profiler', 'DLIO Profiler is a library for wrapping function calls in shared libraries.',
+    (master_doc, 'dftracer', u'DFTracer Documentation',
+     author, 'dftracer', 'DFTracer is a library for wrapping function calls in shared libraries.',
      'Miscellaneous'),
 ]
