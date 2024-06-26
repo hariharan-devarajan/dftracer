@@ -1,0 +1,13 @@
+[
+{"id":"0","name":"read","cat":"POSIX","pid":"0","tid":"19","ts":"10","dur":"60","ph":"X","args":{"hostname":"1d9bd41c01e6"}}
+{"id":"1","name":"read","cat":"POSIX","pid":"0","tid":"19","ts":"40","dur":"10","ph":"X","args":{"hostname":"1d9bd41c01e6"}}
+{"id":"2","name":"read","cat":"POSIX","pid":"0","tid":"19","ts":"120","dur":"60","ph":"X","args":{"hostname":"1d9bd41c01e6"}}
+{"id":"3","name":"read","cat":"POSIX","pid":"0","tid":"19","ts":"210","dur":"40","ph":"X","args":{"hostname":"1d9bd41c01e6"}}
+{"id":"4","name":"read","cat":"POSIX","pid":"0","tid":"19","ts":"230","dur":"10","ph":"X","args":{"hostname":"1d9bd41c01e6"}}
+{"id":"5","name":"read","cat":"POSIX","pid":"0","tid":"19","ts":"10","dur":"50","ph":"X","args":{"hostname":"1d9bd41c01e6","mode":511,"fname":"/dlio/data1"}}
+{"id":"6","name":"read","cat":"POSIX","pid":"0","tid":"19","ts":"40","dur":"50","ph":"X","args":{"hostname":"1d9bd41c01e6"}}
+{"id":"7","name":"Fread","cat":"POSIX","pid":"0","tid":"19","ts":"110","dur":"80","ph":"X","args":{"hostname":"1d9bd41c01e6"}}
+{"id":"8","name":"read","cat":"POSIX","pid":"0","tid":"19","ts":"140","dur":"45","ph":"X","args":{"hostname":"1d9bd41c01e6","mode":511,"fname":"/dlio/data1/train/"}}
+{"id":"9","name":"read","cat":"POSIX","pid":"0","tid":"19","ts":"160","dur":"20","ph":"X","args":{"hostname":"1d9bd41c01e6"}}
+{"id":"10","name":"read","cat":"POSIX","pid":"0","tid":"19","ts":"189","dur":"4","ph":"X","args":{"hostname":"1d9bd41c01e6"}}
+{"id":"11","name":"read","cat":"POSIX","pid":"0","tid":"19","ts":"220","dur":"5","ph":"X","args":{"hostname":"1d9bd41c01e6","mode":511,"fname":"/dlio/data1/valid/"}}

@@ -1,0 +1,139 @@
+{
+    "default": [
+        {
+            "selector": "nodes",
+            "style": {
+                "font-family": "helvetica",
+                "width": "70px",
+                "height": "70px",
+                "label": "data(id)",
+                "font-size": "15px",
+                "font-color": "brown",
+                "text-valign": "center",
+                "text-halign": "center",
+                "background-color": "purple"
+            }
+        },
+        {
+            "selector": "edges",
+            "style": {
+                "font-family": "helvetica",
+                "font-size": "2px",
+                "line-color": "pink"
+            }
+        },
+        {
+            "selector": "node[degree>2]",
+            "style": {
+                "width": "70px",
+                "height": "70px",
+                "font-size": "15px",
+                "font-family": "helvetica",
+                "background-color": "red"
+            }
+        },
+        {
+            "selector": "node[bipartite=0]",
+            "style": {
+                "width": "70px",
+                "height": "70px",
+                "font-family": "helvetica",
+                "background-color": "blue"
+            }
+        },
+        {
+            "selector": "node[degree<4]",
+            "style": {
+                "width": "70px",
+                "height": "70px",
+                "font-size": "15px",
+                "color": "white",
+                "font-family": "helvetica"
+            }
+        },
+        {
+            "selector": "edge[weight>5000]",
+            "style": {
+                "font-family": "helvetica",
+                "line-color": "green"
+            }
+        }
+    ],
+    "direct": [
+        {
+            "selector": "node",
+            "style": {
+                "content": "data(label)",
+                "text-opacity": 0.8,
+                "text-valign": "center",
+                "text-halign": "center",
+                "background-color": "pink"
+            }
+        },
+        {
+            "selector": "edge",
+            "style": {
+                "curve-style": "bezier",
+                "target-arrow-shape": "triangle",
+                "line-color": "#9dbaea",
+                "target-arrow-color": "#9dbaea",
+                "width": 2
+            }
+        },
+        {
+            "selector": "node[id ^= \"f\"]",
+            "style": {
+                "shape": "rectangle"
+            }
+        },
+        {
+            "selector": "edge.bidirectional",
+            "style": {
+                "curve-style": "unbundled-bezier",
+                "control-point-distances": [
+                    20
+                ],
+                "control-point-weights": [
+                    0.5
+                ],
+                "target-arrow-shape": "triangle",
+                "source-arrow-shape": "triangle",
+                "line-color": "#ff0000",
+                "target-arrow-color": "#ff0000",
+                "source-arrow-color": "#ff0000",
+                "width": 2
+            }
+        }
+    ],
+    "directed": [
+        {
+            "selector": "nodes",
+            "style": {
+                "font-family": "helvetica",
+                "width": "50px",
+                "height": "50px",
+                "label": "data(id)",
+                "font-size": "10px",
+                "font-color": "white",
+                "text-valign": "center",
+                "text-halign": "center",
+                "background-color": "pink"
+            }
+        },
+        {
+            "selector": "edge",
+            "style": {
+                "curve-style": "bezier",
+                "target-arrow-shape": "triangle",
+                "target-arrow-color": "#9dbaea"
+            }
+        },
+        {
+            "selector": "edge[back]",
+            "style": {
+                "line-color": "red",
+                "target-arrow-color": "red"
+            }
+        }
+    ]
+}
