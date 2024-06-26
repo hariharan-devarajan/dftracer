@@ -2,7 +2,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/hariharan-devarajan/dftracer/badge.svg?branch=feature/apis)](https://coveralls.io/github/hariharan-devarajan/dftracer?branch=dev)
 [![Documentation Status](https://readthedocs.org/projects/dftracer/badge/?version=latest)](https://dftracer.readthedocs.io/en/latest/?badge=latest)
 
-# DFTracer v1.0.0
+# DFTracer v1.0.1
 A multi-level profiler for capturing application functions and low-level system I/O calls from deep learning workloads.
 
 Requirements for profiler
