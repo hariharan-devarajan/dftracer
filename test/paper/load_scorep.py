@@ -17,7 +17,6 @@ import time
 import otf2
 from otf2.events import *
 
-
 logging.basicConfig(filename='score-p_main.log', encoding='utf-8', level=logging.DEBUG)
 
 def get_json(location, start, end):

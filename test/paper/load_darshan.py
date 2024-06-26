@@ -8,16 +8,13 @@ print(f"dask {dask.__version__}")
 import pyarrow as pa
 print(f"pa {pa.__version__}")
 import logging
+
 from glob import glob
 import argparse
 import time
 
-
-import otf2
-from otf2.events import *
-
-logging.basicConfig(filename='recorder_main.log', encoding='utf-8', level=logging.DEBUG)
-
+import darshan
+logging.basicConfig(filename='darshan_main.log', encoding='utf-8', level=logging.DEBUG)
 
 def generate_darshan_records(log_file):
     def get_dict(row):
@@ -58,7 +55,6 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 parser.add_argument("trace_file", help="Trace file to load", type=str)
-
 parser.add_argument("--workers", help="Number of workers", type=int, default=1)
 args = parser.parse_args()
 filename = args.trace_file
