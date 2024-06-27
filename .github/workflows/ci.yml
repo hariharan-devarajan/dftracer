@@ -2,7 +2,7 @@ name: DFTracer Build and Test
 
 on:
   pull_request:
-    branches: [ main, dev ]
+    branches: [ main, develop ]
   push:
 jobs:
   build-and-test:
