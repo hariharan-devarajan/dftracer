@@ -73,8 +73,10 @@ Initialization now uses the DFTracer API, which can seamlessly integrate into yo
 This will configure the DFTracer environment, setting up the log file, data directories, and process ID exactly like the DLIO Profiler did.
 To migrate these configurations from DLIO Profile to DFTracer please replace your old enviromental variable configurations as shown bellow.
 
+
 .. code-block:: bash
    :linenos:
+   
     # Old environment variable configurations for DLIO Profiler
     DLIO_LOG_FILE=~/dlio_log
     DLIO_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
@@ -84,6 +86,7 @@ To migrate these configurations from DLIO Profile to DFTracer please replace you
 
 .. code-block:: bash
    :linenos:
+   
     # Updated environment variable configurations for DFTracer
     DFTRACER_LOG_FILE=~/log_file  # Changes the log file path variable name
     DFTRACER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset  # Consistent data directory path
