@@ -72,9 +72,9 @@ Initialization now uses the DFTracer API, which can seamlessly integrate into yo
 
 This will configure the DFTracer environment, setting up the log file, data directories, and process ID exactly like the DLIO Profiler did.
 To migrate these configurations from DLIO Profile to DFTracer please replace your old enviromental variable configurations as shown bellow.
+
 .. code-block:: bash
    :linenos:
-
     # Old environment variable configurations for DLIO Profiler
     DLIO_LOG_FILE=~/dlio_log
     DLIO_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset
@@ -84,7 +84,6 @@ To migrate these configurations from DLIO Profile to DFTracer please replace you
 
 .. code-block:: bash
    :linenos:
-
     # Updated environment variable configurations for DFTracer
     DFTRACER_LOG_FILE=~/log_file  # Changes the log file path variable name
     DFTRACER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset  # Consistent data directory path
@@ -162,6 +161,7 @@ For C applications, DFTracer initialization replaces the older DLIO Profiler cal
 
 This command configures DFTracer with the necessary parameters for logging and directory monitoring, similarly to how DLIO Profiler was configured.
 To migrate these configurations from DLIO Profile to DFTracer please replace your old enviromental variable configurations as shown bellow.
+
 .. code-block:: bash
    :linenos:
 
@@ -227,12 +227,14 @@ Migration of the DLP Analyzer jupyter notebook to DFAnalyzer involves configurin
 
 
 Dask Configuration:
-**************************
+-----------------------------------
+
 1. ``cd`` to ``dftracer/dfanalyzer/dask/conf`` and run ``install_dask_env.sh``  to create configuration.yaml  in ``~/.dftracer``.
 2. update the app and environment path in ``configuration.yaml``.
 
 Jupyter Notebook Update:
-**************************
+-----------------------------------
+
 1. update ``app_root`` variable by updating path of new ``configuration.yaml``.
 2. replace ``dlp_analyzer`` with ``dfanalyzer`` and update the imports form ``dfanalyzer.main``
 
@@ -246,6 +248,7 @@ Jupyter Notebook Update:
 
 3. update the ``dask_run_dir`` to use dfanalyzer instead of dlp_analyzer.
 4. rename update and get configuration functions by calling DFtracer equivalent functions.
+
 .. code-block:: python
    :linenos:
 
