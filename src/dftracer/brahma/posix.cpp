@@ -195,6 +195,7 @@ int brahma::POSIXDFTracer::openat(int dirfd, const char *pathname, int flags,
   DFT_LOGGER_START(dirfd);
   DFT_LOGGER_UPDATE(dirfd);
   DFT_LOGGER_UPDATE(flags);
+  DFT_LOGGER_UPDATE(pathname);
   int ret = -1;
   if (flags & O_CREAT) {
     va_list args;
