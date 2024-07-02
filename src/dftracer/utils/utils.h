@@ -40,7 +40,9 @@ inline void signal_handler(int sig) {  // GCOVR_EXCL_START
       nptrs = backtrace(buffer, STACK_SIZE);
       strings = backtrace_symbols(buffer, nptrs);
       if (strings != NULL) {
-        for (j = 0; j < nptrs; j++) printf("%s\n", strings[j]);
+        for (j = 0; j < nptrs; j++) {
+          DFTRACER_LOGERROR("%s", strings[j]);
+        }
         free(strings);
       }
       exit(0);
