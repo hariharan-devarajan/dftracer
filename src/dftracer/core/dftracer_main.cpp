@@ -148,9 +148,14 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
           ssize_t read_bytes = df_read(fd, exec_file_name, DFT_PATH_MAX);
           df_close(fd);
           ssize_t index = 0;
+          size_t parts = 0;
           while (index < read_bytes - 1 && index < DFT_PATH_MAX - 2) {
             if (exec_file_name[index] == '\0') {
               exec_file_name[index] = SEPARATOR;
+              parts++;
+            }
+            if (parts > 1) {
+              exec_file_name[index] = '\0';
             }
             index++;
           }
