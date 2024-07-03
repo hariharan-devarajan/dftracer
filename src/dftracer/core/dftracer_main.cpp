@@ -154,6 +154,7 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
             }
             index++;
           }
+          exec_file_name[DFT_PATH_MAX - 1] = '\0';
           DFTRACER_LOGDEBUG("Exec command line %s", exec_file_name);
           auto items = split(exec_file_name, SEPARATOR);
           for (const auto &item : items) {
