@@ -166,6 +166,7 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
         }
         DFTRACER_LOGINFO("Extracted process_name %s", exec_name.c_str());
         if (!conf->log_file.empty()) {
+          DFTRACER_LOGDEBUG("Conf has log file %s", conf->log_file.c_str());
           this->log_file = std::string(conf->log_file) + "-" + exec_name + "-" +
                            std::to_string(this->process_id) + "-" +
                            log_file_suffix + ".pfw";
