@@ -43,10 +43,10 @@ class DFTConfiguration:
         self.log_file = "dfanalyzer.log"
         self.dask_scheduler = None
         self.index_dir = None
-        self.time_approximate = False
+        self.time_approximate = True
         self.slope_threshold = 45
-        self.time_granularity = 1e3
-        self.skip_hostname = False
+        self.time_granularity = 1e6
+        self.skip_hostname = True
         self.conditions = None
 
 dft_configuration = DFTConfiguration()
@@ -472,7 +472,7 @@ class DFAnalyzer:
                 grouped_df[["only_app_io"]].apply(size_portion, col="only_app_io", axis=1).sum(),
                 grouped_df[["only_app_compute"]].apply(size_portion, col="only_app_compute", axis=1).sum(),
             )
-        logging.info(f"Approximate {self.conf.time_approximate} {total_time}, {total_io_time}, {total_compute_time}, {total_app_io_time}, \
+        logging.debug(f"Approximate {self.conf.time_approximate} total_time:{total_time}, {total_io_time}, {total_compute_time}, {total_app_io_time}, \
                {only_io}, {only_compute}, {only_app_io}, {only_app_compute}")
         return total_time, total_io_time, total_compute_time, total_app_io_time, \
                only_io, only_compute, only_app_io, only_app_compute

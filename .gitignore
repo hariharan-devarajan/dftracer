@@ -70,9 +70,11 @@ logs/*.log
 install
 __pycache__
 dftracer/__pycache__
+*.log
+examples/dfanalyzer/test-trace.pfw.gz.zindex
 
 # Install files
-dftracer_py.egg-info
+pydftracer.egg-info
 /dist/
 /output/
 
