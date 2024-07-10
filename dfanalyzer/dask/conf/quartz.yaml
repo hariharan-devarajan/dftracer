@@ -1,0 +1,20 @@
+config:
+  script_dir: ${DFTRACER_APP}/dfanalyzer/dask/scripts
+  conf_dir: ${DFTRACER_APP}/dfanalyzer/dask/conf
+  run_dir: ${DFTRACER_APP}/dfanalyzer/dask/run_dir
+  log_dir: ${DFTRACER_APP}/dfanalyzer/dask/logs
+job:
+  num_nodes: 4
+  wall_time_min: 60
+  env_id: SLURM_JOB_ID
+scheduler:
+  cmd: srun -N ${DFTRACER_JOB_NUM_NODES} -t ${DFTRACER_JOB_WALL_TIME_MIN}
+  port: 12005
+  kill: scancel ${SLURM_JOB_ID}
+worker:
+  ppn: 16
+  cmd: srun -N ${DFTRACER_JOB_NUM_NODES} --ntasks-per-node=${DFTRACER_WORKER_PPN}
+  per_core: 1
+  threads: 1
+  local_dir: /dev/shm/dask-workspace
+  kill: scancel ${SLURM_JOB_ID}
