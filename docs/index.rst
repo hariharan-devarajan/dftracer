@@ -17,6 +17,7 @@ DFTracer: is a library for profiling I/O calls and application functions.
    build
    building_applications
    api
+   dfanalyzer
 
 .. toctree::
    :maxdepth: 2
@@ -32,6 +33,12 @@ DFTracer: is a library for profiling I/O calls and application functions.
    developer-guide
    style-guides
    testing
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Applications
+
+   pegasus_workflows  # Add this line
 
 ==================
 Indices and tables
