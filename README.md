@@ -99,7 +99,7 @@ if __name__ == "__main__":
     main()
 ```
 
-For this example, as the `DFTRACER_CPP_INIT` do not pass `logfile` or `data_dir`, we need to set `DFTRACER_LOG_FILE` and `DFTRACER_DATA_DIR`.
+For this example, as the `dftracer.initialize_log` do not pass `logfile` or `data_dir`, we need to set `DFTRACER_LOG_FILE` and `DFTRACER_DATA_DIR`.
 By default the DFTracer mode is set to `FUNCTION`.
 Example of running this configurations are:
 
