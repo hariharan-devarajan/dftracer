@@ -158,7 +158,7 @@ def load_indexed_gzip_files(filename, start, end):
     logging.debug(f"Read {len(json_lines)} json lines for [{start}, {end}]")
     return json_lines
 
-def load_objects(line, fn, time_granularity, time_approximate, condition_fn):
+def load_objects(line, fn, time_granularity, time_approximate, condition_fn, load_data):
     d = {}
     if line is not None and line !="" and len(line) > 0 and "[" != line[0] and line != "\n" :
         val = {}
@@ -180,7 +180,7 @@ def load_objects(line, fn, time_granularity, time_approximate, condition_fn):
                 d["trange"] = int(((val["ts"] + val["dur"])/2.0) / time_granularity)
                 d.update(io_function(val, d, time_approximate,condition_fn))
                 if fn:
-                    d.update(fn(val, d, time_approximate,condition_fn))
+                    d.update(fn(val, d, time_approximate,condition_fn, load_data))
                 logging.debug(f"built an dictionary for line {d}")
         except ValueError as error:
             logging.error(f"Processing {line} failed with {error}")
@@ -340,8 +340,13 @@ def human_format_time(num):
 
 class DFAnalyzer:
 
-    def __init__(self, file_pattern, load_fn=None, load_cols={}):
+    def __init__(self, file_pattern, load_fn=None, load_cols={}, load_data = {}):
+
         self.conf = get_dft_configuration()
+        if self.conf.dask_scheduler:
+            client = Client.current()
+            if len(load_data)>0:
+                client.scatter(load_data)
         file_pattern = glob(file_pattern)
         all_files = []
         pfw_pattern = []
@@ -386,13 +391,15 @@ class DFAnalyzer:
             gz_bag = json_lines.map(load_objects, fn=load_fn,
                                     time_granularity=self.conf.time_granularity,
                                     time_approximate=self.conf.time_approximate,
-                                    condition_fn=self.conf.conditions).filter(lambda x: "name" in x)
+                                    condition_fn=self.conf.conditions,
+                                    load_data=load_data).filter(lambda x: "name" in x)
         main_bag = None
         if len(pfw_pattern) > 0:
             pfw_bag = dask.bag.read_text(pfw_pattern).map(load_objects, fn=load_fn,
                                                           time_granularity=self.conf.time_granularity,
                                                           time_approximate=self.conf.time_approximate,
-                                                          condition_fn=self.conf.conditions).filter(lambda x: "name" in x)
+                                                          condition_fn=self.conf.conditions,
+                                                          load_data=load_data).filter(lambda x: "name" in x)
         if len(pfw_gz_pattern) > 0 and len(pfw_pattern) > 0:
             main_bag = dask.bag.concat([pfw_bag, gz_bag])
         elif len(pfw_gz_pattern) > 0:
@@ -411,10 +418,11 @@ class DFAnalyzer:
             logging.debug(f"Number of partitions used are {self.n_partition}")
             self.events = events.repartition(npartitions=self.n_partition).persist()
             _ = wait(self.events)
-            self.events['ts'] = self.events['ts'] - self.events['ts'].min()
-            self.events['te'] = self.events['ts'] + self.events['dur']
-            self.events['trange'] = self.events['ts'] // self.conf.time_granularity
+            self.events['ts'] = (self.events['ts'] - self.events['ts'].min()).astype('uint64[pyarrow]')
+            self.events['te'] = (self.events['ts'] + self.events['dur']).astype('uint64[pyarrow]')
+            self.events['trange'] = (self.events['ts'] // self.conf.time_granularity).astype('uint16[pyarrow]')
             self.events = self.events.persist()
+     
             _ = wait(self.events)
         else:
             logging.error(f"Unable to load Traces")
@@ -666,6 +674,7 @@ def setup_dask_cluster():
         cluster = LocalCluster(n_workers=conf.workers)  # Launches a scheduler and workers locally
         client = Client(cluster)  # Connect to distributed cluster and override default
         logging.info(f"Initialized Client with {conf.workers} workers and link {client.dashboard_link}")
+
 
 def main():
     args = parse_args()
