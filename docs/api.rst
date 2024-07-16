@@ -56,23 +56,23 @@ ENV Variables supported
    ================================ ======  ===========================================================================
    Environment Variable             Type    Description
    ================================ ======  ===========================================================================
-   DFTRACER_CONFIGURATION      STRING  PATH to the yaml configuration
-   DFTRACER_ENABLE             INT     Enable or Disable DFTracer (default 0).
-   DFTRACER_INIT               STRING  DFTracer Mode FUNCTION/PRELOAD (default FUNCTION).
-                                            For Hybrid use PRELOAD mode.
-   DFTRACER_LOG_FILE           STRING  PATH To log file. In this case process id and app name is appended to file.
-   DFTRACER_DATA_DIR           STRING  Colon separated paths that will be traced for I/O accesses by profiler.
-                                            For tracing all directories use the string "all" (not recommended).
-   DFTRACER_INC_METADATA       INT     Include or exclude metadata (default 0)
-   DFTRACER_SET_CORE_AFFINITY  INT     Include or exclude core affinity (default 0).
-                                            DFTRACER_INC_METADATA needs to be enabled.
-   DFTRACER_GOTCHA_PRIORITY    INT     PRIORITY of DFTracer in GOTCHA (default: 1).
-   DFTRACER_LOG_LEVEL          STRING  Logging level within DFTracer ERROR/WARN/INFO/DEBUG (default ERROR).
-   DFTRACER_DISABLE_IO         STRING  Disable automatic binding of all I/O calls.
-   DFTRACER_DISABLE_POSIX      STRING  Disable automatic binding of POSIX I/O calls.
-   DFTRACER_DISABLE_STDIO      STRING  Disable automatic binding of STDIO I/O calls.
-   DFTRACER_TRACE_COMPRESSION  INT     Enable trace compression (default 1)
-   DFTRACER_DISABLE_TIDS       INT     Disable tracing of thread ids (default 0).
+   DFTRACER_CONFIGURATION           STRING  PATH to the yaml configuration
+   DFTRACER_ENABLE                  INT     Enable or Disable DFTracer (default 0).
+   DFTRACER_INIT                    STRING  DFTracer Mode FUNCTION/PRELOAD (default FUNCTION).
+                                                 For Hybrid use PRELOAD mode.
+   DFTRACER_LOG_FILE                STRING  PATH To log file. In this case process id and app name is appended to file.
+   DFTRACER_DATA_DIR                STRING  Colon separated paths that will be traced for I/O accesses by profiler.
+                                                 For tracing all directories use the string "all" (not recommended).
+   DFTRACER_INC_METADATA            INT     Include or exclude metadata (default 0)
+   DFTRACER_SET_CORE_AFFINITY       INT     Include or exclude core affinity (default 0).
+                                                 DFTRACER_INC_METADATA needs to be enabled.
+   DFTRACER_GOTCHA_PRIORITY         INT     PRIORITY of DFTracer in GOTCHA (default: 1).
+   DFTRACER_LOG_LEVEL               STRING  Logging level within DFTracer ERROR/WARN/INFO/DEBUG (default ERROR).
+   DFTRACER_DISABLE_IO              STRING  Disable automatic binding of all I/O calls.
+   DFTRACER_DISABLE_POSIX           STRING  Disable automatic binding of POSIX I/O calls.
+   DFTRACER_DISABLE_STDIO           STRING  Disable automatic binding of STDIO I/O calls.
+   DFTRACER_TRACE_COMPRESSION       INT     Enable trace compression (default 1)
+   DFTRACER_DISABLE_TIDS            INT     Disable tracing of thread ids (default 0).
    ================================ ======  ===========================================================================
 
 ----------------------------------------
@@ -126,6 +126,7 @@ Function Profiling
 To profile a function, add the wrapper ``DFTRACER_CPP_FUNCTION`` at the start of the function
 
 .. code-block:: c
+
     void foo() {
       DFTRACER_CPP_FUNCTION();
       sleep(1);
