@@ -33,6 +33,8 @@ source ${DFTRACER_APP}/dfanalyzer/dask/scripts/utils.sh
 eval $(parse_yaml $DFTRACER_DASK_CONF_NAME DFTRACER_)
 
 source ${DFTRACER_ENV}/bin/activate
+mkdir -p ${DFTRACER_CONFIG_LOG_DIR}
+mkdir -p ${DFTRACER_CONFIG_RUN_DIR}
 
 rm -rf ${DFTRACER_CONFIG_RUN_DIR}/scheduler_${USER}.json
 
