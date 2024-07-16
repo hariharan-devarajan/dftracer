@@ -38,6 +38,7 @@
 
 # Environment and Dependency
 venv*
+.venv*
 dependency/.spack-env
 dependency/spack.lock
 /build_env/
@@ -85,3 +86,7 @@ pydftracer.egg-info
 # Debug files
 /*.core
 
+dfanalyzer/dask/run_dir
+dfanalyzer/dask/logs
+dfanalyzer/dask/scripts/STDIN.*
+*.zindex
