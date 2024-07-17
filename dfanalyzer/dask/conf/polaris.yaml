@@ -1,0 +1,26 @@
+config:
+  script_dir: ${DFTRACER_APP}/dfanalyzer/dask/scripts
+  conf_dir: ${DFTRACER_APP}/dfanalyzer/dask/conf
+  run_dir: ${DFTRACER_APP}/dfanalyzer/dask/run_dir
+  log_dir: ${DFTRACER_APP}/dfanalyzer/dask/logs
+dask:
+  scheduler: dask-scheduler
+  worker: dask-worker
+job:
+  num_nodes: 1
+  wall_time_min: 01:00:00
+  env_id: PBS_JOBID
+  queue: debug
+scheduler:
+  cmd: qsub -l select=${DFTRACER_JOB_NUM_NODES} -l walltime=${DFTRACER_JOB_WALL_TIME_MIN} -l filesystems=home:eagle:grand -q ${DFTRACER_JOB_QUEUE} -A ${DFTRACER_ACCOUNT} --
+  port: 11000
+  kill: qdel
+worker:
+  total_tasks: 16
+  ppn: 16
+  cmd: /opt/cray/pals/1.3.4/bin/mpiexec -n ${DFTRACER_WORKER_TOTAL_TASKS} --ppn ${DFTRACER_WORKER_PPN}
+  per_core: 1
+  threads: 1
+  local_dir: /dev/shm/$USER/dask-workspace
+  kill: qdel
+  connection_string: tcp://${DFTRACER_SCHEDULER_HOSTNAME}:${DFTRACER_SCHEDULER_PORT}
