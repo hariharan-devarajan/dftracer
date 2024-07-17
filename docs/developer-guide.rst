@@ -8,7 +8,7 @@ ALCF Polaris
 
 These are steps that are needed to compile :code:`dftracer` on `ALCF Polaris <https://docs.alcf.anl.gov/polaris/getting-started/>`_
 
-First, make sure you have set up the environment variable and source it as shown `here <https://docs.alcf.anl.gov/polaris/data-science-workflows/python/>`. Then, you can modify the :code:`dftracer` codebase and compile the codebase by running commands below:
+First, make sure you have set up the environment variable and source it as shown `here <https://docs.alcf.anl.gov/polaris/data-science-workflows/python/>`_. Then, you can modify the :code:`dftracer` codebase and compile the codebase by running commands below:
 
 .. code-block:: bash
 
