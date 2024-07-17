@@ -141,6 +141,11 @@ def init():
     """This function is called when new processes start."""
     print(f"Initializing process {os.getpid()}")
 
+@dft_fn.log
+def with_default_args(step=2):
+    for i in dft_fn.iter(range(step)):
+        print(i)
+
 
 def main():
     posix_calls((20, False))
@@ -173,6 +178,8 @@ def main():
     data_gen(num_files=args.num_files, data_dir=args.data_dir, format=args.format, data=data)
     for n in range(args.niter):
         read_data(num_files=args.num_files, data_dir=args.data_dir, format=args.format)
+
+    with_default_args()
 
     log_inst.finalize()
 
