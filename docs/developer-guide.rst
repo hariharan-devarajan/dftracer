@@ -24,7 +24,7 @@ First, make sure you have set up the environment variable and source it as shown
    export DFTRACER_ENABLE_TESTS=On
    export DFTRACER_LOGGER_USER=1
    export DFTRACER_DISABLE_HWLOC=On
-   export TEST_LD_LIBRARY_PATH=/opt/cray/libfabric/1.15.2.0/lib64
+   export DFTRACER_TEST_LD_LIBRARY_PATH=/opt/cray/libfabric/1.15.2.0/lib64
    pip install -v ".[dfanalyzer]"
 
 .. note:: bash

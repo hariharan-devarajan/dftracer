@@ -88,6 +88,9 @@ class CMakeBuild(build_ext):
         enable_dlio_tests = os.environ.get("DFTRACER_ENABLE_PAPER_TESTS", "OFF")
         cmake_args += [f"-DDFTRACER_ENABLE_PAPER_TESTS={enable_dlio_tests}"]
 
+        test_ld_library_path = os.environ.get("DFTRACER_TEST_LD_LIBRARY_PATH", "")
+        cmake_args += [f"-DDFTRACER_TEST_LD_LIBRARY_PATH={test_ld_library_path}"]
+
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.
         cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
@@ -194,7 +197,7 @@ setup(
                     "dfanalyzer": [
                         "bokeh>=2.4.2",
                         "pybind11",
-                        "zindex_py@git+https://github.com/hariharan-devarajan/zindex.git",
+                        "zindex_py==0.0.2",
                         "pandas>=2.0.3",
                         "dask>=2023.5.0",
                         "distributed",
