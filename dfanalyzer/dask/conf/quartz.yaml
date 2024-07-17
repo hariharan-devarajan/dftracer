@@ -3,6 +3,9 @@ config:
   conf_dir: ${DFTRACER_APP}/dfanalyzer/dask/conf
   run_dir: ${DFTRACER_APP}/dfanalyzer/dask/run_dir
   log_dir: ${DFTRACER_APP}/dfanalyzer/dask/logs
+dask:
+  scheduler: dask scheduler
+  worker: dask worker
 job:
   num_nodes: 4
   wall_time_min: 60

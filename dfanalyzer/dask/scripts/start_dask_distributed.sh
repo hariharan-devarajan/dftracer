@@ -15,6 +15,9 @@ case $hostname in
   "quartz"*)
     DFTRACER_DASK_CONF_NAME=${DFTRACER_APP}/dfanalyzer/dask/conf/quartz.yaml
     ;;
+  "polaris"*)
+    DFTRACER_DASK_CONF_NAME=${DFTRACER_APP}/dfanalyzer/dask/conf/polaris.yaml
+    ;;
 esac
 
 if [[ "$DFTRACER_DASK_CONF_NAME" == "UNSET" ]]; then
@@ -33,7 +36,7 @@ source ${DFTRACER_ENV}/bin/activate
 
 rm -rf ${DFTRACER_CONFIG_RUN_DIR}/scheduler_${USER}.json
 
-dask scheduler --scheduler-file ${DFTRACER_CONFIG_RUN_DIR}/scheduler_${USER}.json --port ${DFTRACER_SCHEDULER_PORT} > ${DFTRACER_CONFIG_LOG_DIR}/scheduler_${USER}.log 2>&1 &
+${DFTRACER_DASK_SCHEDULER} --scheduler-file ${DFTRACER_CONFIG_RUN_DIR}/scheduler_${USER}.json --port ${DFTRACER_SCHEDULER_PORT} > ${DFTRACER_CONFIG_LOG_DIR}/scheduler_${USER}.log 2>&1 &
 scheduler_pid=$!
 echo $scheduler_pid > ${DFTRACER_CONFIG_RUN_DIR}/scheduler_${USER}.pid
 
@@ -53,4 +56,8 @@ else
    exit 1
 fi
 
-${DFTRACER_SCHEDULER_CMD} ${DFTRACER_CONFIG_SCRIPT_DIR}/start_dask_worker.sh ${DFTRACER_DASK_CONF_NAME}
+rm ${DFTRACER_CONFIG_RUN_DIR}/job_id_${USER}.pid
+
+${DFTRACER_SCHEDULER_CMD} ${DFTRACER_CONFIG_SCRIPT_DIR}/start_dask_worker.sh ${DFTRACER_DASK_CONF_NAME} ${hostname}
+
+
