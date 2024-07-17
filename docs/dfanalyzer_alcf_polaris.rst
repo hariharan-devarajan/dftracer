@@ -25,19 +25,6 @@ Logging in to Polaris Login Node
    We recommend you to use VSCode to connect to the Polaris login node as it supports opening Jupyter Notebook and do port forwarding natively
 
 ----------------------------------------
-Creating necessary directories
-----------------------------------------
-
-.. code-block:: bash
-
-   cd <dftracer>/dfanalyzer/dask
-   mkdir -p {logs,run_dir}
-
-.. note::
-   
-   These directories are needed to hold log files (for debugging purposes) and intermediary files that will be used through :code:`dfanalyzer` execution
-
-----------------------------------------
 Initializing Dask Configurations
 ----------------------------------------
 
