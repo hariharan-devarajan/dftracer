@@ -130,6 +130,7 @@ option (DFTRACER_INSTALL_DEPENDENCIES "Install DFTracer dependencies" OFF)
 option (DFTRACER_ENABLE_TESTS "Enable tests for DFTRACER." OFF)
 option (DFTRACER_ENABLE_DLIO_BENCHMARK_TESTS "Enable dlio_benchmark tests" OFF)
 option (DFTRACER_ENABLE_PAPER_TESTS "Enable paper tests" OFF)
+set (DFTRACER_TEST_LD_LIBRARY_PATH "" CACHE STRING "Additional LD_LIBRARY_PATH to be included on testing")
 
 #------------------------------------------------------------------------------
 # Compiler setup
