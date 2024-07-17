@@ -27,7 +27,7 @@ First, make sure you have set up the environment variable and source it as shown
    export DFTRACER_TEST_LD_LIBRARY_PATH=/opt/cray/libfabric/1.15.2.0/lib64
    pip install -v ".[dfanalyzer]"
 
-.. note:: bash
+.. note::
 
    We need to disable :code:`darshan` here because it will give you a lot of :code:`segfault` on Polaris machine due to POSIX API interceptor done by Darshan
 
