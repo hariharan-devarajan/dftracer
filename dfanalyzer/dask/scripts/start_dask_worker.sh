@@ -21,7 +21,7 @@ echo "Activated Env"
 if [ "x${DFTRACER_WORKER_CONNECTION_STRING}" != "x" ]; then
     dask_scheduler_conn=${DFTRACER_WORKER_CONNECTION_STRING}
 else
-    dask_scheduler_conn=--scheduler-file ${DFTRACER_CONFIG_RUN_DIR}/scheduler_${USER}.json
+    dask_scheduler_conn="--scheduler-file ${DFTRACER_CONFIG_RUN_DIR}/scheduler_${USER}.json"
 fi
 
 while :
