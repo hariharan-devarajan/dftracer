@@ -23,6 +23,7 @@ DFTracer: is a library for profiling I/O calls and application functions.
    :caption: dfanalyzer
 
    dfanalyzer_build
+   dfanalyzer_distributed
    dfanalyzer_alcf_polaris
    
 .. toctree::
