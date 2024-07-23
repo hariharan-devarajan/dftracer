@@ -36,6 +36,13 @@ DFTracer: is a library for profiling I/O calls and application functions.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Applications
+
+   pegasus_montage
+   pegasus_genome
+
+.. toctree::
+   :maxdepth: 2
    :caption: Contributing
 
    developer-guide
