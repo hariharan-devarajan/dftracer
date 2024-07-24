@@ -1,8 +1,7 @@
-# This will create IMPORTED targets for DFTRACER. The executables will be
-# DFTRACER::<exe-name>-bin (e.g., DFTRACER::dftracer-bin) and the library will
-# be DFTRACER::dftracer.
+# This will create IMPORTED targets for dftracer. The executables will be
+# the library will be dftracer.
 
-include("${CMAKE_CURRENT_LIST_DIR}/DFTRACERConfigVersion.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/dftracer-config-version.cmake")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/modules")
@@ -10,7 +9,7 @@ list(APPEND CMAKE_MODULE_PATH "@EXTRA_CMAKE_MODULE_DIR@")
 
 #include(GNUInstallDirs)
 include(ExternalProject)
-include(DFTRACERCMakeUtilities)
+include(dftracer-utils)
 include(CMakePackageConfigHelpers)
 
 
@@ -40,22 +39,41 @@ set(DFTRACER_HAS_STD_FSTREAM_FD @DFTRACER_HAS_STD_FSTREAM_FD@)
 @PACKAGE_INIT@
 
 # Now actually import the DFTRACER target
-set(_TMP_INCLUDE_DIRS "@PACKAGE_INCLUDE_INSTALL_DIRS@")
+set(_TMP_INCLUDE_DIRS "@DFTRACER_INSTALL_INCLUDE_DIR@")
 foreach (_DIR ${_TMP_INCLUDE_DIRS})
   set_and_check(_INCLUDE_DIR "${_DIR}")
   list(APPEND DFTRACER_INCLUDE_DIRS "${_INCLUDE_DIR}")
 endforeach (_DIR "${_TMP_INCLUDE_DIRS}")
 
-set(_TMP_LIBRARY_DIRS "@PACKAGE_LIB_INSTALL_DIR@")
+set(_TMP_LIBRARY_DIRS "@DFTRACER_INSTALL_LIB_DIR@")
 foreach (_DIR ${_TMP_LIBRARY_DIRS})
   set_and_check(_LIBRARY_DIR "${_DIR}")
   list(APPEND DFTRACER_LIBRARY_DIRS "${_LIBRARY_DIR}")
 endforeach (_DIR ${_TMP_LIBRARY_DIRS})
 
-if (NOT TARGET DFTRACER::dftracer)
+if (NOT TARGET dftracer)
   include(${CMAKE_CURRENT_LIST_DIR}/dftracer-targets.cmake)
-endif (NOT TARGET DFTRACER::dftracer)
+endif (NOT TARGET dftracer)
 
-check_required_components(DFTRACER)
+find_package(brahma REQUIRED)
+if (${brahma_FOUND})
+    message(STATUS "[DFTRACER] found brahma at ${BRAHMA_INCLUDE_DIRS}")
+    include_directories(${BRAHMA_INCLUDE_DIRS})
+     target_link_libraries(dftracer INTERFACE ${BRAHMA_LIBRARIES})
+else ()
+    message(FATAL_ERROR "-- [DFTRACER] brahma is needed for ${PROJECT_NAME} build")
+endif ()
 
-set(DFTRACER_LIBRARIES DFTRACER::dftracer)
+find_package(yaml-cpp REQUIRED)
+if (${yaml-cpp_FOUND})
+    message(STATUS "[DFTRACER] found yaml-cpp at ${YAML_CPP_INCLUDE_DIR}")
+    include_directories(${YAML_CPP_INCLUDE_DIR})
+    set(YAML_CPP_LIBRARY_DIR "${YAML_CPP_CMAKE_DIR}/../../")
+    target_link_libraries(dftracer INTERFACE -L${YAML_CPP_LIBRARY_DIR} ${YAML_CPP_LIBRARIES})
+else ()
+    message(FATAL_ERROR "-- [DFTRACER] yaml-cpp is needed for ${PROJECT_NAME} build")
+endif ()
+
+check_required_components(dftracer)
+
+set(DFTRACER_LIBRARIES dftracer)
