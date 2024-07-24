@@ -349,7 +349,7 @@ endif()
 #-----------------------------------------------------------------------------
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-        ${CMAKE_CURRENT_Scd ../OURCE_DIR}/cmake/configure_files/${PROJECT_NAME}-config.cmake.build.in
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/configure_files/${PROJECT_NAME}-config.cmake.build.in
         "${CMAKE_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
         INSTALL_DESTINATION  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}-config.cmake 
         PATH_VARS CMAKE_BINARY_DIR
@@ -363,7 +363,7 @@ configure_package_config_file(
 )
 install(
         FILES
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/install/${PROJECT_NAME}-config.cmake
+        ${CMAKE_BINARY_DIR}/install/${PROJECT_NAME}-config.cmake
         DESTINATION
         ${DFTRACER_LIBDIR}/cmake/${PROJECT_NAME}
 )
