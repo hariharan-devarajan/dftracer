@@ -195,6 +195,7 @@ setup(
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"],
                     "dfanalyzer": [
+                        "seaborn>=0.13.2",
                         "bokeh>=2.4.2",
                         "pybind11",
                         "zindex_py==0.0.2",

@@ -29,6 +29,7 @@ class DFAnalyzerPlots(object):
         y2label: str = 'Bandwidth',
         x_num_ticks: int = 10,
         y_num_ticks: int = 5,
+        y_axis_formatter = ticker.FuncFormatter(lambda x, pos: '{:.0f}'.format(x)),
     ):
         size_denom = 1024
         y2label_suffix = 'KB/s'
@@ -53,7 +54,8 @@ class DFAnalyzerPlots(object):
                     .reset_index() \
                     .map_partitions(_set_bw) \
                     .compute() \
-                    .assign(seconds=self._assign_seconds)
+                    .assign(seconds=self._assign_seconds) \
+                    .sort_values("seconds")
 
         fig, ax1 = plt.subplots(figsize=figsize)
         if time_col == "io_time":
@@ -82,12 +84,11 @@ class DFAnalyzerPlots(object):
 
 
         ax1.yaxis.set_major_formatter(ticker.FuncFormatter(
-            lambda x, pos: '{:.0f}'.format(x/1e6)))
+            lambda x, pos: '{:.1f}'.format(x/1e6)))
         ax1.set_xlabel(xlabel)
         ax1.set_ylabel(y1label)
 
-        ax2.yaxis.set_major_formatter(ticker.FuncFormatter(
-            lambda x, pos: '{:.1f}'.format(x)))
+        ax2.yaxis.set_major_formatter(y_axis_formatter)
         if has_y2:
             ax2.set_ylabel(f"{y2label} ({y2label_suffix})")
 
@@ -132,6 +133,7 @@ class DFAnalyzerPlots(object):
         ylabel: str = 'Transfer Size',
         x_num_ticks: int = 10,
         y_num_ticks: int = 5,
+        y_axis_formatter = ticker.FuncFormatter(lambda x, pos: '{:.0f}'.format(x)),
     ):
         xfer_col = 'xfer'
 
@@ -167,8 +169,7 @@ class DFAnalyzerPlots(object):
         ax.yaxis.set_major_locator(ticker.LinearLocator(y_num_ticks))
         # ax1.yaxis.set_major_formatter(ticker.FuncFormatter(
         #     lambda x, pos: '{:.0f}'.format(x/1e6)))
-        ax.yaxis.set_major_formatter(ticker.FuncFormatter(
-            lambda x, pos: '{:.1f}'.format(x)))
+        ax.yaxis.set_major_formatter(yaxis_formatter)
 
         # ax.get_legend().remove()
         ax.minorticks_on()
