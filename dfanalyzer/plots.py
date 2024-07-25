@@ -155,7 +155,8 @@ class DFAnalyzerPlots(object):
             .query("phase == 2") \
             .map_partitions(_set_xfer_size) \
             .compute() \
-            .assign(seconds=self._assign_seconds)
+            .assign(seconds=self._assign_seconds) \
+            .sort_values("seconds")
 
         fig, ax = plt.subplots(figsize=figsize)
 
@@ -169,7 +170,7 @@ class DFAnalyzerPlots(object):
         ax.yaxis.set_major_locator(ticker.LinearLocator(y_num_ticks))
         # ax1.yaxis.set_major_formatter(ticker.FuncFormatter(
         #     lambda x, pos: '{:.0f}'.format(x/1e6)))
-        ax.yaxis.set_major_formatter(yaxis_formatter)
+        ax.yaxis.set_major_formatter(y_axis_formatter)
 
         # ax.get_legend().remove()
         ax.minorticks_on()
