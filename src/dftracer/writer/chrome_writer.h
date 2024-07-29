@@ -62,9 +62,10 @@ class ChromeWriter {
     auto written_elements = fwrite(write_buffer, sizeof(char), write_size, fh);
     funlockfile(fh);
     if (written_elements != write_size) {  // GCOVR_EXCL_START
-      ERROR(written_elements != write_size,
-            "unable to log write %s for a+ written only %d of %d with error %s",
-            filename.c_str(), written_elements, write_size, strerror(errno));
+      ERROR(
+          written_elements != write_size,
+          "unable to log write for a+ written only %d of %d with error code %d",
+          written_elements, write_size, errno);
     }  // GCOVR_EXCL_STOP
     return written_elements;
   }
