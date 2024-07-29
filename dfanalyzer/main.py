@@ -230,10 +230,22 @@ def io_function(json_object, current_dict, time_approximate,condition_fn):
             d["hostname"] = json_object["args"]["hostname"]
 
         if "POSIX" == json_object["cat"] and "ret" in json_object["args"]:
-            if "write" in json_object["name"]:
+            if json_object["name"] == "write":
                 d["size"] = int(json_object["args"]["ret"])
-            elif "read" in json_object["name"] and "readdir" not in json_object["name"]:
+            elif json_object["name"] == "read":
                 d["size"] = int(json_object["args"]["ret"])
+            elif json_object["name"] == "fwrite":
+                d["size"] = 1
+                if "ret" in json_object["args"]:
+                    d["size"] *= int(json_object["args"]["ret"]) 
+                if "size" in json_object["args"]:
+                    d["size"] *= int(json_object["args"]["size"])
+            elif json_object["name"] == "fread":               
+                d["size"] = 1
+                if "ret" in json_object["args"]:
+                    d["size"] *= int(json_object["args"]["ret"]) 
+                if "size" in json_object["args"]:
+                    d["size"] *= int(json_object["args"]["size"])
         else:
             if "image_size" in json_object["args"]:
                 d["size"] = int(json_object["args"]["image_size"])

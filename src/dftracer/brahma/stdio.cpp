@@ -47,6 +47,7 @@ size_t brahma::STDIODFTracer::fread(void *ptr, size_t size, size_t nmemb,
   DFT_LOGGER_UPDATE(size);
   DFT_LOGGER_UPDATE(nmemb);
   size_t ret = __real_fread(ptr, size, nmemb, fp);
+  DFT_LOGGER_UPDATE(ret);
   DFT_LOGGER_END();
   return ret;
 }
@@ -58,6 +59,7 @@ size_t brahma::STDIODFTracer::fwrite(const void *ptr, size_t size, size_t nmemb,
   DFT_LOGGER_UPDATE(size);
   DFT_LOGGER_UPDATE(nmemb);
   size_t ret = __real_fwrite(ptr, size, nmemb, fp);
+  DFT_LOGGER_UPDATE(ret);
   DFT_LOGGER_END();
   return ret;
 }
@@ -66,6 +68,7 @@ long brahma::STDIODFTracer::ftell(FILE *fp) {
   BRAHMA_MAP_OR_FAIL(ftell);
   DFT_LOGGER_START(fp);
   long ret = __real_ftell(fp);
+  DFT_LOGGER_UPDATE(ret);
   DFT_LOGGER_END();
   return ret;
 }
@@ -76,6 +79,7 @@ int brahma::STDIODFTracer::fseek(FILE *fp, long offset, int whence) {
   DFT_LOGGER_UPDATE(offset);
   DFT_LOGGER_UPDATE(whence);
   int ret = __real_fseek(fp, offset, whence);
+  DFT_LOGGER_UPDATE(ret);
   DFT_LOGGER_END();
   return ret;
 }
