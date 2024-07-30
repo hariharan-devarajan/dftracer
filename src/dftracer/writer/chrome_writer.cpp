@@ -19,9 +19,11 @@ std::shared_ptr<dftracer::ChromeWriter>
 template <>
 bool dftracer::Singleton<dftracer::ChromeWriter>::stop_creating_instances =
     false;
-void dftracer::ChromeWriter::initialize(char *filename, bool throw_error) {
+void dftracer::ChromeWriter::initialize(char *filename, char *dftracer_meta,
+                                        bool throw_error) {
   this->throw_error = throw_error;
   this->filename = filename;
+  this->meta_file = dftracer_meta;
   if (fh == nullptr) {
     fh = fopen(filename, "ab+");
     if (fh == nullptr) {
@@ -32,25 +34,43 @@ void dftracer::ChromeWriter::initialize(char *filename, bool throw_error) {
       DFTRACER_LOGINFO("created log file %s", filename);
     }
   }
-  DFTRACER_LOGDEBUG("ChromeWriter.initialize %s", this->filename.c_str());
+  if (meta_fd == -1) {
+    meta_fd = open(this->meta_file.c_str(), O_WRONLY | O_CREAT | O_EXCL, 777);
+  }
+  DFTRACER_LOGDEBUG("ChromeWriter.initialize %s and %s", this->filename.c_str(),
+                    this->meta_file.c_str());
 }
 
 void dftracer::ChromeWriter::log(
     int index, ConstEventType event_name, ConstEventType category,
     TimeResolution &start_time, TimeResolution &duration,
     std::unordered_map<std::string, std::any> *metadata, ProcessID process_id,
-    ThreadID thread_id) {
+    ThreadID thread_id, bool is_meta) {
   DFTRACER_LOGDEBUG("ChromeWriter.log", "");
-  if (fh != nullptr) {
-    int size;
-    char data[MAX_LINE_SIZE];
-    convert_json(index, event_name, category, start_time, duration, metadata,
-                 process_id, thread_id, &size, data);
-    write_buffer_op(data, size);
+  if (is_meta) {
+    if (meta_fd != -1) {
+      int size;
+      char data[MAX_LINE_SIZE];
+      convert_json(index, event_name, category, start_time, duration, metadata,
+                   process_id, thread_id, &size, data);
+      auto written_bytes = write(meta_fd, data, size);
+      if (written_bytes != size) {
+        DFTRACER_LOGERROR("ChromeWriter.log metadata written %d of %d",
+                          written_bytes, size);
+      }
+    }
   } else {
-    DFTRACER_LOGERROR("ChromeWriter.log invalid", "");
+    if (fh != nullptr) {
+      int size;
+      char data[MAX_LINE_SIZE];
+      convert_json(index, event_name, category, start_time, duration, metadata,
+                   process_id, thread_id, &size, data);
+      write_buffer_op(data, size);
+    } else {
+      DFTRACER_LOGERROR("ChromeWriter.log invalid", "");
+    }
+    is_first_write = false;
   }
-  is_first_write = false;
 }
 
 void dftracer::ChromeWriter::finalize(bool has_entry) {
@@ -115,6 +135,10 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
 #if DISABLE_HWLOC == 1
     hwloc_topology_destroy(topology);
 #endif
+  }
+  if (meta_fd != -1) {
+    DFTRACER_LOGINFO("Profiler finalizing writer %s", this->meta_file.c_str());
+    close(meta_fd);
   }
   DFTRACER_LOGDEBUG("Finished writer finalization", "");
 }

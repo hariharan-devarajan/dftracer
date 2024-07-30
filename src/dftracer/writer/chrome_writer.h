@@ -34,6 +34,7 @@ class ChromeWriter {
  protected:
   bool throw_error;
   std::string filename;
+  std::string meta_file;
 
  private:
   bool include_metadata, enable_compression;
@@ -43,6 +44,7 @@ class ChromeWriter {
   hwloc_topology_t topology;
 #endif
   FILE *fh;
+  int meta_fd;
   char hostname[256];
   static const int MAX_LINE_SIZE = 4096;
   static const int MAX_META_LINE_SIZE = 3000;
@@ -100,6 +102,7 @@ class ChromeWriter {
         enable_compression(false),
         enable_core_affinity(false),
         fh(nullptr),
+        meta_fd(-1),
         is_first_write(true) {
     DFTRACER_LOGDEBUG("ChromeWriter.ChromeWriter", "");
     auto conf =
@@ -116,12 +119,12 @@ class ChromeWriter {
     }
   }
   ~ChromeWriter() { DFTRACER_LOGDEBUG("Destructing ChromeWriter", ""); }
-  void initialize(char *filename, bool throw_error);
+  void initialize(char *filename, char *dftracer_meta, bool throw_error);
 
   void log(int index, ConstEventType event_name, ConstEventType category,
            TimeResolution &start_time, TimeResolution &duration,
            std::unordered_map<std::string, std::any> *metadata,
-           ProcessID process_id, ThreadID tid);
+           ProcessID process_id, ThreadID tid, bool is_meta = false);
 
   void finalize(bool has_entry);
 };

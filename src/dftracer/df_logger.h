@@ -10,13 +10,16 @@
 #include <dftracer/utils/configuration_manager.h>
 #include <dftracer/utils/utils.h>
 #include <dftracer/writer/chrome_writer.h>
+#include <libgen.h>
 #include <sys/time.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <any>
 #include <chrono>
 #include <cstdint>
 #include <cstring>
+#include <dftracer/dftracer_config.hpp>
 #include <unordered_map>
 
 typedef std::chrono::high_resolution_clock chrono;
@@ -59,10 +62,40 @@ class DFTLogger {
     this->process_id = process_id;
     this->writer = dftracer::Singleton<dftracer::ChromeWriter>::get_instance();
     if (this->writer != nullptr) {
-      this->writer->initialize(log_file.data(), this->throw_error);
+      auto trace_dir_str = std::string(log_file);
+      const char *trace_dir = dirname(trace_dir_str.data());
+      char dftrace_meta[PATH_MAX];
+      sprintf(dftrace_meta, "%s/dftracer.pfw", trace_dir);
+      this->writer->initialize(log_file.data(), dftrace_meta,
+                               this->throw_error);
     }
     this->is_init = true;
     DFTRACER_LOGINFO("Writing trace to %s", log_file.c_str());
+  }
+  inline void initialize_dftracer_log() {
+    if (this->writer != nullptr) {
+      auto meta = std::unordered_map<std::string, std::any>();
+      meta.insert_or_assign("version", DFTRACER_VERSION);
+      time_t ltime;       /* calendar time */
+      ltime = time(NULL); /* get current cal time */
+      char timestamp[1024];
+      auto size = sprintf(timestamp, "%s", asctime(localtime(&ltime)));
+      timestamp[size - 1] = '\0';
+      meta.insert_or_assign("date", std::string(timestamp));
+      this->enter_event();
+      this->log("start", "dftracer", this->get_time(), 0, &meta, true);
+      this->exit_event();
+    }
+  }
+
+  inline void finalize_dftracer_log() {
+    if (this->writer != nullptr) {
+      auto meta = std::unordered_map<std::string, std::any>();
+      meta.insert_or_assign("num_events", index.load());
+      this->enter_event();
+      this->log("end", "dftracer", this->get_time(), 0, &meta, true);
+      this->exit_event();
+    }
   }
 
   inline void enter_event() {
@@ -86,7 +119,8 @@ class DFTLogger {
 
   inline void log(ConstEventType event_name, ConstEventType category,
                   TimeResolution start_time, TimeResolution duration,
-                  std::unordered_map<std::string, std::any> *metadata) {
+                  std::unordered_map<std::string, std::any> *metadata,
+                  bool is_meta = false) {
     DFTRACER_LOGDEBUG("DFTLogger.log", "");
     ThreadID tid = 0;
     if (dftracer_tid) {
@@ -102,7 +136,8 @@ class DFTLogger {
     }
     if (this->writer != nullptr) {
       this->writer->log(index_stack[level - 1], event_name, category,
-                        start_time, duration, metadata, this->process_id, tid);
+                        start_time, duration, metadata, this->process_id, tid,
+                        is_meta);
       has_entry = true;
     } else {
       DFTRACER_LOGERROR("DFTLogger.log writer not initialized", "");
