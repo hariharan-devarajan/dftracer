@@ -111,6 +111,7 @@ bool dftracer::DFTracerCore::finalize() {
       }
     }
     if (logger != nullptr) {
+      logger->finalize_dftracer_log();
       logger->finalize();
       dftracer::Singleton<DFTLogger>::finalize();
     }
@@ -162,9 +163,9 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
           exec_file_name[DFT_PATH_MAX - 1] = '\0';
           DFTRACER_LOGDEBUG("Exec command line %s", exec_file_name);
           auto items = split(exec_file_name, SEPARATOR);
-          for (const auto &item : items) {
+          for (auto item : items) {
             if (strstr(item.c_str(), "python") == nullptr) {
-              exec_name = basename(item.c_str());
+              exec_name = basename(item.data());
               break;
             }
           }
@@ -184,10 +185,11 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
       }
       DFTRACER_LOGDEBUG("Setting log file to %s", this->log_file.c_str());
       logger->update_log_file(this->log_file, this->process_id);
+      logger->initialize_dftracer_log();
       if (bind) {
         if (conf->io) {
           auto trie = dftracer::Singleton<Trie>::get_instance();
-          const char *ignore_extensions[3] = {".pfw", ".py",".pfw.gz"};
+          const char *ignore_extensions[3] = {".pfw", ".py", ".pfw.gz"};
           const char *ignore_prefix[8] = {"/pipe",  "/socket", "/proc",
                                           "/sys",   "/collab", "anon_inode",
                                           "socket", "/var/tmp"};
