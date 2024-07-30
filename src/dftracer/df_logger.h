@@ -81,6 +81,31 @@ class DFTLogger {
     this->is_init = true;
     DFTRACER_LOGINFO("Writing trace to %s", log_file.c_str());
   }
+  inline void initialize_dftracer_log() {
+    if (this->writer != nullptr) {
+      auto meta = std::unordered_map<std::string, std::any>();
+      meta.insert_or_assign("version", DFTRACER_VERSION);
+      time_t ltime;       /* calendar time */
+      ltime = time(NULL); /* get current cal time */
+      char timestamp[1024];
+      auto size = sprintf(timestamp, "%s", asctime(localtime(&ltime)));
+      timestamp[size - 1] = '\0';
+      meta.insert_or_assign("date", std::string(timestamp));
+      this->enter_event();
+      this->log("start", "dftracer", this->get_time(), 0, &meta, true);
+      this->exit_event();
+    }
+  }
+
+  inline void finalize_dftracer_log() {
+    if (this->writer != nullptr) {
+      auto meta = std::unordered_map<std::string, std::any>();
+      meta.insert_or_assign("num_events", index.load());
+      this->enter_event();
+      this->log("end", "dftracer", this->get_time(), 0, &meta, true);
+      this->exit_event();
+    }
+  }
 
   inline void enter_event() {
     index++;
@@ -103,7 +128,8 @@ class DFTLogger {
 
   inline void log(ConstEventType event_name, ConstEventType category,
                   TimeResolution start_time, TimeResolution duration,
-                  std::unordered_map<std::string, std::any> *metadata) {
+                  std::unordered_map<std::string, std::any> *metadata,
+                  bool is_meta = false) {
     DFTRACER_LOGDEBUG("DFTLogger.log", "");
     ThreadID tid = 0;
     if (dftracer_tid) {
@@ -119,7 +145,8 @@ class DFTLogger {
     }
     if (this->writer != nullptr) {
       this->writer->log(index_stack[level - 1], event_name, category,
-                        start_time, duration, metadata, this->process_id, tid);
+                        start_time, duration, metadata, this->process_id, tid,
+                        is_meta);
       has_entry = true;
     } else {
       DFTRACER_LOGERROR("DFTLogger.log writer not initialized", "");

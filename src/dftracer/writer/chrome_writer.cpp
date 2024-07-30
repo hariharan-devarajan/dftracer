@@ -21,9 +21,11 @@ std::shared_ptr<dftracer::ChromeWriter>
 template <>
 bool dftracer::Singleton<dftracer::ChromeWriter>::stop_creating_instances =
     false;
-void dftracer::ChromeWriter::initialize(char *filename, bool throw_error) {
+void dftracer::ChromeWriter::initialize(char *filename, char *dftracer_meta,
+                                        bool throw_error) {
   this->throw_error = throw_error;
   this->filename = filename;
+  this->meta_file = dftracer_meta;
   if (fh == nullptr) {
     fh = fopen(filename, "ab+");
     if (fh == nullptr) {
@@ -34,14 +36,24 @@ void dftracer::ChromeWriter::initialize(char *filename, bool throw_error) {
       DFTRACER_LOGINFO("created log file %s", filename);
     }
   }
-  DFTRACER_LOGDEBUG("ChromeWriter.initialize %s", this->filename.c_str());
+  if (this->meta_fd == -1) {
+    this->meta_fd = open(dftracer_meta, O_WRONLY | O_CREAT, 0777);
+    if (this->meta_fd == -1) {
+      ERROR(this->meta_fd == -1, "unable to create meta log file %s",
+            dftracer_meta);  // GCOVR_EXCL_LINE
+    } else {
+      DFTRACER_LOGINFO("created meta log file %s", dftracer_meta);
+    }
+  }
+  DFTRACER_LOGDEBUG("ChromeWriter.initialize %s and %s", this->filename.c_str(),
+                    this->meta_file.c_str());
 }
 
 void dftracer::ChromeWriter::log(
     int index, ConstEventType event_name, ConstEventType category,
     TimeResolution &start_time, TimeResolution &duration,
     std::unordered_map<std::string, std::any> *metadata, ProcessID process_id,
-    ThreadID thread_id) {
+    ThreadID thread_id, bool is_meta) {
   DFTRACER_LOGDEBUG("ChromeWriter.log", "");
 
   if (fh != nullptr) {
@@ -118,6 +130,10 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
 #if DISABLE_HWLOC == 1
     hwloc_topology_destroy(topology);
 #endif
+  }
+  if (meta_fd != -1) {
+    DFTRACER_LOGINFO("Profiler finalizing writer %s", this->meta_file.c_str());
+    close(meta_fd);
   }
   DFTRACER_LOGDEBUG("Finished writer finalization", "");
 }
