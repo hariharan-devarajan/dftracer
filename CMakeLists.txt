@@ -42,11 +42,14 @@ if (CMAKE_INSTALL_LIBDIR)
        ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR})
    set(DFTRACER_INSTALL_SYSCONFDIR
        ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_SYSCONFDIR}/modulefiles)
+   set(DFTRACER_INSTALL_BINFDIR
+           ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
 else ()
    set(DFTRACER_LIBDIR "lib")
    set(DFTRACER_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include")
    set(DFTRACER_INSTALL_DOCDIR "${CMAKE_INSTALL_PREFIX}/doc")
    set(DFTRACER_INSTALL_SYSCONFDIR "${CMAKE_INSTALL_PREFIX}/etc/modulefiles")
+   set(DFTRACER_INSTALL_BINARYDIR "${CMAKE_INSTALL_PREFIX}/bin")
    message(STATUS "DFTRACER_LIBDIR set to ${DFTRACER_LIBDIR}")
 endif ()
 
@@ -328,6 +331,22 @@ if (DFTRACER_BUILD_PYTHON_BINDINGS)
                 . ${CMAKE_BINARY_DIR}/symlink.sh
                 \")")
 endif()
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_compact.sh ${EXECUTABLE_OUTPUT_PATH}/dftracer_compact COPYONLY)
+install(
+        FILES
+        ${EXECUTABLE_OUTPUT_PATH}/dftracer_compact
+        DESTINATION
+        bin
+)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/merge_pfw.sh ${EXECUTABLE_OUTPUT_PATH}/merge_pfw COPYONLY)
+install(
+        FILES
+        ${EXECUTABLE_OUTPUT_PATH}/merge_pfw
+        DESTINATION
+        bin
+)
+
 #cmake_policy(SET CMP0079 NEW) # In case that we need more control over the target building order
 
 if(DFTRACER_ENABLE_TESTS)
