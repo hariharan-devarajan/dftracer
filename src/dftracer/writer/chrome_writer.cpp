@@ -8,8 +8,10 @@
 #include <unistd.h>
 
 #include <cassert>
+#include <cerrno>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <sstream>
 #include <thread>
 
@@ -34,8 +36,14 @@ void dftracer::ChromeWriter::initialize(char *filename, char *dftracer_meta,
       DFTRACER_LOGINFO("created log file %s", filename);
     }
   }
-  if (meta_fd == -1) {
-    meta_fd = open(this->meta_file.c_str(), O_WRONLY | O_CREAT | O_EXCL, 777);
+  if (this->meta_fd == -1) {
+    this->meta_fd = open(dftracer_meta, O_WRONLY | O_CREAT, 0777);
+    if (this->meta_fd == -1) {
+      ERROR(this->meta_fd == -1, "unable to create meta log file %s",
+            dftracer_meta);  // GCOVR_EXCL_LINE
+    } else {
+      DFTRACER_LOGINFO("created meta log file %s", dftracer_meta);
+    }
   }
   DFTRACER_LOGDEBUG("ChromeWriter.initialize %s and %s", this->filename.c_str(),
                     this->meta_file.c_str());
@@ -48,15 +56,26 @@ void dftracer::ChromeWriter::log(
     ThreadID thread_id, bool is_meta) {
   DFTRACER_LOGDEBUG("ChromeWriter.log", "");
   if (is_meta) {
-    if (meta_fd != -1) {
+    if (this->meta_fd != -1) {
       int size;
       char data[MAX_LINE_SIZE];
       convert_json(index, event_name, category, start_time, duration, metadata,
                    process_id, thread_id, &size, data);
-      auto written_bytes = write(meta_fd, data, size);
+      struct flock lock;
+      lock.l_type = F_WRLCK;
+      lock.l_whence = SEEK_SET;
+      lock.l_start = 0;
+      lock.l_len = 0;
+      lock.l_pid = process_id;
+      fcntl(meta_fd, F_SETLKW, &lock);
+      lseek(meta_fd, 0, SEEK_END);
+      auto written_bytes = write(this->meta_fd, data, size);
+      lock.l_type = F_UNLCK;
+      fcntl(meta_fd, F_SETLKW, &lock);
       if (written_bytes != size) {
-        DFTRACER_LOGERROR("ChromeWriter.log metadata written %d of %d",
-                          written_bytes, size);
+        DFTRACER_LOGERROR(
+            "ChromeWriter.log metadata written %d of %d with error %d:%s",
+            written_bytes, size, errno, strerror(errno));
       }
     }
   } else {

@@ -62,10 +62,8 @@ class DFTLogger {
     this->process_id = process_id;
     this->writer = dftracer::Singleton<dftracer::ChromeWriter>::get_instance();
     if (this->writer != nullptr) {
-      auto trace_dir_str = std::string(log_file);
-      const char *trace_dir = dirname(trace_dir_str.data());
       char dftrace_meta[PATH_MAX];
-      sprintf(dftrace_meta, "%s/dftracer.pfw", trace_dir);
+      sprintf(dftrace_meta, "%s-meta.pfw", log_file.c_str());
       this->writer->initialize(log_file.data(), dftrace_meta,
                                this->throw_error);
     }
