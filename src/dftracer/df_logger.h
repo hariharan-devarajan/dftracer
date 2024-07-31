@@ -57,7 +57,8 @@ class DFTLogger {
     index_stack.clear();
     DFTRACER_LOGDEBUG("Destructing DFTLogger", "");
   }
-  inline void update_log_file(std::string log_file, ProcessID process_id = -1) {
+  inline void update_log_file(std::string log_file, std::string exec_name,
+                              ProcessID process_id = -1) {
     DFTRACER_LOGDEBUG("DFTLogger.update_log_file %s", log_file.c_str());
     this->process_id = process_id;
     this->writer = dftracer::Singleton<dftracer::ChromeWriter>::get_instance();
@@ -65,6 +66,7 @@ class DFTLogger {
       this->writer->initialize(log_file.data(), this->throw_error);
       auto meta = std::unordered_map<std::string, std::any>();
       meta.insert_or_assign("version", DFTRACER_VERSION);
+      meta.insert_or_assign("exec", exec_name);
       time_t ltime;       /* calendar time */
       ltime = time(NULL); /* get current cal time */
       char timestamp[1024];
