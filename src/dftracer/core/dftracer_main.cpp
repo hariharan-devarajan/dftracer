@@ -147,9 +147,19 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
         df_close(fd);
         ssize_t index = 0;
         size_t parts = 0;
+        size_t last_index = 0;
+        bool has_extracted = false;
         while (index < read_bytes - 1 && index < DFT_PATH_MAX - 2) {
           if (exec_cmd[index] == '\0') {
+            if (!has_extracted) {
+              exec_name = std::string(exec_cmd + last_index, index);
+              if (exec_name.find("python") != std::string::npos) {
+                has_extracted = true;
+              }
+              DFTRACER_LOGINFO("Extracted process_name %s", exec_name.c_str());
+            }
             exec_cmd[index] = SEPARATOR;
+            last_index = index + 1;
             parts++;
           }
           if (parts > 1) {
@@ -159,13 +169,6 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
         }
         exec_cmd[DFT_PATH_MAX - 1] = '\0';
         DFTRACER_LOGDEBUG("Exec command line %s", exec_cmd);
-        auto items = split(exec_cmd, SEPARATOR);
-        for (auto item : items) {
-          if (strstr(item.c_str(), "python") == nullptr) {
-            exec_name = basename(item.data());
-            break;
-          }
-        }
       }
       if (_log_file == nullptr) {
         DFTRACER_LOGINFO("Extracted process_name %s", exec_name.c_str());
