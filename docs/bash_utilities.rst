@@ -35,12 +35,14 @@ Once the uncompressed data is parsed. The JSON utility `jq` can be used to parse
 In each case we have to remove the first `[` which has been added to support perfetto ui.
 
 For uncompressed files
+
 .. code-block:: bash
 
     cat *.pfw | grep -i "[^#[]" | jq -c '.'
 
 
 For compressed files
+
 .. code-block:: bash
 
     gzip -c -d `echo *.gz` | grep -i "[^#[]" | jq -c '.'
