@@ -21,11 +21,9 @@ std::shared_ptr<dftracer::ChromeWriter>
 template <>
 bool dftracer::Singleton<dftracer::ChromeWriter>::stop_creating_instances =
     false;
-void dftracer::ChromeWriter::initialize(char *filename, char *dftracer_meta,
-                                        bool throw_error) {
+void dftracer::ChromeWriter::initialize(char *filename, bool throw_error) {
   this->throw_error = throw_error;
   this->filename = filename;
-  this->meta_file = dftracer_meta;
   if (fh == nullptr) {
     fh = fopen(filename, "ab+");
     if (fh == nullptr) {
@@ -36,60 +34,26 @@ void dftracer::ChromeWriter::initialize(char *filename, char *dftracer_meta,
       DFTRACER_LOGINFO("created log file %s", filename);
     }
   }
-  if (this->meta_fd == -1) {
-    this->meta_fd = open(dftracer_meta, O_WRONLY | O_CREAT, 0777);
-    if (this->meta_fd == -1) {
-      ERROR(this->meta_fd == -1, "unable to create meta log file %s",
-            dftracer_meta);  // GCOVR_EXCL_LINE
-    } else {
-      DFTRACER_LOGINFO("created meta log file %s", dftracer_meta);
-    }
-  }
-  DFTRACER_LOGDEBUG("ChromeWriter.initialize %s and %s", this->filename.c_str(),
-                    this->meta_file.c_str());
+  DFTRACER_LOGDEBUG("ChromeWriter.initialize %s", this->filename.c_str());
 }
 
 void dftracer::ChromeWriter::log(
     int index, ConstEventType event_name, ConstEventType category,
     TimeResolution &start_time, TimeResolution &duration,
     std::unordered_map<std::string, std::any> *metadata, ProcessID process_id,
-    ThreadID thread_id, bool is_meta) {
+    ThreadID thread_id) {
   DFTRACER_LOGDEBUG("ChromeWriter.log", "");
-  if (is_meta) {
-    if (this->meta_fd != -1) {
-      int size;
-      char data[MAX_LINE_SIZE];
-      convert_json(index, event_name, category, start_time, duration, metadata,
-                   process_id, thread_id, &size, data);
-      struct flock lock;
-      lock.l_type = F_WRLCK;
-      lock.l_whence = SEEK_SET;
-      lock.l_start = 0;
-      lock.l_len = 0;
-      lock.l_pid = process_id;
-      fcntl(meta_fd, F_SETLKW, &lock);
-      lseek(meta_fd, 0, SEEK_END);
-      auto written_bytes = write(this->meta_fd, data, size);
-      lock.l_type = F_UNLCK;
-      fcntl(meta_fd, F_SETLKW, &lock);
-      if (written_bytes != size) {
-        DFTRACER_LOGERROR(
-            "ChromeWriter.log metadata written %d of %d with error %d:%s",
-            written_bytes, size, errno, strerror(errno));
-      }
-    }
+
+  if (fh != nullptr) {
+    int size;
+    char data[MAX_LINE_SIZE];
+    convert_json(index, event_name, category, start_time, duration, metadata,
+                 process_id, thread_id, &size, data);
+    write_buffer_op(data, size);
   } else {
-    if (fh != nullptr) {
-      int size;
-      char data[MAX_LINE_SIZE];
-      convert_json(index, event_name, category, start_time, duration, metadata,
-                   process_id, thread_id, &size, data);
-      write_buffer_op(data, size);
-    } else {
-      DFTRACER_LOGERROR("ChromeWriter.log invalid", "");
-    }
-    is_first_write = false;
+    DFTRACER_LOGERROR("ChromeWriter.log invalid", "");
   }
+  is_first_write = false;
 }
 
 void dftracer::ChromeWriter::finalize(bool has_entry) {
@@ -154,10 +118,6 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
 #if DISABLE_HWLOC == 1
     hwloc_topology_destroy(topology);
 #endif
-  }
-  if (meta_fd != -1) {
-    DFTRACER_LOGINFO("Profiler finalizing writer %s", this->meta_file.c_str());
-    close(meta_fd);
   }
   DFTRACER_LOGDEBUG("Finished writer finalization", "");
 }
