@@ -4,7 +4,7 @@
 # The script compacts all trace file and then divides the trace into equal file pieces.
 # This has the following signature.
 #
-# usage: dftracer_compact.sh [-fcv] [-d input_directory] [-o output_directory] [-l num_lines] [-p prefix]
+# usage: dftracer_compact [-fcv] [-d input_directory] [-o output_directory] [-l num_lines] [-p prefix]
 #   -f                      override output directory
 #   -c                      compress output file
 #   -v                      enable verbose mode
