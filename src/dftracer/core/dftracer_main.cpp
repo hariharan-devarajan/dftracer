@@ -111,7 +111,6 @@ bool dftracer::DFTracerCore::finalize() {
       }
     }
     if (logger != nullptr) {
-      logger->finalize_dftracer_log();
       logger->finalize();
       dftracer::Singleton<DFTLogger>::finalize();
     }
