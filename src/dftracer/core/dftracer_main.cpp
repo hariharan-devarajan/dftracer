@@ -138,28 +138,28 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
       }
       DFTRACER_LOGDEBUG("Setting process_id to %d", this->process_id);
       std::string exec_name = "DEFAULT";
+      char exec_cmd[DFT_PATH_MAX] = "DEFAULT";
       char cmd[128];
       sprintf(cmd, "/proc/%lu/cmdline", df_getpid());
       int fd = df_open(cmd, O_RDONLY);
       if (fd != -1) {
-        char exec_file_name[DFT_PATH_MAX];
-        ssize_t read_bytes = df_read(fd, exec_file_name, DFT_PATH_MAX);
+        ssize_t read_bytes = df_read(fd, exec_cmd, DFT_PATH_MAX);
         df_close(fd);
         ssize_t index = 0;
         size_t parts = 0;
         while (index < read_bytes - 1 && index < DFT_PATH_MAX - 2) {
-          if (exec_file_name[index] == '\0') {
-            exec_file_name[index] = SEPARATOR;
+          if (exec_cmd[index] == '\0') {
+            exec_cmd[index] = SEPARATOR;
             parts++;
           }
           if (parts > 1) {
-            exec_file_name[index] = '\0';
+            exec_cmd[index] = '\0';
           }
           index++;
         }
-        exec_file_name[DFT_PATH_MAX - 1] = '\0';
-        DFTRACER_LOGDEBUG("Exec command line %s", exec_file_name);
-        auto items = split(exec_file_name, SEPARATOR);
+        exec_cmd[DFT_PATH_MAX - 1] = '\0';
+        DFTRACER_LOGDEBUG("Exec command line %s", exec_cmd);
+        auto items = split(exec_cmd, SEPARATOR);
         for (auto item : items) {
           if (strstr(item.c_str(), "python") == nullptr) {
             exec_name = basename(item.data());
@@ -182,7 +182,8 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
         this->log_file = _log_file;
       }
       DFTRACER_LOGDEBUG("Setting log file to %s", this->log_file.c_str());
-      logger->update_log_file(this->log_file, exec_name, this->process_id);
+      logger->update_log_file(this->log_file, exec_name, exec_cmd,
+                              this->process_id);
       if (bind) {
         if (conf->io) {
           auto trie = dftracer::Singleton<Trie>::get_instance();
