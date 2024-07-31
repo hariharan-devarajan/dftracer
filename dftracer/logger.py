@@ -105,6 +105,13 @@ class dftracer:
             logging.debug(f"logger.finalize")
             self.logger.finalize()
 
+def get_default_args(func):
+    signature = inspect.signature(func)
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
 
 class dft_fn(object):
 
@@ -182,17 +189,19 @@ class dft_fn(object):
                             self._arguments["image_size"] = str(args[0].image_size)
                         if hasattr(args[0], "image_idx"):
                             self._arguments["image_idx"] = str(args[0].image_idx)
-                    for name, value in zip(arg_names[1:], kwargs):
-                        if hasattr(args, name):
-                            setattr(args, name, value)
-                            if name == "epoch":
-                                self._arguments["epoch"] = str(value)
-                            elif name == "image_idx":
-                                self._arguments["image_idx"] = str(value)
-                            elif name == "image_size":
-                                self._arguments["image_size"] = str(value)
-                            elif name == "step":
-                                self._arguments["image_size"] = str(value)
+                    full_args = dict(zip(arg_names[1:], args[1:]))
+                    full_args.update(kwargs)
+                    full_args.update(get_default_args(func))
+
+                    for name, value in full_args.items():
+                        if name == "epoch":
+                            self._arguments["epoch"] = str(value)
+                        elif name == "image_idx":
+                            self._arguments["image_idx"] = str(value)
+                        elif name == "image_size":
+                            self._arguments["image_size"] = str(value)
+                        elif name == "step":
+                            self._arguments["image_size"] = str(value)
 
                 start = dftracer.get_instance().get_time()
                 dftracer.get_instance().enter_event()
@@ -261,6 +270,7 @@ class dft_fn(object):
             if DFTRACER_ENABLE:
                 arg_values = dict(zip(arg_names[1:], args))
                 arg_values.update(kwargs)
+                arg_values.update(get_default_args(init))
                 if "epoch" in arg_values:
                     self._arguments["epoch"] = str(arg_values["epoch"])
                 elif "image_idx" in arg_values:

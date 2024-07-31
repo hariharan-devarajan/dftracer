@@ -14,6 +14,8 @@ set(DFTRACER_PACKAGE_VERSION_MINOR "${DFTRACER_VERSION_PATCH}")
 set(DFTRACER_PACKAGE_STRING "${DFTRACER_PACKAGE_NAME} ${DFTRACER_PACKAGE_VERSION}")
 set(DFTRACER_PACKAGE_TARNAME "${DFTRACER_PACKAGE}")
 
+set(DFTRACER_VERSION "(1, 0, 3)")
+
 project(dftracer LANGUAGES C CXX)
 
 
@@ -40,11 +42,14 @@ if (CMAKE_INSTALL_LIBDIR)
        ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR})
    set(DFTRACER_INSTALL_SYSCONFDIR
        ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_SYSCONFDIR}/modulefiles)
+   set(DFTRACER_INSTALL_BINFDIR
+           ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
 else ()
    set(DFTRACER_LIBDIR "lib")
    set(DFTRACER_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include")
    set(DFTRACER_INSTALL_DOCDIR "${CMAKE_INSTALL_PREFIX}/doc")
    set(DFTRACER_INSTALL_SYSCONFDIR "${CMAKE_INSTALL_PREFIX}/etc/modulefiles")
+   set(DFTRACER_INSTALL_BINARYDIR "${CMAKE_INSTALL_PREFIX}/bin")
    message(STATUS "DFTRACER_LIBDIR set to ${DFTRACER_LIBDIR}")
 endif ()
 
@@ -130,6 +135,7 @@ option (DFTRACER_INSTALL_DEPENDENCIES "Install DFTracer dependencies" OFF)
 option (DFTRACER_ENABLE_TESTS "Enable tests for DFTRACER." OFF)
 option (DFTRACER_ENABLE_DLIO_BENCHMARK_TESTS "Enable dlio_benchmark tests" OFF)
 option (DFTRACER_ENABLE_PAPER_TESTS "Enable paper tests" OFF)
+set (DFTRACER_TEST_LD_LIBRARY_PATH "" CACHE STRING "Additional LD_LIBRARY_PATH to be included on testing")
 
 #------------------------------------------------------------------------------
 # Compiler setup
@@ -325,6 +331,22 @@ if (DFTRACER_BUILD_PYTHON_BINDINGS)
                 . ${CMAKE_BINARY_DIR}/symlink.sh
                 \")")
 endif()
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_compact.sh ${EXECUTABLE_OUTPUT_PATH}/dftracer_compact COPYONLY)
+install(
+        FILES
+        ${EXECUTABLE_OUTPUT_PATH}/dftracer_compact
+        DESTINATION
+        bin
+)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/merge_pfw.sh ${EXECUTABLE_OUTPUT_PATH}/merge_pfw COPYONLY)
+install(
+        FILES
+        ${EXECUTABLE_OUTPUT_PATH}/merge_pfw
+        DESTINATION
+        bin
+)
+
 #cmake_policy(SET CMP0079 NEW) # In case that we need more control over the target building order
 
 if(DFTRACER_ENABLE_TESTS)
@@ -346,21 +368,28 @@ endif()
 #-----------------------------------------------------------------------------
 # Configure the config.cmake file for the build directory
 #-----------------------------------------------------------------------------
-configure_file(
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/configure_files/${PROJECT_NAME}-config.cmake.build.in
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}-config.cmake @ONLY
+        "${CMAKE_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+        INSTALL_DESTINATION  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}-config.cmake 
+        PATH_VARS CMAKE_BINARY_DIR
 )
 
-configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/configure_files/${PROJECT_NAME}-config.cmake.install.in
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/install/${PROJECT_NAME}-config.cmake @ONLY
+configure_package_config_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/configure_files/${PROJECT_NAME}-config.cmake.install.in
+        "${CMAKE_BINARY_DIR}/install/${PROJECT_NAME}-config.cmake"
+        INSTALL_DESTINATION  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/install/${PROJECT_NAME}-config.cmake
+        PATH_VARS CMAKE_BINARY_DIR
 )
 install(
         FILES
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/install/${PROJECT_NAME}-config.cmake
+        ${CMAKE_BINARY_DIR}/install/${PROJECT_NAME}-config.cmake
         DESTINATION
         ${DFTRACER_LIBDIR}/cmake/${PROJECT_NAME}
 )
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/dftracer-utils.cmake"
+        DESTINATION "${DFTRACER_LIBDIR}/cmake/dftracer")
 #-----------------------------------------------------------------------------
 # Configure the ${PROJECT_NAME}-config-version .cmake file for the install directory
 #-----------------------------------------------------------------------------

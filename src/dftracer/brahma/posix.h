@@ -79,7 +79,7 @@ class POSIXDFTracer : public POSIX {
     DFTRACER_LOGDEBUG("Finalizing POSIXDFTracer", "");
     stop_trace = true;
   }
-  ~POSIXDFTracer() { DFTRACER_LOGDEBUG("Destructing POSIXDFTracer", ""); }
+  ~POSIXDFTracer() {}
   static std::shared_ptr<POSIXDFTracer> get_instance(bool trace_all = false) {
     DFTRACER_LOGDEBUG("POSIX class get_instance", "");
     if (!stop_trace && instance == nullptr) {

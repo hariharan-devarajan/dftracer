@@ -8,8 +8,10 @@
 #include <unistd.h>
 
 #include <cassert>
+#include <cerrno>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <sstream>
 #include <thread>
 
@@ -41,6 +43,7 @@ void dftracer::ChromeWriter::log(
     std::unordered_map<std::string, std::any> *metadata, ProcessID process_id,
     ThreadID thread_id) {
   DFTRACER_LOGDEBUG("ChromeWriter.log", "");
+
   if (fh != nullptr) {
     int size;
     char data[MAX_LINE_SIZE];

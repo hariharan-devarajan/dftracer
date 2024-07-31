@@ -88,6 +88,9 @@ class CMakeBuild(build_ext):
         enable_dlio_tests = os.environ.get("DFTRACER_ENABLE_PAPER_TESTS", "OFF")
         cmake_args += [f"-DDFTRACER_ENABLE_PAPER_TESTS={enable_dlio_tests}"]
 
+        test_ld_library_path = os.environ.get("DFTRACER_TEST_LD_LIBRARY_PATH", "")
+        cmake_args += [f"-DDFTRACER_TEST_LD_LIBRARY_PATH={test_ld_library_path}"]
+
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.
         cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
@@ -151,7 +154,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="pydftracer",
-    version="1.0.2",
+    version="1.0.3",
     description="I/O profiler for deep learning python apps. Specifically for dlio_benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -192,9 +195,10 @@ setup(
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"],
                     "dfanalyzer": [
+                        "seaborn>=0.13.2",
                         "bokeh>=2.4.2",
                         "pybind11",
-                        "zindex_py==0.0.1",
+                        "zindex_py==0.0.2",
                         "pandas>=2.0.3",
                         "dask>=2023.5.0",
                         "distributed",

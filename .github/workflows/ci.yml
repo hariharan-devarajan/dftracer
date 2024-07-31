@@ -2,7 +2,7 @@ name: DFTracer Build and Test
 
 on:
   pull_request:
-    branches: [ main, dev ]
+    branches: [ main, develop ]
   push:
 jobs:
   build-and-test:
@@ -79,7 +79,7 @@ jobs:
           mkdir coverage
           FILE=$PWD/coverage/coverage.json
           cd build
-          COVERALLS_REPO_TOKEN=${{ secrets.GITHUB_TOKEN }} gcovr -r ../ . --coveralls $FILE -e ../test/ -e ../src/example
+          COVERALLS_REPO_TOKEN=${{ secrets.COVERALLS }} gcovr -r ../ . --coveralls $FILE -e ../test/ -e ../src/example
           if [ -e '$FILE' ]; then
           sed -i'' -e 's/"service_name": "github-actions-ci"/"service_name": "github"/' '$FILE'
           fi
