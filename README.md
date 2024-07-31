@@ -133,9 +133,9 @@ The original SC'24 paper describes the design and implementation of DFTracer cod
 
 @misc{devarajan_dftracer_code_2024,
     type = {Github},
-    title = {hariharan-devarajan/dftracer at v1.0.2},
-    shorttitle = {{DFTracer} v1.0.2},
-    url = {https://github.com/hariharan-devarajan/dftracer/tree/v1.0.2},
+    title = {Github {DFTracer}},
+    shorttitle = {{DFTracer}},
+    url = {https://github.com/hariharan-devarajan/dftracer.git},
     urldate = {2024-07-31},
     journal = {DFTracer v1.0.2: A multi-level dataflow tracer for capture I/O calls from worklows.},
     author = {Devarajan, Hariharan and Pottier, Loic and Velusamy, Kaushik and Zheng, Huihuo and Yildirim, Izzet and Kogiou, Olga and Yu, Weikuan and Kougkas, Anthony and Sun, Xian-He and Yeom, Jae Seung and Mohror, Kathryn},
