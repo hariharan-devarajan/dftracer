@@ -111,7 +111,6 @@ bool dftracer::DFTracerCore::finalize() {
       }
     }
     if (logger != nullptr) {
-      logger->finalize_dftracer_log();
       logger->finalize();
       dftracer::Singleton<DFTLogger>::finalize();
     }
@@ -185,7 +184,6 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
       }
       DFTRACER_LOGDEBUG("Setting log file to %s", this->log_file.c_str());
       logger->update_log_file(this->log_file, this->process_id);
-      logger->initialize_dftracer_log();
       if (bind) {
         if (conf->io) {
           auto trie = dftracer::Singleton<Trie>::get_instance();
