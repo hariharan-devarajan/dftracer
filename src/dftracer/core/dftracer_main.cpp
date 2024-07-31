@@ -137,39 +137,41 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
         this->process_id = *_process_id;
       }
       DFTRACER_LOGDEBUG("Setting process_id to %d", this->process_id);
-      if (_log_file == nullptr) {
-        char cmd[128];
-        sprintf(cmd, "/proc/%lu/cmdline", df_getpid());
-        int fd = df_open(cmd, O_RDONLY);
-        std::string exec_name = "DEFAULT";
-
-        if (fd != -1) {
-          char exec_file_name[DFT_PATH_MAX];
-          ssize_t read_bytes = df_read(fd, exec_file_name, DFT_PATH_MAX);
-          df_close(fd);
-          ssize_t index = 0;
-          size_t parts = 0;
-          while (index < read_bytes - 1 && index < DFT_PATH_MAX - 2) {
-            if (exec_file_name[index] == '\0') {
-              exec_file_name[index] = SEPARATOR;
-              parts++;
+      char exec_name[DFT_PATH_MAX] = "DEFAULT";
+      char exec_cmd[DFT_PATH_MAX] = "DEFAULT";
+      char cmd[128];
+      sprintf(cmd, "/proc/%lu/cmdline", df_getpid());
+      int fd = df_open(cmd, O_RDONLY);
+      if (fd != -1) {
+        ssize_t read_bytes = df_read(fd, exec_cmd, DFT_PATH_MAX);
+        df_close(fd);
+        ssize_t index = 0;
+        size_t parts = 0;
+        size_t last_index = 0;
+        bool has_extracted = false;
+        while (index < read_bytes - 1 && index < DFT_PATH_MAX - 2) {
+          if (exec_cmd[index] == '\0') {
+            if (!has_extracted) {
+              strcpy(exec_name, basename(exec_cmd + last_index));
+              if (strcmp(exec_name, "python") != 0) {
+                has_extracted = true;
+              }
+              DFTRACER_LOGINFO("Extracted process_name %s", exec_name);
             }
-            if (parts > 1) {
-              exec_file_name[index] = '\0';
-            }
-            index++;
+            exec_cmd[index] = SEPARATOR;
+            last_index = index + 1;
+            parts++;
           }
-          exec_file_name[DFT_PATH_MAX - 1] = '\0';
-          DFTRACER_LOGDEBUG("Exec command line %s", exec_file_name);
-          auto items = split(exec_file_name, SEPARATOR);
-          for (auto item : items) {
-            if (strstr(item.c_str(), "python") == nullptr) {
-              exec_name = basename(item.data());
-              break;
-            }
+          if (parts > 1) {
+            exec_cmd[index] = '\0';
           }
+          index++;
         }
-        DFTRACER_LOGINFO("Extracted process_name %s", exec_name.c_str());
+        exec_cmd[DFT_PATH_MAX - 1] = '\0';
+        DFTRACER_LOGDEBUG("Exec command line %s", exec_cmd);
+      }
+      if (_log_file == nullptr) {
+        DFTRACER_LOGINFO("Extracted process_name %s", exec_name);
         if (!conf->log_file.empty()) {
           DFTRACER_LOGDEBUG("Conf has log file %s", conf->log_file.c_str());
           this->log_file = std::string(conf->log_file) + "-" + exec_name + "-" +
@@ -183,7 +185,8 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
         this->log_file = _log_file;
       }
       DFTRACER_LOGDEBUG("Setting log file to %s", this->log_file.c_str());
-      logger->update_log_file(this->log_file, this->process_id);
+      logger->update_log_file(this->log_file, exec_name, exec_cmd,
+                              this->process_id);
       if (bind) {
         if (conf->io) {
           auto trie = dftracer::Singleton<Trie>::get_instance();
