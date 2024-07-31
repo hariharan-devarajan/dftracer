@@ -3,6 +3,7 @@ Bash Utility scripts
 ========================
 
 This section describes the bash utilities that are compatible with DFTracer logs
+
 ----------
 
 ------------------
@@ -82,4 +83,8 @@ Extract max timestamp
 .. code-block:: bash
 
     cat *.pfw | grep -i "[^#[]" | jq -c '.ts | tonumber' | sort -n | tail -n 1
+
+
+For more commands on `jq` refer to  `JQ Manual
+<https://jqlang.github.io/jq/manual/>`_.
 
