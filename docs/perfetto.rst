@@ -116,11 +116,3 @@ Find Thread ID of __getitem__
 .. code-block:: sql
 
     SELECT DISTINCT thread.name as thread_name FROM slice JOIN thread_track ON thread_track.id = slice.track_id JOIN thread using (utid) WHERE slice.name LIKE "%__getitem__%"
-
-+++++++++++++++++++++++++++++++++++++++++++++++++
-Find Total Size of __getitem__ in one thread
-+++++++++++++++++++++++++++++++++++++++++++++++++
-
-.. code-block:: sql
-
-    SELECT count(*) as NUM_READ, AVG(string_value) as AVG_SIZE FROM slice JOIN args ON slice.arg_set_id = args.arg_set_id JOIN thread_track ON thread_track_id WHERE name="pread" AND parent_id=159152 AND key="args.ret"
