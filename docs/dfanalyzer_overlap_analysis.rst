@@ -45,7 +45,8 @@ Assume we have training loop similar to this:
         for epoch in range(num_epoch):
             for batch in dataloader:
                optimizer.zero_grad()
-               loss = model(batch)
+               out = forward(batch)
+               loss = calculate_loss(out)
                loss.backward()
                optimizer.step()
 
@@ -73,7 +74,8 @@ Now, we need to modify code a bit to annotate computation and I/O using :code:`d
         for epoch in range(num_epoch):
             for batch in dlp_io.iter(dataloader): # we annotate this as I/O
                optimizer.zero_grad()
-               loss = model(batch)
+               out = forward(batch)
+               loss = calculate_loss(out)
                loss.backward()
                optimizer.step()
 
