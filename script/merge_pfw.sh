@@ -110,6 +110,12 @@ echo "[" | cat - $d2 > $tmp_file && mv $tmp_file $dest
 rm -rf $tmp_file
 
 echo "Extracting events"
+
+sed -i 's/^\[//g;/^$/d;s/^ *//;s/ *$//' $d2
+tmp_file=$(mktemp)
+echo "[" | cat - $d2 > $tmp_file && mv $tmp_file $dest
+rm -rf $tmp_file
+
 if [ "$compressed" == "1" ]; then
   echo "Compressing events"
   gzip $dest
