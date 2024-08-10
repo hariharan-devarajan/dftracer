@@ -33,7 +33,8 @@ DFTracer: is a library for profiling I/O calls and application functions.
 
    utilities
    bash_utilities
-   
+   perfetto
+
 .. toctree::
    :maxdepth: 2
    :caption: Reference
@@ -63,4 +64,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
