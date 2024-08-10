@@ -104,12 +104,13 @@ if [[ "$gz_count" != "0" ]]; then
   gzip -c -d `echo $folder/*.gz` >> $d2
 fi
 
+echo "Extracting events"
+
 sed -i 's/^\[//g;/^$/d;s/^ *//;s/ *$//' $d2
 tmp_file=$(mktemp)
 echo "[" | cat - $d2 > $tmp_file && mv $tmp_file $dest
 rm -rf $tmp_file
 
-echo "Extracting events"
 if [ "$compressed" == "1" ]; then
   echo "Compressing events"
   gzip $dest
