@@ -2,6 +2,7 @@ graft src
 graft cmake
 graft dependency
 graft include
+graft script
 
 include CMakeLists.txt
 include LICENSE
