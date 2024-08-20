@@ -127,7 +127,7 @@ The original SC'24 paper describes the design and implementation of DFTracer cod
 	booktitle = {{SC24}: {International} {Conference} for {High} {Performance} {Computing}, {Networking}, {Storage} and {Analysis}},
 	publisher = {IEEE},
 	author = {Devarajan, Hariharan and Pottier, Loic and Velusamy, Kaushik and Zheng, Huihuo and Yildirim, Izzet and Kogiou, Olga and Yu, Weikuan and Kougkas, Anthony and Sun, Xian-He and Yeom, Jae Seung and Mohror, Kathryn},
-	month = jun,
+	month = nov,
 	year = {2024},
 }
 
