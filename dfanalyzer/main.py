@@ -552,7 +552,7 @@ class DFAnalyzer:
 
     def summary(self):
         num_events = len(self.events)
-        logging.info(f"Total number of events in the workload are {num_events}") 
+        logging.info(f"Total number of events in the workload are {num_events}")
         total_time, total_io_time, total_compute_time, total_app_io_time, \
         only_io, only_compute, only_app_io, only_app_compute = self._calculate_time() #(0, 0, 0, 0, 0, 0, 0, 0, 0)
         hosts_used, filenames_accessed, num_procs, compute_tid, posix_tid, io_by_operations = dask.compute(
