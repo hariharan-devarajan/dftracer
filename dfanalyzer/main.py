@@ -542,6 +542,14 @@ class DFAnalyzer:
         logging.info(f"List after removing numbers {list(item_sets)}")
         return list(item_sets)
 
+    def _check_hosts_time_skew(self):
+        # check if there is time skew across nodes
+        hosts_ts_df = self.events.groupby('hostname').agg({'ts': 'min'}).compute()
+        # filter the hosts if time skew exceeds 30 seconds
+        max_time_skew = 30e6
+        if np.std(hosts_ts_df['ts']) > max_time_skew:
+           logging.warn(f"The time skew exceeds {max_time_skew // 1e6} sec across hosts {hosts_ts_df.index.tolist()}")
+
     def summary(self):
         num_events = len(self.events)
         logging.info(f"Total number of events in the workload are {num_events}")
@@ -560,6 +568,8 @@ class DFAnalyzer:
 
         hosts_used = hosts_used.to_list()
         #hosts_used_regex_str = self._create_host_intervals(hosts_used)
+        if len(hosts_used) > 1:
+            self._check_hosts_time_skew()
 
         filenames_accessed = filenames_accessed.to_list()
         #filename_basename_regex_str = self._remove_numbers(filenames_accessed)
