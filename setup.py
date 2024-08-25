@@ -188,6 +188,8 @@ setup(
         "Source": "https://github.com/hariharan-devarajan/dftracer",
     },
     packages=(find_namespace_packages(include=['dftracer', 'dfanalyzer'])),
+    scripts=['script/dftracer_compact',
+             'script/dftracer_merge'],
     package_dir={"dftracer": "dftracer",
                  "dfanalyzer": "dfanalyzer"},
     ext_modules=[CMakeExtension("dftracer.pydftracer"),],

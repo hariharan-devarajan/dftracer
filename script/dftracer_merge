@@ -3,7 +3,7 @@
 # This script allows users to combine all pfw format into one.
 # This has the following signature.
 #
-# usage: merge_pfw.sh [-fcv] [-d input_directory] [-o OUTPUT_FILE]
+# usage: dftracer_merge [-fcv] [-d input_directory] [-o OUTPUT_FILE]
 #  -f                      override output file
 #  -c                      compress output file
 #  -v                      enable verbose mode
