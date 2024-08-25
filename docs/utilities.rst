@@ -17,7 +17,7 @@ This has the following signature.
 
 .. code-block:: bash
 
-    <install-dir>/bin/merge_pfw [-fcv] [-d input_directory] [-o output_file]
+    <install-dir>/bin/dftracer_merge [-fcv] [-d input_directory] [-o output_file]
 
 Arguments for this script are 
 

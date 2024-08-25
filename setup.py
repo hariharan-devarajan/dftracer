@@ -154,7 +154,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="pydftracer",
-    version="1.0.3",
+    version="1.0.4",
     description="I/O profiler for deep learning python apps. Specifically for dlio_benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -188,6 +188,8 @@ setup(
         "Source": "https://github.com/hariharan-devarajan/dftracer",
     },
     packages=(find_namespace_packages(include=['dftracer', 'dfanalyzer'])),
+    scripts=['script/dftracer_compact',
+             'script/dftracer_merge'],
     package_dir={"dftracer": "dftracer",
                  "dfanalyzer": "dfanalyzer"},
     ext_modules=[CMakeExtension("dftracer.pydftracer"),],

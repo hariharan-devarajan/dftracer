@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 
 # The script compacts all trace file and then divides the trace into equal file pieces.
 # This has the following signature.
@@ -14,7 +13,6 @@
 #   -l num_lines            lines per trace.
 #   -p prefix               prefix to be used for compact files.
 
-
 LOG_DIR=$PWD
 OUTPUT_DIR=$PWD/output
 LINES=10000
@@ -23,7 +21,6 @@ override=0
 compressed=0
 
 PPWD=$PWD
-
 
 function usage {
     echo "usage: $(basename $0) [-fcv] [-d input_directory] [-o output_directory] [-l num_lines] [-p prefix]"
@@ -94,19 +91,19 @@ mkdir -p ${OUTPUT_DIR}
 pfw_count=`ls -1 $LOG_DIR/*.pfw 2> /dev/null | wc -l`
 gz_count=`ls -1 $LOG_DIR/*.gz 2> /dev/null | wc -l`
 total=$((pfw_count + gz_count))
-if [ $total == 0 ]; then 
+if [ $total == 0 ]; then
     echo "The folder does not contain any pfw or pfw.gz files."
     exit 0
-fi 
+fi
 dest=${OUTPUT_DIR}/temp
 d2=${dest}.bak
 shopt -s dotglob
-if [[ "$pfw_count" != "0" ]]; then 
+if [[ "$pfw_count" != "0" ]]; then
 echo "Parsing pfw files from ${LOG_DIR} folder"
 ls ${LOG_DIR}/*.pfw | xargs cat | grep -v "^\[" | jq -c '.' > $d2
 fi
 
-if [[ "$gz_count" != "0" ]]; then 
+if [[ "$gz_count" != "0" ]]; then
 echo "Parsing pfw.gz files from ${LOG_DIR} folder"
 gzip -c -d `echo $folder/*.gz` | grep -v "^\[" | jq -c '.' >> $d2
 fi
@@ -125,6 +122,4 @@ if [ $compressed == 1 ]; then
 gzip ${PREFIX}-*.pfw
 fi
 
-
 cd $PPWD
-

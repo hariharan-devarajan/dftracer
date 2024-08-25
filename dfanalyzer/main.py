@@ -456,6 +456,12 @@ class DFAnalyzer:
             grouped_df = self.events.groupby(["trange", "pid", "tid"]) \
                             .agg({"compute_time": sum, "io_time": sum, "app_io_time": sum}) \
                             .groupby(["trange"]).max()
+            # check if the max io_time > time_granularity
+            max_io_time = grouped_df.max().compute()['io_time']
+            if max_io_time > self.conf.time_granularity:
+                # throw a warning, running with large granuality
+                logging.warn(f"The max io_time {max_io_time} exceeds the time_granularity {self.conf.time_granularity}. " \
+                             f"Please adjust the time_granularity to {int(2 * max_io_time /1e6)}e6 and rerun the analyzer.")
             grouped_df["io_time"] = grouped_df["io_time"].fillna(0)
             grouped_df["compute_time"] = grouped_df["compute_time"].fillna(0)
             grouped_df["app_io_time"] = grouped_df["app_io_time"].fillna(0)
@@ -536,6 +542,14 @@ class DFAnalyzer:
         logging.info(f"List after removing numbers {list(item_sets)}")
         return list(item_sets)
 
+    def _check_hosts_time_skew(self):
+        # check if there is time skew across nodes
+        hosts_ts_df = self.events.groupby('hostname').agg({'ts': 'min'}).compute()
+        # filter the hosts if time skew exceeds 30 seconds
+        max_time_skew = 30e6
+        if np.std(hosts_ts_df['ts']) > max_time_skew:
+           logging.warn(f"The time skew exceeds {max_time_skew // 1e6} sec across hosts {hosts_ts_df.index.tolist()}")
+
     def summary(self):
         num_events = len(self.events)
         logging.info(f"Total number of events in the workload are {num_events}")
@@ -554,6 +568,8 @@ class DFAnalyzer:
 
         hosts_used = hosts_used.to_list()
         #hosts_used_regex_str = self._create_host_intervals(hosts_used)
+        if len(hosts_used) > 1:
+            self._check_hosts_time_skew()
 
         filenames_accessed = filenames_accessed.to_list()
         #filename_basename_regex_str = self._remove_numbers(filenames_accessed)

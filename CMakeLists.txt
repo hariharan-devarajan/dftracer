@@ -14,7 +14,7 @@ set(DFTRACER_PACKAGE_VERSION_MINOR "${DFTRACER_VERSION_PATCH}")
 set(DFTRACER_PACKAGE_STRING "${DFTRACER_PACKAGE_NAME} ${DFTRACER_PACKAGE_VERSION}")
 set(DFTRACER_PACKAGE_TARNAME "${DFTRACER_PACKAGE}")
 
-set(DFTRACER_VERSION "(1, 0, 3)")
+set(DFTRACER_VERSION "(1, 0, 4)")
 
 project(dftracer LANGUAGES C CXX)
 
@@ -331,7 +331,7 @@ if (DFTRACER_BUILD_PYTHON_BINDINGS)
                 . ${CMAKE_BINARY_DIR}/symlink.sh
                 \")")
 endif()
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_compact.sh ${EXECUTABLE_OUTPUT_PATH}/dftracer_compact COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_compact ${EXECUTABLE_OUTPUT_PATH}/dftracer_compact COPYONLY)
 install(
         FILES
         ${EXECUTABLE_OUTPUT_PATH}/dftracer_compact
@@ -339,10 +339,10 @@ install(
         bin
 )
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/merge_pfw.sh ${EXECUTABLE_OUTPUT_PATH}/merge_pfw COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_merge ${EXECUTABLE_OUTPUT_PATH}/dftracer_merge COPYONLY)
 install(
         FILES
-        ${EXECUTABLE_OUTPUT_PATH}/merge_pfw
+        ${EXECUTABLE_OUTPUT_PATH}/dftracer_merge
         DESTINATION
         bin
 )
