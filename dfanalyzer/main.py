@@ -232,7 +232,7 @@ def io_function(json_object, current_dict, time_approximate,condition_fn):
         if "POSIX" == json_object["cat"] and "ret" in json_object["args"]:
             if json_object["name"] == "write":
                 d["size"] = int(json_object["args"]["ret"])
-            elif json_object["name"] == "read":
+            elif json_object["name"] in ["read", "pread"]:
                 d["size"] = int(json_object["args"]["ret"])
             elif json_object["name"] == "fwrite":
                 d["size"] = 1

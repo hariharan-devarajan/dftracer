@@ -32,4 +32,4 @@ To run the notebook you will have to install Jupyter. We have a simple requireme
     cd dftracer
     pip install -r examples/dfanalyzer/requirements.txt
 
-A simple example of loading DFAnalyzer and quick recommended queries are available on to :code:`<dftracer>/examples/dfanalyzer/dfanalyzer_distributed.ipynb` and run your notebook.
+A simple example of loading DFAnalyzer and quick recommended queries are available on to :code:`<dftracer>/examples/dfanalyzer/dfanalyzer.ipynb` and run your notebook.
