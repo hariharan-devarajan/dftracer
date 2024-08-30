@@ -162,9 +162,9 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
             last_index = index + 1;
             parts++;
           }
-          if (parts > 1) {
+          /*if (parts > 1) {
             exec_cmd[index] = '\0';
-          }
+          }*/
           index++;
         }
         exec_cmd[DFT_PATH_MAX - 1] = '\0';
