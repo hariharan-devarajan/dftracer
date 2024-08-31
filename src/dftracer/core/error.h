@@ -4,27 +4,25 @@
 
 #ifndef DFTRACER_ERROR_H
 #define DFTRACER_ERROR_H
-
-struct ErrorCode {
-  const char *code;
-  const char *message;
-};
+// clang-format off
+#define DFTRACE_DEFINE_ERROR(name, code, message)   \
+const char* DFTRACER_##name##_CODE = code;                    \
+const char* DFTRACER_##name##_MSG = message;
 
 // Main error codes
-const ErrorCode SUCCESS = {"1000", "Operation Successful"};
-const ErrorCode FAILURE = {"1001", "Internal Failure"};
-
+#define DFTRACER_SUCCESS_CODE "0"
+#define DFTRACER_SUCCESS_MSG "Operation Successful"
+#define DFTRACER_FAILURE_CODE "1001"
+#define DFTRACER_FAILURE_MSG "Internal Failure"
 // Invalid API calls
-const ErrorCode UNKNOWN_PROFILER_TYPE = {"1002",
-                                         "Code 1002: Unknown profiler type %d"};
+#define DFTRACER_UNKNOWN_PROFILER_TYPE_CODE "1002"
+#define DFTRACER_UNKNOWN_PROFILER_TYPE_MSG "Code 1002: Unknown profiler type %d"
 
 // Invalid configurations
-const ErrorCode UNDEFINED_DATA_DIR = {
-    "2001",
-    "Code 2001: Data dirs not defined. Please define env variable "
-    "DFTRACER_DATA_DIR"};
-const ErrorCode UNDEFINED_LOG_FILE = {"2002",
-                                      "Code 2002: log file not defined. Please "
-                                      "define env variable DFTRACER_LOG_FILE"};
+#define DFTRACER_UNDEFINED_DATA_DIR_CODE "2001"
+#define DFTRACER_UNDEFINED_DATA_DIR_MSG "Code 2001: Data dirs not defined. Please define env variable DFTRACER_DATA_DIR"
+#define DFTRACER_UNDEFINED_LOG_FILE_CODE "2002"
+#define DFTRACER_UNDEFINED_LOG_FILE_MSG "Code 2002: log file not defined. Please define env variable DFTRACER_LOG_FILE"
 
+// clang-format on
 #endif  // DFTRACER_ERROR_H
