@@ -96,13 +96,17 @@ class DFTLogger {
 
   inline void enter_event() {
     index++;
-    level++;
-    index_stack.push_back(index.load());
+    if (include_metadata) {
+      level++;
+      index_stack.push_back(index.load());
+    }
   }
 
   inline void exit_event() {
-    level--;
-    index_stack.pop_back();
+    if (include_metadata) {
+      level--;
+      index_stack.pop_back();
+    }
   }
 
   inline TimeResolution get_time() {
@@ -120,6 +124,10 @@ class DFTLogger {
     ThreadID tid = 0;
     if (dftracer_tid) {
       tid = df_gettid() + this->process_id;
+    }
+    int local_index;
+    if (!include_metadata) {
+      local_index = index.load();
     }
     if (metadata != nullptr) {
       metadata->insert_or_assign("level", level);
@@ -152,8 +160,15 @@ class DFTLogger {
 #endif
 
     if (this->writer != nullptr) {
-      this->writer->log(index_stack[level - 1], event_name, category,
-                        start_time, duration, metadata, this->process_id, tid);
+      if (include_metadata) {
+        this->writer->log(index_stack[level - 1], event_name, category,
+                          start_time, duration, metadata, this->process_id,
+                          tid);
+      } else {
+        this->writer->log(local_index, event_name, category, start_time,
+                          duration, metadata, this->process_id, tid);
+      }
+
       has_entry = true;
     } else {
       DFTRACER_LOG_ERROR("DFTLogger.log writer not initialized", "");
