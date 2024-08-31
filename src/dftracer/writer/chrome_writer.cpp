@@ -30,7 +30,7 @@ void dftracer::ChromeWriter::initialize(char *filename, bool throw_error) {
       DFTRACER_LOG_ERROR("unable to create log file %s",
                          filename);  // GCOVR_EXCL_LINE
     } else {
-      setvbuf(fh, NULL, _IOLBF, MAX_LINE_SIZE);
+      setvbuf(fh, NULL, _IOFBF, MAX_BUFFER);
       DFTRACER_LOG_INFO("created log file %s", filename);
     }
   }
@@ -58,6 +58,9 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
   DFTRACER_LOG_DEBUG("ChromeWriter.finalize", "");
   if (fh != nullptr) {
     DFTRACER_LOG_INFO("Profiler finalizing writer %s", filename.c_str());
+    if (current_index > 0) {
+      write_buffer_op(true);
+    }
     fflush(fh);
     int last_off = ftell(fh);
     (void)last_off;
@@ -118,11 +121,7 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
     hwloc_topology_destroy(topology);
 #endif
   }
-  {
-    if (current_index > 0) {
-      write_buffer_op(true);
-    }
-  }
+
   {
     std::unique_lock<std::shared_mutex> lock(mtx);
     if (buffer) {
@@ -140,6 +139,7 @@ void dftracer::ChromeWriter::convert_json(
     std::unordered_map<std::string, std::any> *metadata, ProcessID process_id,
     ThreadID thread_id) {
   auto previous_index = current_index;
+  (void)previous_index;
   char is_first_char[3] = "  ";
   if (!is_first_write) is_first_char[0] = '\0';
   if (include_metadata) {
@@ -220,7 +220,7 @@ void dftracer::ChromeWriter::convert_json(
       std::unique_lock<std::shared_mutex> lock(mtx);
       auto written_size = sprintf(
           buffer + current_index,
-          R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{}})",
+          R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X"})",
           is_first_char, index, event_name, category, process_id, thread_id,
           start_time, duration);
       current_index += written_size;

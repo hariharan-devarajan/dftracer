@@ -56,24 +56,23 @@ class ChromeWriter {
 
   bool is_first_write;
   inline size_t write_buffer_op(bool force = false) {
-    if (!force && current_index > MAX_BUFFER) return 0;
+    if (!force && current_index < MAX_BUFFER) return 0;
     DFTRACER_LOG_DEBUG("ChromeWriter.write_buffer_op %s",
                        this->filename.c_str());
     size_t written_elements = 0;
-    auto previous_index = current_index;
     {
       std::unique_lock<std::shared_mutex> lock(mtx);
       flockfile(fh);
-      written_elements = fwrite(buffer, sizeof(char), current_index, fh);
+      written_elements = fwrite(buffer, current_index, sizeof(char), fh);
       funlockfile(fh);
       current_index = 0;
     }
 
-    if (written_elements != previous_index) {  // GCOVR_EXCL_START
+    if (written_elements != 1) {  // GCOVR_EXCL_START
       DFTRACER_LOG_ERROR(
-          "unable to log write for a+ written only %ld of %ld with error code "
+          "unable to log write for a+ written only %ld of %d with error code "
           "%d",
-          written_elements, previous_index, errno);
+          written_elements, 1, errno);
     }  // GCOVR_EXCL_STOP
     return written_elements;
   }
