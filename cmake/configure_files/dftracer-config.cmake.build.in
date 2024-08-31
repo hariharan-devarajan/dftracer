@@ -75,6 +75,18 @@ else ()
     message(FATAL_ERROR "-- [DFTRACER] yaml-cpp is needed for ${PROJECT_NAME} build")
 endif ()
 
+set(DFTRACER_INCLUDE_MPI @DFTRACER_ENABLE_MPI@)
+if (DFTRACER_INCLUDE_MPI)
+  find_package(MPI COMPONENTS CXX REQUIRED)
+  if (MPI_FOUND)
+        message(STATUS "[DFTRACER] found mpi.h at ${MPI_CXX_INCLUDE_DIRS}")
+        include_directories(${MPI_CXX_INCLUDE_DIRS})
+        target_link_libraries(dftracer INTERFACE ${MPI_CXX_LIBRARIES})
+    else ()
+        message(FATAL_ERROR "-- [DFTRACER] mpi is needed for ${PROJECT_NAME} build")
+    endif ()
+endif()
+
 check_required_components(dftracer)
 
 set(DFTRACER_LIBRARIES dftracer)

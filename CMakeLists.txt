@@ -111,6 +111,11 @@ option (DFTRACER_DISABLE_HWLOC "Disable HWLOC" On)
 if (NOT DFTRACER_DISABLE_HWLOC) 
     set(DFTRACER_HWLOC_ENABLE 1)
 endif()
+
+option (DFTRACER_ENABLE_MPI "Enable MPI" On)
+if (DFTRACER_ENABLE_MPI) 
+    set(DFTRACER_MPI_ENABLE 1)
+endif()
 option (DFTRACER_BUILD_PYTHON_BINDINGS "Build python bindings." ON)
 set(DFTRACER_PYTHON_EXE "python3" CACHE STRING "Python executable to use for building.")
 set(DFTRACER_PYTHON_SITE $ENV{DFTRACER_PYTHON_SITE} CACHE STRING "Python site packages to use for building.")
@@ -218,6 +223,18 @@ if (DFTRACER_BUILD_PYTHON_BINDINGS)
     find_package(pybind11 REQUIRED)
     #add_subdirectory(dependency/py11bind)
 endif()
+
+if (DFTRACER_ENABLE_MPI) 
+  find_package(MPI COMPONENTS CXX REQUIRED)
+  if (MPI_FOUND)
+      message(STATUS "[DFTRACER] found mpi.h at ${MPI_CXX_INCLUDE_DIRS}")
+      include_directories(${MPI_CXX_INCLUDE_DIRS})
+      set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${MPI_CXX_LIBRARIES})
+  else ()
+      message(FATAL_ERROR "-- [DFTRACER] mpi is needed for ${PROJECT_NAME} build")
+  endif ()
+endif()
+
 if (NOT DFTRACER_DISABLE_HWLOC)
     find_package(HWLOC REQUIRED)
     if (${HWLOC_FOUND})
@@ -393,14 +410,10 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/dftracer-utils.cmake"
 #-----------------------------------------------------------------------------
 # Configure the ${PROJECT_NAME}-config-version .cmake file for the install directory
 #-----------------------------------------------------------------------------
-configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/configure_files/${PROJECT_NAME}-config-version.cmake.in
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}-config-version.cmake @ONLY
-)
 
 install(
         FILES
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}-config-version.cmake
+        ${CMAKE_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
         DESTINATION
         ${DFTRACER_LIBDIR}/cmake/${PROJECT_NAME}
 )
@@ -421,7 +434,7 @@ include(CMakePackageConfigHelpers)
 
 # Write the version file. This is independent of build/install tree.
 write_basic_package_version_file(
-  DFTRACERConfigVersion.cmake
+  dftracer-config-version.cmake
   VERSION "${DFTRACER_PACKAGE_VERSION}"
   COMPATIBILITY SameMajorVersion)
 

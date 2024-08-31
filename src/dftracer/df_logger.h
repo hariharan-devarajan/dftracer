@@ -22,6 +22,10 @@
 #include <dftracer/dftracer_config.hpp>
 #include <unordered_map>
 
+#ifdef DFTRACER_MPI_ENABLE
+#include <mpi.h>
+#endif
+
 typedef std::chrono::high_resolution_clock chrono;
 
 class DFTLogger {
@@ -34,7 +38,9 @@ class DFTLogger {
   std::vector<int> index_stack;
   std::atomic_int index;
   bool has_entry;
-
+#ifdef DFTRACER_MPI_ENABLE
+  bool mpi_event;
+#endif
  public:
   bool include_metadata;
   DFTLogger(bool init_log = false)
@@ -44,6 +50,9 @@ class DFTLogger {
         index_stack(),
         index(0),
         has_entry(false),
+#ifdef DFTRACER_MPI_ENABLE
+        mpi_event(false),
+#endif
         include_metadata(false) {
     DFTRACER_LOGDEBUG("DFTLogger.DFTLogger", "");
     auto conf =
@@ -64,18 +73,24 @@ class DFTLogger {
     this->writer = dftracer::Singleton<dftracer::ChromeWriter>::get_instance();
     if (this->writer != nullptr) {
       this->writer->initialize(log_file.data(), this->throw_error);
-      auto meta = std::unordered_map<std::string, std::any>();
-      meta.insert_or_assign("version", DFTRACER_VERSION);
-      meta.insert_or_assign("exec", exec_name);
-      meta.insert_or_assign("cmd", cmd);
-      time_t ltime;       /* calendar time */
-      ltime = time(NULL); /* get current cal time */
-      char timestamp[1024];
-      auto size = sprintf(timestamp, "%s", asctime(localtime(&ltime)));
-      timestamp[size - 1] = '\0';
-      meta.insert_or_assign("date", std::string(timestamp));
+      std::unordered_map<std::string, std::any> *meta = nullptr;
+      if (include_metadata) {
+        meta = new std::unordered_map<std::string, std::any>();
+        meta->insert_or_assign("version", DFTRACER_VERSION);
+        meta->insert_or_assign("exec", exec_name);
+        meta->insert_or_assign("cmd", cmd);
+        time_t ltime;       /* calendar time */
+        ltime = time(NULL); /* get current cal time */
+        char timestamp[1024];
+        auto size = sprintf(timestamp, "%s", asctime(localtime(&ltime)));
+        timestamp[size - 1] = '\0';
+        meta->insert_or_assign("date", std::string(timestamp));
+      }
       this->enter_event();
-      this->log("start", "dftracer", this->get_time(), 0, &meta);
+      this->log("start", "dftracer", this->get_time(), 0, meta);
+      if (include_metadata) {
+        delete (meta);
+      }
       this->exit_event();
     }
     this->is_init = true;
@@ -117,6 +132,28 @@ class DFTLogger {
       }
       metadata->insert_or_assign("p_idx", parent_index_value);
     }
+#ifdef DFTRACER_MPI_ENABLE
+    if (!mpi_event && include_metadata) {
+      int initialized;
+      int status = MPI_Initialized(&initialized);
+      if (status == MPI_SUCCESS && initialized == true) {
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        auto meta = std::unordered_map<std::string, std::any>();
+        meta.insert_or_assign("rank", rank);
+        this->enter_event();
+        if (this->writer != nullptr) {
+          auto start = this->get_time();
+          TimeResolution dur = 0;
+          this->writer->log(index_stack[level - 1], "mpi", "dftracer", start,
+                            dur, &meta, this->process_id, tid);
+        }
+        this->exit_event();
+        mpi_event = true;
+      }
+    }
+#endif
+
     if (this->writer != nullptr) {
       this->writer->log(index_stack[level - 1], event_name, category,
                         start_time, duration, metadata, this->process_id, tid);
