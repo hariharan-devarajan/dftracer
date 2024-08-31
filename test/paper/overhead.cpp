@@ -3,7 +3,7 @@
 //
 
 #include <dftracer/core/constants.h>
-#include <dftracer/core/macro.h>
+#include <dftracer/core/logging.h>
 #include <fcntl.h>
 #include <math.h>
 #include <mpi.h>
@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
   uint64_t transfer_size = 4096;
   char filename[4096], filename_primary[4096];
   if (argc < 4) {
-    DFTRACER_LOGERROR(
+    DFTRACER_LOG_ERROR(
         "usage: overhead FILENAME <NUM OPERATIONS> <TRANSFER SIZE>", "");
     exit(1);
   }
@@ -33,13 +33,13 @@ int main(int argc, char* argv[]) {
   transfer_size = strtoll(argv[4], NULL, 10);
   MPI_Barrier(MPI_COMM_WORLD);
   if (my_rank == 0) {
-    DFTRACER_LOGINFO("Running with transfer size %lu  and num ops %lu",
-                     transfer_size, num_operations);
+    DFTRACER_LOG_INFO("Running with transfer size %lu  and num ops %lu",
+                      transfer_size, num_operations);
   }
   long double file_size = num_operations * transfer_size;
   int ts = ceil(file_size / comm_size);
   if (my_rank == 0) {
-    DFTRACER_LOGINFO("Writing %d per rank for data generation", ts);
+    DFTRACER_LOG_INFO("Writing %d per rank for data generation", ts);
   }
   sprintf(filename_primary, "%s/file_0-%d.bat", argv[2], comm_size);
   {
@@ -58,8 +58,8 @@ int main(int argc, char* argv[]) {
     int written_bytes;
     MPI_Get_count(&stat_orig, MPI_CHAR, &written_bytes);
     if (written_bytes != ts) {
-      DFTRACER_LOGERROR("Write was unsuccessful written %d of %d bytes",
-                        written_bytes, ts);
+      DFTRACER_LOG_ERROR("Write was unsuccessful written %d of %d bytes",
+                         written_bytes, ts);
     }
     assert(written_bytes == ts);
     status_orig = MPI_File_close(&fh_orig);
@@ -73,12 +73,12 @@ int main(int argc, char* argv[]) {
   assert(fs::file_size(filename) >= file_size);
   MPI_Barrier(MPI_COMM_WORLD);
   if (my_rank == 0) {
-    DFTRACER_LOGINFO("Created dataset for test", "");
+    DFTRACER_LOG_INFO("Created dataset for test", "");
   }
   Timer operation_timer;
   MPI_Barrier(MPI_COMM_WORLD);
   if (my_rank == 0) {
-    DFTRACER_LOGINFO("Starting read", "");
+    DFTRACER_LOG_INFO("Starting read", "");
   }
   operation_timer.resumeTime();
   int fd = open(filename, O_RDONLY);
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
     assert(transfer_size == (uint64_t)read_bytes);
     MPI_Barrier(MPI_COMM_WORLD);
     if (i % 10000 == 0 && my_rank == 0) {
-      DFTRACER_LOGINFO("Completed %d loops", i);
+      DFTRACER_LOG_INFO("Completed %d loops", i);
     }
   }
   free(buf);
@@ -104,16 +104,15 @@ int main(int argc, char* argv[]) {
 
   MPI_Barrier(MPI_COMM_WORLD);
   if (my_rank == 0) {
-    DFTRACER_LOGINFO("Finishing read", "");
+    DFTRACER_LOG_INFO("Finishing read", "");
   }
   double elapsed_time = operation_timer.getElapsedTime();
   double total_time;
   MPI_Reduce(&elapsed_time, &total_time, 1, MPI_DOUBLE, MPI_SUM, 0,
              MPI_COMM_WORLD);
   if (my_rank == 0) {
-    DFTRACER_LOGPRINT("scale,ops,ts,time", "")
-    DFTRACER_LOGPRINT("%d,%lu,%lu,%f", comm_size, num_operations, transfer_size,
-                      total_time)
+    printf("scale,ops,ts,time\n%d,%lu,%lu,%f\n", comm_size, num_operations,
+           transfer_size, total_time);
   }
   if (fs::exists(filename)) fs::remove(filename);
   MPI_Finalize();

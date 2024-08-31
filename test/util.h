@@ -4,27 +4,13 @@
 
 #ifndef DFTRACER_TEST_UTIL_H
 #define DFTRACER_TEST_UTIL_H
+#include <dftracer/core/logging.h>
+
 #include <cstring>
 #include <experimental/filesystem>
 
 namespace fs = std::experimental::filesystem;
-inline void init_log() {
-  cpplogger::LoggerType logger_level;
-  char *dftracer_log_level = getenv(DFTRACER_LOG_LEVEL);
-  if (dftracer_log_level == nullptr) {  // GCOV_EXCL_START
-    logger_level = cpplogger::LoggerType::LOG_ERROR;
-  } else {
-    if (strcmp(dftracer_log_level, "ERROR") == 0) {
-      logger_level = cpplogger::LoggerType::LOG_ERROR;
-    } else if (strcmp(dftracer_log_level, "INFO") == 0) {
-      logger_level = cpplogger::LoggerType::LOG_INFO;
-    } else if (strcmp(dftracer_log_level, "DEBUG") == 0) {
-      logger_level = cpplogger::LoggerType::LOG_WARN;
-    }
-  }  // GCOV_EXCL_STOP
-  DFTRACER_LOGGER->level = logger_level;
-  DFTRACER_LOGDEBUG("Enabling logging level %d", logger_level);
-}
+inline void init_log() { DFTRACER_LOGGER_INIT(); }
 class Timer {
  public:
   Timer() : elapsed_time(0) {}

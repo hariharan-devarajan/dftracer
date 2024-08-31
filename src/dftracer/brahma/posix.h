@@ -6,7 +6,7 @@
 #define DFTRACER_POSIX_H
 
 #include <brahma/brahma.h>
-#include <dftracer/core/macro.h>
+#include <dftracer/core/logging.h>
 #include <dftracer/df_logger.h>
 #include <dftracer/utils/utils.h>
 #include <fcntl.h>
@@ -33,11 +33,12 @@ class POSIXDFTracer : public POSIX {
     const char *trace = tracked_fd[fd % MAX_FD].empty()
                             ? nullptr
                             : tracked_fd[fd % MAX_FD].c_str();
-    if (trace != nullptr)
-      DFTRACER_LOGDEBUG(
+    if (trace != nullptr) {
+      DFTRACER_LOG_DEBUG(
           "Calling POSIXDFTracer.is_traced for %s and"
           " fd %d trace %d",
           func, fd, trace != nullptr);
+    }
     return trace;
   }
 
@@ -49,7 +50,7 @@ class POSIXDFTracer : public POSIX {
     else
       trace = is_traced_common(filename, func);
     if (trace != nullptr)
-      DFTRACER_LOGDEBUG(
+      DFTRACER_LOG_DEBUG(
           "Calling POSIXDFTracer.is_traced with "
           "filename %s for %s trace %d",
           filename, func, trace != nullptr);
@@ -57,31 +58,31 @@ class POSIXDFTracer : public POSIX {
   }
 
   inline void trace(int fd, const char *filename) {
-    DFTRACER_LOGDEBUG("Calling POSIXDFTracer.trace for %d and %s", fd,
-                      filename);
+    DFTRACER_LOG_DEBUG("Calling POSIXDFTracer.trace for %d and %s", fd,
+                       filename);
     if (fd == -1) return;
     tracked_fd[fd % MAX_FD] = filename;
   }
 
   inline void remove_trace(int fd) {
-    DFTRACER_LOGDEBUG("Calling POSIXDFTracer.remove_trace for %d", fd);
+    DFTRACER_LOG_DEBUG("Calling POSIXDFTracer.remove_trace for %d", fd);
     if (fd == -1) return;
     tracked_fd[fd % MAX_FD] = std::string();
   }
 
  public:
   POSIXDFTracer(bool trace_all) : POSIX(), trace_all_files(trace_all) {
-    DFTRACER_LOGDEBUG("POSIX class intercepted", "");
+    DFTRACER_LOG_DEBUG("POSIX class intercepted", "");
     for (int i = 0; i < MAX_FD; ++i) tracked_fd[i] = std::string();
     logger = DFT_LOGGER_INIT();
   }
   void finalize() {
-    DFTRACER_LOGDEBUG("Finalizing POSIXDFTracer", "");
+    DFTRACER_LOG_DEBUG("Finalizing POSIXDFTracer", "");
     stop_trace = true;
   }
   ~POSIXDFTracer() {}
   static std::shared_ptr<POSIXDFTracer> get_instance(bool trace_all = false) {
-    DFTRACER_LOGDEBUG("POSIX class get_instance", "");
+    DFTRACER_LOG_DEBUG("POSIX class get_instance", "");
     if (!stop_trace && instance == nullptr) {
       instance = std::make_shared<POSIXDFTracer>(trace_all);
       POSIX::set_instance(instance);

@@ -9,7 +9,7 @@ template <>
 bool dftracer::Singleton<dftracer::DFTracerCore>::stop_creating_instances =
     false;
 void dft_finalize() {
-  DFTRACER_LOGDEBUG("DFTracerCore.dft_finalize", "");
+  DFTRACER_LOG_DEBUG("DFTracerCore.dft_finalize", "");
   auto conf =
       dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
   if (conf->init_type == ProfileInitType::PROFILER_INIT_FUNCTION) {
@@ -31,7 +31,7 @@ dftracer::DFTracerCore::DFTracerCore(ProfilerStage stage, ProfileType type,
       log_file_suffix(),
       include_metadata(false) {
   conf = dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
-  DFTRACER_LOGINFO(
+  DFTRACER_LOG_INFO(
       "Loading DFTracer with ProfilerStage %d ProfileType %d and process "
       "%d",
       stage, type, process_id);
@@ -43,7 +43,7 @@ dftracer::DFTracerCore::DFTracerCore(ProfilerStage stage, ProfileType type,
         if (conf->init_type == ProfileInitType::PROFILER_INIT_LD_PRELOAD) {
           initialize(true, log_file, data_dirs, process_id);
         }
-        DFTRACER_LOGINFO(
+        DFTRACER_LOG_INFO(
             "Preloading DFTracer with log_file %s data_dir %s and process "
             "%d",
             this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
@@ -60,46 +60,46 @@ dftracer::DFTracerCore::DFTracerCore(ProfilerStage stage, ProfileType type,
         bind = true;
       }
       initialize(bind, log_file, data_dirs, process_id);
-      DFTRACER_LOGINFO(
+      DFTRACER_LOG_INFO(
           "App Initializing DFTracer with log_file %s data_dir %s and "
           "process %d",
           this->log_file.c_str(), this->data_dirs.c_str(), this->process_id);
       break;
     }
     default: {  // GCOVR_EXCL_START
-      DFTRACER_LOGERROR(UNKNOWN_PROFILER_TYPE.message, type);
-      throw std::runtime_error(UNKNOWN_PROFILER_TYPE.code);
+      DFTRACER_LOG_ERROR(DFTRACER_UNKNOWN_PROFILER_TYPE_MSG, type);
+      throw std::runtime_error(DFTRACER_UNKNOWN_PROFILER_TYPE_CODE);
     }  // GCOVR_EXCL_STOP
   }
-  DFTRACER_LOGDEBUG("DFTracerCore::DFTracerCore type %d", type);
+  DFTRACER_LOG_DEBUG("DFTracerCore::DFTracerCore type %d", type);
 }
 
 void dftracer::DFTracerCore::log(
     ConstEventType event_name, ConstEventType category,
     TimeResolution start_time, TimeResolution duration,
     std::unordered_map<std::string, std::any> *metadata) {
-  DFTRACER_LOGDEBUG("DFTracerCore::log", "");
+  DFTRACER_LOG_DEBUG("DFTracerCore::log", "");
   if (this->is_initialized && conf->enable) {
     if (logger != nullptr) {
       logger->log(event_name, category, start_time, duration, metadata);
     } else {
-      DFTRACER_LOGERROR("DFTracerCore::log logger not initialized", "");
+      DFTRACER_LOG_ERROR("DFTracerCore::log logger not initialized", "");
     }
   }
 }
 
 bool dftracer::DFTracerCore::finalize() {
-  DFTRACER_LOGDEBUG("DFTracerCore::finalize", "");
+  DFTRACER_LOG_DEBUG("DFTracerCore::finalize", "");
   if (this->is_initialized && conf->enable) {
-    DFTRACER_LOGINFO("Calling finalize on pid %d", this->process_id);
+    DFTRACER_LOG_INFO("Calling finalize on pid %d", this->process_id);
     auto trie = dftracer::Singleton<Trie>::get_instance();
     if (trie != nullptr) {
-      DFTRACER_LOGINFO("Release Prefix Tree", "");
+      DFTRACER_LOG_INFO("Release Prefix Tree", "");
       trie->finalize();
       dftracer::Singleton<Trie>::finalize();
     }
     if (bind && conf->io) {
-      DFTRACER_LOGINFO("Release I/O bindings", "");
+      DFTRACER_LOG_INFO("Release I/O bindings", "");
       brahma_free_bindings();
       auto posix_instance = brahma::POSIXDFTracer::get_instance();
       if (posix_instance != nullptr) {
@@ -123,20 +123,20 @@ bool dftracer::DFTracerCore::finalize() {
 void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
                                         const char *_data_dirs,
                                         const int *_process_id) {
-  DFTRACER_LOGDEBUG("DFTracerCore::initialize", "");
+  DFTRACER_LOG_DEBUG("DFTracerCore::initialize", "");
   if (conf->bind_signals) set_signal();
   if (!is_initialized) {
     this->bind = _bind;
     include_metadata = conf->metadata;
     logger = dftracer::Singleton<DFTLogger>::get_instance();
     if (conf->enable) {
-      DFTRACER_LOGDEBUG("DFTracer enabled", "");
+      DFTRACER_LOG_DEBUG("DFTracer enabled", "");
       if (_process_id == nullptr || *_process_id == -1) {
         this->process_id = df_getpid();
       } else {
         this->process_id = *_process_id;
       }
-      DFTRACER_LOGDEBUG("Setting process_id to %d", this->process_id);
+      DFTRACER_LOG_DEBUG("Setting process_id to %d", this->process_id);
       char exec_name[DFT_PATH_MAX] = "DEFAULT";
       char exec_cmd[DFT_PATH_MAX] = "DEFAULT";
       char cmd[128];
@@ -156,7 +156,7 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
               if (strcmp(exec_name, "python") != 0) {
                 has_extracted = true;
               }
-              DFTRACER_LOGINFO("Extracted process_name %s", exec_name);
+              DFTRACER_LOG_INFO("Extracted process_name %s", exec_name);
             }
             exec_cmd[index] = SEPARATOR;
             last_index = index + 1;
@@ -168,23 +168,23 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
           index++;
         }
         exec_cmd[DFT_PATH_MAX - 1] = '\0';
-        DFTRACER_LOGDEBUG("Exec command line %s", exec_cmd);
+        DFTRACER_LOG_DEBUG("Exec command line %s", exec_cmd);
       }
       if (_log_file == nullptr) {
-        DFTRACER_LOGINFO("Extracted process_name %s", exec_name);
+        DFTRACER_LOG_INFO("Extracted process_name %s", exec_name);
         if (!conf->log_file.empty()) {
-          DFTRACER_LOGDEBUG("Conf has log file %s", conf->log_file.c_str());
+          DFTRACER_LOG_DEBUG("Conf has log file %s", conf->log_file.c_str());
           this->log_file = std::string(conf->log_file) + "-" + exec_name + "-" +
                            std::to_string(this->process_id) + "-" +
                            log_file_suffix + ".pfw";
         } else {  // GCOV_EXCL_START
-          DFTRACER_LOGERROR(UNDEFINED_LOG_FILE.message, "");
-          throw std::runtime_error(UNDEFINED_LOG_FILE.code);
+          DFTRACER_LOG_ERROR(DFTRACER_UNDEFINED_LOG_FILE_MSG, "");
+          throw std::runtime_error(DFTRACER_UNDEFINED_LOG_FILE_CODE);
         }  // GCOV_EXCL_STOP
       } else {
         this->log_file = _log_file;
       }
-      DFTRACER_LOGDEBUG("Setting log file to %s", this->log_file.c_str());
+      DFTRACER_LOG_DEBUG("Setting log file to %s", this->log_file.c_str());
       logger->update_log_file(this->log_file, exec_name, exec_cmd,
                               this->process_id);
       if (bind) {
@@ -205,8 +205,8 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
               if (!conf->data_dirs.empty()) {
                 this->data_dirs = conf->data_dirs;
               } else {  // GCOV_EXCL_START
-                DFTRACER_LOGERROR(UNDEFINED_DATA_DIR.message, "");
-                throw std::runtime_error(UNDEFINED_DATA_DIR.code);
+                DFTRACER_LOG_ERROR(DFTRACER_UNDEFINED_DATA_DIR_MSG, "");
+                throw std::runtime_error(DFTRACER_UNDEFINED_DATA_DIR_CODE);
               }  // GCOV_EXCL_STOP
             } else {
               this->data_dirs = _data_dirs;
@@ -214,16 +214,16 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
                 this->data_dirs += ":" + conf->data_dirs;
               }
             }
-            DFTRACER_LOGDEBUG("Setting data_dirs to %s",
-                              this->data_dirs.c_str());
+            DFTRACER_LOG_DEBUG("Setting data_dirs to %s",
+                               this->data_dirs.c_str());
           } else {
-            DFTRACER_LOGDEBUG("Ignoring data_dirs as tracing all files", "");
+            DFTRACER_LOG_DEBUG("Ignoring data_dirs as tracing all files", "");
           }
           brahma_gotcha_wrap("dftracer", conf->gotcha_priority);
           if (!conf->trace_all_files) {
             auto paths = split(this->data_dirs, DFTRACER_DATA_DIR_DELIMITER);
             for (const auto &path : paths) {
-              DFTRACER_LOGDEBUG("Profiler will trace %s\n", path.c_str());
+              DFTRACER_LOG_DEBUG("Profiler will trace %s\n", path.c_str());
               trie->include(path.c_str(), path.size());
             }
           }
@@ -241,11 +241,11 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
 }
 
 TimeResolution dftracer::DFTracerCore::get_time() {
-  DFTRACER_LOGDEBUG("DFTracerCore::get_time", "");
+  DFTRACER_LOG_DEBUG("DFTracerCore::get_time", "");
   if (this->is_initialized && conf->enable && logger != nullptr) {
     return logger->get_time();
   } else {
-    DFTRACER_LOGDEBUG("DFTracerCore::get_time logger not initialized", "");
+    DFTRACER_LOG_DEBUG("DFTracerCore::get_time logger not initialized", "");
   }
   return -1;
 }

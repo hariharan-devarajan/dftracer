@@ -273,13 +273,23 @@ set(DFTRACER_CORE_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/posix.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/stdio.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/dftracer_main.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/macro.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/logging.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/singleton.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/configuration_manager.h)
 add_library(${PROJECT_NAME} SHARED)
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCY_LIB})
+add_library(${PROJECT_NAME}_dbg SHARED)
+target_link_libraries(${PROJECT_NAME}_dbg ${DEPENDENCY_LIB})
+target_compile_definitions(${PROJECT_NAME}_dbg PUBLIC DFTRACER_LOGGER_CPP_LOGGER)
+target_compile_definitions(${PROJECT_NAME}_dbg PUBLIC DFTRACER_LOGGER_LEVEL_TRACE)
+target_compile_definitions(${PROJECT_NAME}_dbg PUBLIC DFTRACER_LOGGER_LEVEL_DEBUG)
+target_compile_definitions(${PROJECT_NAME}_dbg PUBLIC DFTRACER_LOGGER_LEVEL_INFO)
+target_compile_definitions(${PROJECT_NAME}_dbg PUBLIC DFTRACER_LOGGER_LEVEL_WARN)
+target_compile_definitions(${PROJECT_NAME}_dbg PUBLIC DFTRACER_LOGGER_LEVEL_ERROR)
 add_library(${PROJECT_NAME}_preload SHARED)
 target_link_libraries(${PROJECT_NAME}_preload ${DEPENDENCY_LIB} ${PROJECT_NAME})
+add_library(${PROJECT_NAME}_preload_dbg SHARED)
+target_link_libraries(${PROJECT_NAME}_preload_dbg ${DEPENDENCY_LIB} ${PROJECT_NAME}_dbg)
 if (DFTRACER_BUILD_PYTHON_BINDINGS)
     pybind11_add_module(py${PROJECT_NAME} ${DFTRACER_CORE_SRC} ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/pydftracer.cpp)
     target_compile_definitions(py${PROJECT_NAME} PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
@@ -289,11 +299,29 @@ target_sources(${PROJECT_NAME}
         PRIVATE
         ${DFTRACER_CORE_SRC}
         )
+target_sources(${PROJECT_NAME}_dbg
+        PRIVATE
+        ${DFTRACER_CORE_SRC}
+        )
 target_sources(${PROJECT_NAME}_preload
         PRIVATE
         ${DFTRACER_PRELOAD_SRC}
         )
+target_sources(${PROJECT_NAME}_preload_dbg
+        PRIVATE
+        ${DFTRACER_PRELOAD_SRC}
+        )
 target_include_directories(${PROJECT_NAME}
+        PRIVATE
+        # where the library itself will look for its internal headers
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        PUBLIC
+        # where top-level project will look for the library's public headers
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        # where external projects will look for the library's public headers
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        )
+target_include_directories(${PROJECT_NAME}_dbg
         PRIVATE
         # where the library itself will look for its internal headers
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -324,13 +352,35 @@ install(
 install(TARGETS ${PROJECT_NAME}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(
+          TARGETS ${PROJECT_NAME}_dbg
+          EXPORT ${DFTRACER_EXPORTED_TARGETS}
+          LIBRARY DESTINATION ${DFTRACER_INSTALL_LIB_DIR}
+          ARCHIVE DESTINATION ${DFTRACER_INSTALL_LIB_DIR}
+          RUNTIME DESTINATION ${DFTRACER_INSTALL_BIN_DIR}
+  )
+install(TARGETS ${PROJECT_NAME}_dbg
+          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+          PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(TARGETS ${PROJECT_NAME}_preload
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(TARGETS ${PROJECT_NAME}_preload_dbg
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(
     TARGETS
     ${PROJECT_NAME}_preload
+    EXPORT
+    ${DFTRACER_EXPORTED_TARGETS}
+    LIBRARY DESTINATION ${DFTRACER_INSTALL_LIB_DIR}
+    ARCHIVE DESTINATION ${DFTRACER_INSTALL_LIB_DIR}
+    RUNTIME DESTINATION ${DFTRACER_INSTALL_BIN_DIR}
+)
+install(
+    TARGETS
+    ${PROJECT_NAME}_preload_dbg
     EXPORT
     ${DFTRACER_EXPORTED_TARGETS}
     LIBRARY DESTINATION ${DFTRACER_INSTALL_LIB_DIR}

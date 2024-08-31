@@ -5,7 +5,7 @@
 #ifndef DFTRACER_GENERIC_LOGGER_H
 #define DFTRACER_GENERIC_LOGGER_H
 
-#include <dftracer/core/macro.h>
+#include <dftracer/core/logging.h>
 #include <dftracer/core/singleton.h>
 #include <dftracer/utils/configuration_manager.h>
 #include <dftracer/utils/utils.h>
@@ -54,7 +54,7 @@ class DFTLogger {
         mpi_event(false),
 #endif
         include_metadata(false) {
-    DFTRACER_LOGDEBUG("DFTLogger.DFTLogger", "");
+    DFTRACER_LOG_DEBUG("DFTLogger.DFTLogger", "");
     auto conf =
         dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
     include_metadata = conf->metadata;
@@ -62,13 +62,10 @@ class DFTLogger {
     throw_error = conf->throw_error;
     this->is_init = true;
   }
-  ~DFTLogger() {
-    index_stack.clear();
-    DFTRACER_LOGDEBUG("Destructing DFTLogger", "");
-  }
+  ~DFTLogger() { index_stack.clear(); }
   inline void update_log_file(std::string log_file, std::string exec_name,
                               std::string cmd, ProcessID process_id = -1) {
-    DFTRACER_LOGDEBUG("DFTLogger.update_log_file %s", log_file.c_str());
+    DFTRACER_LOG_DEBUG("DFTLogger.update_log_file %s", log_file.c_str());
     this->process_id = process_id;
     this->writer = dftracer::Singleton<dftracer::ChromeWriter>::get_instance();
     if (this->writer != nullptr) {
@@ -94,7 +91,7 @@ class DFTLogger {
       this->exit_event();
     }
     this->is_init = true;
-    DFTRACER_LOGINFO("Writing trace to %s", log_file.c_str());
+    DFTRACER_LOG_INFO("Writing trace to %s", log_file.c_str());
   }
 
   inline void enter_event() {
@@ -109,7 +106,7 @@ class DFTLogger {
   }
 
   inline TimeResolution get_time() {
-    DFTRACER_LOGDEBUG("DFTLogger.get_time", "");
+    DFTRACER_LOG_DEBUG("DFTLogger.get_time", "");
     struct timeval tv {};
     gettimeofday(&tv, NULL);
     TimeResolution t = 1000000 * tv.tv_sec + tv.tv_usec;
@@ -119,7 +116,7 @@ class DFTLogger {
   inline void log(ConstEventType event_name, ConstEventType category,
                   TimeResolution start_time, TimeResolution duration,
                   std::unordered_map<std::string, std::any> *metadata) {
-    DFTRACER_LOGDEBUG("DFTLogger.log", "");
+    DFTRACER_LOG_DEBUG("DFTLogger.log", "");
     ThreadID tid = 0;
     if (dftracer_tid) {
       tid = df_gettid() + this->process_id;
@@ -159,12 +156,12 @@ class DFTLogger {
                         start_time, duration, metadata, this->process_id, tid);
       has_entry = true;
     } else {
-      DFTRACER_LOGERROR("DFTLogger.log writer not initialized", "");
+      DFTRACER_LOG_ERROR("DFTLogger.log writer not initialized", "");
     }
   }
 
   inline void finalize() {
-    DFTRACER_LOGDEBUG("DFTLogger.finalize", "");
+    DFTRACER_LOG_DEBUG("DFTLogger.finalize", "");
     if (this->writer != nullptr) {
       auto meta = std::unordered_map<std::string, std::any>();
       meta.insert_or_assign("num_events", index.load());
@@ -172,9 +169,9 @@ class DFTLogger {
       this->log("end", "dftracer", this->get_time(), 0, &meta);
       this->exit_event();
       writer->finalize(has_entry);
-      DFTRACER_LOGINFO("Released Logger", "");
+      DFTRACER_LOG_INFO("Released Logger", "");
     } else {
-      DFTRACER_LOGWARN("DFTLogger.finalize writer not initialized", "");
+      DFTRACER_LOG_WARN("DFTLogger.finalize writer not initialized", "");
     }
   }
 };
@@ -186,7 +183,7 @@ class DFTLogger {
   if (trace && this->logger->include_metadata) \
     metadata->insert_or_assign(#value, value);
 #define DFT_LOGGER_START(entity)                                  \
-  DFTRACER_LOGDEBUG("Calling function %s", __FUNCTION__);         \
+  DFTRACER_LOG_DEBUG("Calling function %s", __FUNCTION__);        \
   const char *fname = is_traced(entity, __FUNCTION__);            \
   bool trace = fname != nullptr;                                  \
   TimeResolution start_time = 0;                                  \
