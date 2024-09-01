@@ -58,9 +58,7 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
   DFTRACER_LOG_DEBUG("ChromeWriter.finalize", "");
   if (fh != nullptr) {
     DFTRACER_LOG_INFO("Profiler finalizing writer %s", filename.c_str());
-    if (current_index > 0) {
-      write_buffer_op(true);
-    }
+    write_buffer_op(true);
     fflush(fh);
     int last_off = ftell(fh);
     (void)last_off;
