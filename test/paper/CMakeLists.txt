@@ -81,8 +81,7 @@ function(add_df_test machine PPN NODES example example_name)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_TRACE_ALL_FILES=1)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_TRACE_TIDS=0)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_BIND_SIGNALS=1)
-
-\    endfunction()
+endfunction()
 
 function(add_darshan_test machine PPN NODES example example_name)
     set(example_name "darshan_${example_name}")
