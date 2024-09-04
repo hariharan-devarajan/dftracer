@@ -36,7 +36,7 @@ pip install pydftracer
 ### From Github
 
 ```bash
-DFT_VERSION=dev
+DFT_VERSION=develop
 pip install git+https://github.com/hariharan-devarajan/dftracer.git@${DFT_VERSION}
 ```
 
