@@ -117,7 +117,7 @@ class DFTLogger {
     return t;
   }
 
-  inline void log(ConstEventType event_name, ConstEventType category,
+  inline void log(ConstEventNameType event_name, ConstEventNameType category,
                   TimeResolution start_time, TimeResolution duration,
                   std::unordered_map<std::string, std::any> *metadata) {
     DFTRACER_LOG_DEBUG("DFTLogger.log", "");
@@ -141,19 +141,27 @@ class DFTLogger {
     if (!mpi_event && include_metadata) {
       int initialized;
       int status = MPI_Initialized(&initialized);
-      if (status == MPI_SUCCESS && initialized == true) {
+      if (status == MPI_SUCCESS && initialized == true &&
+          this->writer != nullptr) {
         int rank;
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
         auto meta = std::unordered_map<std::string, std::any>();
         meta.insert_or_assign("rank", rank);
+        auto start = this->get_time();
         this->enter_event();
-        if (this->writer != nullptr) {
-          auto start = this->get_time();
-          TimeResolution dur = 0;
-          this->writer->log(index_stack[level - 1], "mpi", "dftracer", start,
-                            dur, &meta, this->process_id, tid);
-        }
+        this->writer->log(index_stack[level - 1], "mpi", "dftracer",
+                          EventType::COMPLETE_EVENT, start, 0, &meta,
+                          this->process_id, tid);
         this->exit_event();
+        char process_name[1024];
+        auto size = sprintf(process_name, "Rank %d", rank);
+        process_name[size] = '\0';
+        this->enter_event();
+        this->writer->log(index_stack[level - 1], "process_name", process_name,
+                          EventType::METADATA_EVENT, 0, 0, nullptr,
+                          this->process_id, tid);
+        this->exit_event();
+
         mpi_event = true;
       }
     }
@@ -162,11 +170,12 @@ class DFTLogger {
     if (this->writer != nullptr) {
       if (include_metadata) {
         this->writer->log(index_stack[level - 1], event_name, category,
-                          start_time, duration, metadata, this->process_id,
-                          tid);
+                          EventType::COMPLETE_EVENT, start_time, duration,
+                          metadata, this->process_id, tid);
       } else {
-        this->writer->log(local_index, event_name, category, start_time,
-                          duration, metadata, this->process_id, tid);
+        this->writer->log(local_index, event_name, category,
+                          EventType::COMPLETE_EVENT, start_time, duration,
+                          metadata, this->process_id, tid);
       }
 
       has_entry = true;

@@ -6,7 +6,7 @@
 #include <dftracer/core/enumeration.h>
 #include <dftracer/dftracer.h>
 
-DFTracer::DFTracer(ConstEventType _name, ConstEventType _cat)
+DFTracer::DFTracer(ConstEventNameType _name, ConstEventNameType _cat)
     : initialized(true), name(_name), cat(_cat), metadata(nullptr) {
   DFTRACER_LOG_DEBUG("DFTracer::DFTracer event %s cat %s ", _name, _cat);
   auto dftracer_core = DFTRACER_MAIN_SINGLETON(ProfilerStage::PROFILER_OTHER,
@@ -72,8 +72,8 @@ void initialize_no_bind(const char *log_file, const char *data_dirs,
                                process_id);
 }
 
-struct DFTracerData *initialize_region(ConstEventType name,
-                                       ConstEventType cat) {
+struct DFTracerData *initialize_region(ConstEventNameType name,
+                                       ConstEventNameType cat) {
   DFTRACER_LOG_DEBUG("dftracer.initialize_region event %s cat %s", name, cat);
   auto data = new DFTracerData();
   data->profiler = new DFTracer(name, C_LOG_CATEGORY);
@@ -119,7 +119,7 @@ TimeResolution get_time() {
   return 0;
 }
 
-void log_event(ConstEventType name, ConstEventType cat,
+void log_event(ConstEventNameType name, ConstEventNameType cat,
                TimeResolution start_time, TimeResolution duration) {
   DFTRACER_LOG_DEBUG("dftracer.cpp.log_event", "");
   auto dftracer = DFTRACER_MAIN_SINGLETON(ProfilerStage::PROFILER_OTHER,

@@ -75,7 +75,7 @@ dftracer::DFTracerCore::DFTracerCore(ProfilerStage stage, ProfileType type,
 }
 
 void dftracer::DFTracerCore::log(
-    ConstEventType event_name, ConstEventType category,
+    ConstEventNameType event_name, ConstEventNameType category,
     TimeResolution start_time, TimeResolution duration,
     std::unordered_map<std::string, std::any> *metadata) {
   DFTRACER_LOG_DEBUG("DFTracerCore::log", "");

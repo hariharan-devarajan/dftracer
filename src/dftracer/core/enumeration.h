@@ -22,6 +22,10 @@ enum ProfileInitType : uint8_t {
   PROFILER_INIT_LD_PRELOAD = 1,
   PROFILER_INIT_FUNCTION = 2
 };
+enum EventType : uint8_t {
+  COMPLETE_EVENT = 0,
+  METADATA_EVENT = 1,
+};
 inline void convert(const std::string &s, ProfileInitType &type) {
   if (s == "PRELOAD") {
     type = ProfileInitType::PROFILER_INIT_LD_PRELOAD;
