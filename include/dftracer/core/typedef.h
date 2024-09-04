@@ -7,6 +7,6 @@
 typedef unsigned long long int TimeResolution;
 typedef unsigned long int ThreadID;
 typedef unsigned long int ProcessID;
-typedef char* EventType;
-typedef const char* ConstEventType;
+typedef char* EventNameType;
+typedef const char* ConstEventNameType;
 #endif  // DFTRACER_TYPEDEF_H

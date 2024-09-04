@@ -5,7 +5,7 @@
 #include <dftracer/brahma/stdio.h>
 #include <dftracer/df_logger.h>
 
-static ConstEventType CATEGORY = "STDIO";
+static ConstEventNameType CATEGORY = "STDIO";
 
 std::shared_ptr<brahma::STDIODFTracer> brahma::STDIODFTracer::instance =
     nullptr;

@@ -4,7 +4,7 @@
 #include <cpp-logger/logger.h>
 #include <dftracer/brahma/posix.h>
 
-static ConstEventType CATEGORY = "POSIX";
+static ConstEventNameType CATEGORY = "POSIX";
 
 std::shared_ptr<brahma::POSIXDFTracer> brahma::POSIXDFTracer::instance =
     nullptr;

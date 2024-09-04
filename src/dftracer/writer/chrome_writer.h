@@ -48,9 +48,9 @@ class ChromeWriter {
 
   size_t current_index;
   char *buffer;
-  void convert_json(int index, ConstEventType event_name,
-                    ConstEventType category, TimeResolution start_time,
-                    TimeResolution duration,
+  void convert_json(int index, ConstEventNameType event_name,
+                    ConstEventNameType category, EventType type,
+                    TimeResolution start_time, TimeResolution duration,
                     std::unordered_map<std::string, std::any> *metadata,
                     ProcessID process_id, ThreadID thread_id);
 
@@ -135,8 +135,9 @@ class ChromeWriter {
   ~ChromeWriter() { DFTRACER_LOG_DEBUG("Destructing ChromeWriter", ""); }
   void initialize(char *filename, bool throw_error);
 
-  void log(int index, ConstEventType event_name, ConstEventType category,
-           TimeResolution &start_time, TimeResolution &duration,
+  void log(int index, ConstEventNameType event_name,
+           ConstEventNameType category, EventType type,
+           TimeResolution start_time, TimeResolution duration,
            std::unordered_map<std::string, std::any> *metadata,
            ProcessID process_id, ThreadID tid);
 

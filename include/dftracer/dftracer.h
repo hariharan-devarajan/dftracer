@@ -34,17 +34,17 @@ void finalize();
 #include <unordered_map>
 
 // constants defined
-__attribute__((unused)) static ConstEventType CPP_LOG_CATEGORY = "CPP_APP";
+__attribute__((unused)) static ConstEventNameType CPP_LOG_CATEGORY = "CPP_APP";
 
 class DFTracer {
   bool initialized;
-  ConstEventType name;
-  ConstEventType cat;
+  ConstEventNameType name;
+  ConstEventNameType cat;
   TimeResolution start_time;
   std::unordered_map<std::string, std::any> *metadata;
 
  public:
-  DFTracer(ConstEventType _name, ConstEventType _cat);
+  DFTracer(ConstEventNameType _name, ConstEventNameType _cat);
 
   void update(const char *key, int value);
 
@@ -87,8 +87,9 @@ struct DFTracerData {
   void *profiler;
 };
 
-__attribute__((unused)) static ConstEventType C_LOG_CATEGORY = "C_APP";
-struct DFTracerData *initialize_region(ConstEventType name, ConstEventType cat);
+__attribute__((unused)) static ConstEventNameType C_LOG_CATEGORY = "C_APP";
+struct DFTracerData *initialize_region(ConstEventNameType name,
+                                       ConstEventNameType cat);
 void finalize_region(struct DFTracerData *data);
 void update_metadata_int(struct DFTracerData *data, const char *key, int value);
 void update_metadata_string(struct DFTracerData *data, const char *key,
