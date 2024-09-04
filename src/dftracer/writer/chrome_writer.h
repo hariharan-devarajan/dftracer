@@ -56,7 +56,8 @@ class ChromeWriter {
 
   bool is_first_write;
   inline size_t write_buffer_op(bool force = false) {
-    if (!force && current_index < write_buffer_size) return 0;
+    if (current_index == 0 || (!force && current_index < write_buffer_size))
+      return 0;
     DFTRACER_LOG_DEBUG("ChromeWriter.write_buffer_op %s",
                        this->filename.c_str());
     size_t written_elements = 0;
@@ -70,7 +71,7 @@ class ChromeWriter {
 
     if (written_elements != 1) {  // GCOVR_EXCL_START
       DFTRACER_LOG_ERROR(
-          "unable to log write for a+ written only %ld of %d with error code "
+          "unable to log write only %ld of %d with error code "
           "%d",
           written_elements, 1, errno);
     }  // GCOVR_EXCL_STOP
