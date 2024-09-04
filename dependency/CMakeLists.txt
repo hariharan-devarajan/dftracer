@@ -1,7 +1,7 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/dftracer-utils.cmake)
 install_external_project(cpp-logger https://github.com/hariharan-devarajan/cpp-logger.git v0.0.4 ${CMAKE_INSTALL_PREFIX} "")
 install_external_project(gotcha https://github.com/LLNL/GOTCHA.git 1.0.7 ${CMAKE_INSTALL_PREFIX} "")
-install_external_project(brahma https://github.com/hariharan-devarajan/brahma.git v0.0.5 ${CMAKE_INSTALL_PREFIX} "")
+install_external_project(brahma https://github.com/hariharan-devarajan/brahma.git v0.0.6 ${CMAKE_INSTALL_PREFIX} "")
 install_external_project(yaml-cpp https://github.com/jbeder/yaml-cpp.git yaml-cpp-0.6.3 ${CMAKE_INSTALL_PREFIX} "-DYAML_CPP_BUILD_TESTS=OFF;-DYAML_BUILD_SHARED_LIBS=ON")
 install_external_project(pybind11 https://github.com/pybind/pybind11.git v2.12.0 ${CMAKE_INSTALL_PREFIX} "-DPYBIND11_TEST=OFF")
 add_dependencies(yaml-cpp brahma)

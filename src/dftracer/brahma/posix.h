@@ -193,6 +193,17 @@ class POSIXDFTracer : public POSIX {
   int truncate(const char *pathname, off_t length) override;
 
   int ftruncate(int fd, off_t length) override;
+
+  int execl(const char *pathname, const char *arg, ...) override;
+
+  int execlp(const char *file, const char *arg, ...) override;
+
+  int execv(const char *pathname, char *const argv[]) override;
+
+  int execvp(const char *file, char *const argv[]) override;
+
+  int execvpe(const char *file, char *const argv[],
+              char *const envp[]) override;
 };
 
 }  // namespace brahma
