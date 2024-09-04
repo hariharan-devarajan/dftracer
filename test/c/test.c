@@ -37,6 +37,8 @@ int main(int argc, char *argv[]) {
   FILE *fh = fopen(filename, "w+");
   fwrite("hello", sizeof("hello"), 1, fh);
   fclose(fh);
+  char *arr[] = {"ls", "-l", NULL};
+  execv("/bin/ls", arr);
   if (init) {
     DFTRACER_C_FINI();
   }

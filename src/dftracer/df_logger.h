@@ -62,10 +62,7 @@ class DFTLogger {
     throw_error = conf->throw_error;
     this->is_init = true;
   }
-  ~DFTLogger() {
-    this->finalize();
-    index_stack.clear();
-  }
+  ~DFTLogger() { index_stack.clear(); }
   inline void update_log_file(std::string log_file, std::string exec_name,
                               std::string cmd, ProcessID process_id = -1) {
     DFTRACER_LOG_DEBUG("DFTLogger.update_log_file %s", log_file.c_str());
@@ -220,6 +217,18 @@ class DFTLogger {
     if (this->logger->include_metadata) {                         \
       metadata = new std::unordered_map<std::string, std::any>(); \
       DFT_LOGGER_UPDATE(fname);                                   \
+    }                                                             \
+    this->logger->enter_event();                                  \
+    start_time = this->logger->get_time();                        \
+  }
+#define DFT_LOGGER_START_ALWAYS(entity)                           \
+  DFTRACER_LOG_DEBUG("Calling function %s", __FUNCTION__);        \
+  bool trace = true;                                              \
+  TimeResolution start_time = 0;                                  \
+  std::unordered_map<std::string, std::any> *metadata = nullptr;  \
+  if (trace) {                                                    \
+    if (this->logger->include_metadata) {                         \
+      metadata = new std::unordered_map<std::string, std::any>(); \
     }                                                             \
     this->logger->enter_event();                                  \
     start_time = this->logger->get_time();                        \
