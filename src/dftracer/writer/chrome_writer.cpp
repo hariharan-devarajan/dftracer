@@ -30,7 +30,7 @@ void dftracer::ChromeWriter::initialize(char *filename, bool throw_error) {
       DFTRACER_LOG_ERROR("unable to create log file %s",
                          filename);  // GCOVR_EXCL_LINE
     } else {
-      setvbuf(fh, NULL, _IOFBF, MAX_BUFFER);
+      setvbuf(fh, NULL, _IOFBF, write_buffer_size + 4096);
       DFTRACER_LOG_INFO("created log file %s", filename);
     }
   }
