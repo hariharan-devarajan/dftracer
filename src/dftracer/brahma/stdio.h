@@ -83,9 +83,9 @@ class STDIODFTracer : public STDIO {
 
   int fclose(FILE *fp) override;
 
-  size_t fread(void *ptr, size_t size, size_t nmemb, FILE *fp) override;
+  size_t fread(void *ptr, size_t size, size_t count, FILE *fp) override;
 
-  size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *fp) override;
+  size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fp) override;
 
   long ftell(FILE *fp) override;
 
