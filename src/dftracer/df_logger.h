@@ -62,7 +62,10 @@ class DFTLogger {
     throw_error = conf->throw_error;
     this->is_init = true;
   }
-  ~DFTLogger() { index_stack.clear(); }
+  ~DFTLogger() {
+    this->finalize();
+    index_stack.clear();
+  }
   inline void update_log_file(std::string log_file, std::string exec_name,
                               std::string cmd, ProcessID process_id = -1) {
     DFTRACER_LOG_DEBUG("DFTLogger.update_log_file %s", log_file.c_str());
@@ -194,6 +197,7 @@ class DFTLogger {
       this->exit_event();
       writer->finalize(has_entry);
       DFTRACER_LOG_INFO("Released Logger", "");
+      this->writer = nullptr;
     } else {
       DFTRACER_LOG_WARN("DFTLogger.finalize writer not initialized", "");
     }

@@ -73,6 +73,8 @@ ENV Variables supported
    DFTRACER_DISABLE_STDIO           STRING  Disable automatic binding of STDIO I/O calls.
    DFTRACER_TRACE_COMPRESSION       INT     Enable trace compression (default 1)
    DFTRACER_DISABLE_TIDS            INT     Disable tracing of thread ids (default 0).
+   DFTRACER_WRITE_BUFFER_SIZE       INT     Setup the buffering size for write optimization (default 0). Disabled as 
+                                            This wont work for AI workloads
    ================================ ======  ===========================================================================
 
 ----------------------------------------

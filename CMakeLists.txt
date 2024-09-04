@@ -294,6 +294,10 @@ if (DFTRACER_BUILD_PYTHON_BINDINGS)
     pybind11_add_module(py${PROJECT_NAME} ${DFTRACER_CORE_SRC} ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/pydftracer.cpp)
     target_compile_definitions(py${PROJECT_NAME} PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
     target_link_libraries(py${PROJECT_NAME} PRIVATE ${DEPENDENCY_LIB})
+
+    pybind11_add_module(py${PROJECT_NAME}_dbg ${DFTRACER_CORE_SRC} ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/pydftracer_dbg.cpp)
+    target_compile_definitions(py${PROJECT_NAME}_dbg PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
+    target_link_libraries(py${PROJECT_NAME}_dbg PRIVATE ${DEPENDENCY_LIB})
 endif()
 target_sources(${PROJECT_NAME}
         PRIVATE
@@ -396,6 +400,17 @@ if (DFTRACER_BUILD_PYTHON_BINDINGS)
                 COMMAND bash -c \"set -e
                 chmod +x ${CMAKE_BINARY_DIR}/symlink.sh
                 . ${CMAKE_BINARY_DIR}/symlink.sh
+                \")")
+
+    
+    install(TARGETS py${PROJECT_NAME}_dbg
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/symlink_dbg.sh CONTENT "echo -- Installing: symlink ${MAIN_PYTHON_SITE_PACKAGES}/$<TARGET_FILE_NAME:py${PROJECT_NAME}_dbg> from ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/$<TARGET_FILE_NAME:py${PROJECT_NAME}_dbg>;ln -sf ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/$<TARGET_FILE_NAME:py${PROJECT_NAME}_dbg> ${MAIN_PYTHON_SITE_PACKAGES}/$<TARGET_FILE_NAME:py${PROJECT_NAME}_dbg>")
+    install(CODE "execute_process(
+                COMMAND bash -c \"set -e
+                chmod +x ${CMAKE_BINARY_DIR}/symlink_dbg.sh
+                . ${CMAKE_BINARY_DIR}/symlink_dbg.sh
                 \")")
 endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_compact ${EXECUTABLE_OUTPUT_PATH}/dftracer_compact COPYONLY)

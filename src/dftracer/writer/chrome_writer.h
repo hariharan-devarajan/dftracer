@@ -44,7 +44,7 @@ class ChromeWriter {
   char hostname[256];
   static const int MAX_LINE_SIZE = 4096;
   static const int MAX_META_LINE_SIZE = 3000;
-  static const int MAX_BUFFER = 33554432;  // 32MB
+  size_t write_buffer_size;
 
   size_t current_index;
   char *buffer;
@@ -56,7 +56,8 @@ class ChromeWriter {
 
   bool is_first_write;
   inline size_t write_buffer_op(bool force = false) {
-    if (!force && current_index < MAX_BUFFER) return 0;
+    if (current_index == 0 || (!force && current_index < write_buffer_size))
+      return 0;
     DFTRACER_LOG_DEBUG("ChromeWriter.write_buffer_op %s",
                        this->filename.c_str());
     size_t written_elements = 0;
@@ -70,7 +71,7 @@ class ChromeWriter {
 
     if (written_elements != 1) {  // GCOVR_EXCL_START
       DFTRACER_LOG_ERROR(
-          "unable to log write for a+ written only %ld of %d with error code "
+          "unable to log write only %ld of %d with error code "
           "%d",
           written_elements, 1, errno);
     }  // GCOVR_EXCL_STOP
@@ -117,10 +118,11 @@ class ChromeWriter {
     include_metadata = conf->metadata;
     enable_core_affinity = conf->core_affinity;
     enable_compression = conf->compression;
+    write_buffer_size = conf->write_buffer_size;
     {
       std::unique_lock<std::shared_mutex> lock(mtx);
       if (!buffer) {
-        buffer = (char *)malloc(MAX_BUFFER + 4096);
+        buffer = (char *)malloc(write_buffer_size + 4096);
         current_index = 0;
       }
     }

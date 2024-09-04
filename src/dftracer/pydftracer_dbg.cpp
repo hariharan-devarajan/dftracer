@@ -17,7 +17,7 @@
 
 #include "pydftracer.cpp.in"
 
-PYBIND11_MODULE(pydftracer, m) {
+PYBIND11_MODULE(pydftracer_dbg, m) {
   m.doc() = "Python module for dftracer";  // optional module docstring
   m.def("initialize", &dftracer::initialize, "initialize dftracer",
         py::arg("log_file") = nullptr, py::arg("data_dirs") = nullptr,
