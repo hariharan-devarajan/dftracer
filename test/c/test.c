@@ -4,9 +4,10 @@
 
 #include <dftracer/dftracer.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <unistd.h>
-
 void foo() {
   DFTRACER_C_FUNCTION_START();
   DFTRACER_C_FUNCTION_UPDATE_INT("key", 0);
@@ -36,9 +37,18 @@ int main(int argc, char *argv[]) {
   foo();
   FILE *fh = fopen(filename, "w+");
   fwrite("hello", sizeof("hello"), 1, fh);
+  int pid = getpid();
+  int child_pid = fork();  // fork a duplicate process
+
+  int child_ppid = getppid();  // get the child's parent pid
+
+  if (child_ppid == pid) {
+    // if the current process is a child of the main process
+    char *arr[] = {"ls", "-l", NULL};
+    execv("/bin/ls", arr);
+    exit(0);
+  }
   fclose(fh);
-  char *arr[] = {"ls", "-l", NULL};
-  execv("/bin/ls", arr);
   if (init) {
     DFTRACER_C_FINI();
   }
