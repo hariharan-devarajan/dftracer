@@ -47,7 +47,7 @@ class ChromeWriter {
   size_t write_buffer_size;
 
   size_t current_index;
-  char *buffer;
+  std::vector<char> buffer;
   void convert_json(int index, ConstEventNameType event_name,
                     ConstEventNameType category, EventType type,
                     TimeResolution start_time, TimeResolution duration,
@@ -64,7 +64,7 @@ class ChromeWriter {
     {
       std::unique_lock<std::shared_mutex> lock(mtx);
       flockfile(fh);
-      written_elements = fwrite(buffer, current_index, sizeof(char), fh);
+      written_elements = fwrite(buffer.data(), current_index, sizeof(char), fh);
       funlockfile(fh);
       current_index = 0;
     }
@@ -109,7 +109,6 @@ class ChromeWriter {
         enable_core_affinity(false),
         fh(nullptr),
         current_index(0),
-        buffer(nullptr),
         is_first_write(true) {
     DFTRACER_LOG_DEBUG("ChromeWriter.ChromeWriter", "");
     auto conf =
@@ -121,10 +120,8 @@ class ChromeWriter {
     write_buffer_size = conf->write_buffer_size;
     {
       std::unique_lock<std::shared_mutex> lock(mtx);
-      if (!buffer) {
-        buffer = (char *)malloc(write_buffer_size + 4096);
-        current_index = 0;
-      }
+      buffer = std::vector<char>(write_buffer_size + 4096);
+      current_index = 0;
     }
 
     if (enable_core_affinity) {

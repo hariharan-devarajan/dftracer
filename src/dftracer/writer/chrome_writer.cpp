@@ -119,15 +119,6 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
     hwloc_topology_destroy(topology);
 #endif
   }
-
-  {
-    std::unique_lock<std::shared_mutex> lock(mtx);
-    if (buffer) {
-      free(buffer);
-      current_index = 0;
-    }
-  }
-
   DFTRACER_LOG_DEBUG("Finished writer finalization", "");
 }
 
@@ -208,7 +199,7 @@ void dftracer::ChromeWriter::convert_json(
       switch (type) {
         case EventType::COMPLETE_EVENT: {
           auto written_size = sprintf(
-              buffer + current_index,
+              buffer.data() + current_index,
               R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{"hostname":"%s"%s}})",
               is_first_char, index, event_name, category, process_id, thread_id,
               start_time, duration, this->hostname, all_stream.str().c_str());
@@ -230,7 +221,7 @@ void dftracer::ChromeWriter::convert_json(
       switch (type) {
         case EventType::COMPLETE_EVENT: {
           auto written_size = sprintf(
-              buffer + current_index,
+              buffer.data() + current_index,
               R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X"})",
               is_first_char, index, event_name, category, process_id, thread_id,
               start_time, duration);
@@ -239,7 +230,7 @@ void dftracer::ChromeWriter::convert_json(
         };
         case EventType::METADATA_EVENT: {
           auto written_size = sprintf(
-              buffer + current_index,
+              buffer.data() + current_index,
               R"(%s{"id":%d,"name":"%s","pid":%lu,"tid":%lu,"ph":"M","args":{"name":"%s"}})",
               is_first_char, index, event_name, process_id, thread_id,
               category);
@@ -254,5 +245,5 @@ void dftracer::ChromeWriter::convert_json(
     }
   }
   DFTRACER_LOG_DEBUG("ChromeWriter.convert_json %s on %s",
-                     buffer + previous_index, this->filename.c_str());
+                     buffer.data() + previous_index, this->filename.c_str());
 }
