@@ -82,6 +82,7 @@ class DFTLogger {
         auto size = sprintf(timestamp, "%s", asctime(localtime(&ltime)));
         timestamp[size - 1] = '\0';
         meta->insert_or_assign("date", std::string(timestamp));
+        meta->insert_or_assign("ppid", getppid());
       }
       this->enter_event();
       this->log("start", "dftracer", this->get_time(), 0, meta);
@@ -221,7 +222,7 @@ class DFTLogger {
     this->logger->enter_event();                                  \
     start_time = this->logger->get_time();                        \
   }
-#define DFT_LOGGER_START_ALWAYS(entity)                           \
+#define DFT_LOGGER_START_ALWAYS()                                 \
   DFTRACER_LOG_DEBUG("Calling function %s", __FUNCTION__);        \
   bool trace = true;                                              \
   TimeResolution start_time = 0;                                  \

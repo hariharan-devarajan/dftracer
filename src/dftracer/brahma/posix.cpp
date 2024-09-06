@@ -568,7 +568,7 @@ int brahma::POSIXDFTracer::ftruncate(int fd, off_t length) {
 
 int brahma::POSIXDFTracer::execl(const char *pathname, const char *arg, ...) {
   BRAHMA_MAP_OR_FAIL(execl);
-  DFT_LOGGER_START_ALWAYS(pathname);
+  DFT_LOGGER_START_ALWAYS();
   DFT_LOGGER_UPDATE(pathname);
   DFT_LOGGER_UPDATE(arg);
   va_list args;
@@ -581,20 +581,21 @@ int brahma::POSIXDFTracer::execl(const char *pathname, const char *arg, ...) {
 
 int brahma::POSIXDFTracer::execlp(const char *pathname, const char *arg, ...) {
   BRAHMA_MAP_OR_FAIL(execlp);
-  DFT_LOGGER_START_ALWAYS(pathname);
+  DFT_LOGGER_START_ALWAYS();
   DFT_LOGGER_UPDATE(pathname);
   DFT_LOGGER_UPDATE(arg);
   va_list args;
   va_start(args, arg);
   int ret = __real_execlp(pathname, arg, args);
   va_end(args);
+  DFT_LOGGER_UPDATE(ret);
   DFT_LOGGER_END();
   return ret;
 }
 
 int brahma::POSIXDFTracer::execv(const char *pathname, char *const argv[]) {
   BRAHMA_MAP_OR_FAIL(execv);
-  DFT_LOGGER_START_ALWAYS(pathname);
+  DFT_LOGGER_START_ALWAYS();
   DFT_LOGGER_UPDATE(pathname);
   const char *val = argv[0];
   int i = 0;
@@ -625,13 +626,14 @@ int brahma::POSIXDFTracer::execv(const char *pathname, char *const argv[]) {
   }
 
   int ret = __real_execv(pathname, argv);
+  DFT_LOGGER_UPDATE(ret);
   DFT_LOGGER_END();
   return ret;
 }
 
 int brahma::POSIXDFTracer::execvp(const char *pathname, char *const argv[]) {
   BRAHMA_MAP_OR_FAIL(execvp);
-  DFT_LOGGER_START_ALWAYS(pathname);
+  DFT_LOGGER_START_ALWAYS();
   DFT_LOGGER_UPDATE(pathname);
   const char *val = argv[0];
   int i = 0;
@@ -661,6 +663,7 @@ int brahma::POSIXDFTracer::execvp(const char *pathname, char *const argv[]) {
     val = argv[i];
   }
   int ret = __real_execvp(pathname, argv);
+  DFT_LOGGER_UPDATE(ret);
   DFT_LOGGER_END();
   return ret;
 }
@@ -668,7 +671,7 @@ int brahma::POSIXDFTracer::execvp(const char *pathname, char *const argv[]) {
 int brahma::POSIXDFTracer::execvpe(const char *pathname, char *const argv[],
                                    char *const envp[]) {
   BRAHMA_MAP_OR_FAIL(execvpe);
-  DFT_LOGGER_START_ALWAYS(pathname);
+  DFT_LOGGER_START_ALWAYS();
   DFT_LOGGER_UPDATE(pathname);
   const char *val = argv[0];
   int i = 0;
@@ -698,6 +701,16 @@ int brahma::POSIXDFTracer::execvpe(const char *pathname, char *const argv[],
     val = argv[i];
   }
   int ret = __real_execvpe(pathname, argv, envp);
+  DFT_LOGGER_UPDATE(ret);
+  DFT_LOGGER_END();
+  return ret;
+}
+
+int brahma::POSIXDFTracer::fork() {
+  BRAHMA_MAP_OR_FAIL(fork);
+  DFT_LOGGER_START_ALWAYS();
+  int ret = __real_fork();
+  DFT_LOGGER_UPDATE(ret);
   DFT_LOGGER_END();
   return ret;
 }

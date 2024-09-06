@@ -39,15 +39,17 @@ int main(int argc, char *argv[]) {
   fwrite("hello", sizeof("hello"), 1, fh);
   int pid = getpid();
   int child_pid = fork();  // fork a duplicate process
-
+  printf("child pid %d\n", child_pid);
   int child_ppid = getppid();  // get the child's parent pid
 
   if (child_ppid == pid) {
     // if the current process is a child of the main process
     char *arr[] = {"ls", "-l", NULL};
     execv("/bin/ls", arr);
-    exit(0);
+    exit(1);
   }
+  int status = -1;
+  waitpid(child_pid, &status, WEXITED);
   fclose(fh);
   if (init) {
     DFTRACER_C_FINI();
