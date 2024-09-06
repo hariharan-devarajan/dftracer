@@ -204,6 +204,8 @@ class POSIXDFTracer : public POSIX {
 
   int execvpe(const char *file, char *const argv[],
               char *const envp[]) override;
+
+  int fork() override;
 };
 
 }  // namespace brahma
