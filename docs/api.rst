@@ -74,7 +74,8 @@ ENV Variables supported
    DFTRACER_TRACE_COMPRESSION       INT     Enable trace compression (default 1)
    DFTRACER_DISABLE_TIDS            INT     Disable tracing of thread ids (default 0).
    DFTRACER_WRITE_BUFFER_SIZE       INT     Setup the buffering size for write optimization (default 0). Disabled as 
-                                            This wont work for AI workloads
+                                            This wont work for AI workloads which uses fork and spawn without a clear exit.
+                                            Also, it does not work for workloads which uses exec and rewrite process buffer state.
    ================================ ======  ===========================================================================
 
 ----------------------------------------
