@@ -134,7 +134,12 @@ class ChromeWriter {
 #endif
     }
   }
-  ~ChromeWriter() { DFTRACER_LOG_DEBUG("Destructing ChromeWriter", ""); }
+  ~ChromeWriter() { 
+   DFTRACER_LOG_DEBUG("Destructing ChromeWriter", "");
+   if (buffer) {
+      free(buffer);
+   }
+  }
   void initialize(char *filename, bool throw_error);
 
   void log(int index, ConstEventNameType event_name,
