@@ -241,6 +241,8 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
         }
         dftracer::Function::get_instance();
       }
+    } else {
+      dftracer::Function::get_instance()->finalize();
     }
     is_initialized = true;
   }
