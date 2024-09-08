@@ -277,6 +277,7 @@ set(DFTRACER_CORE_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/singleton.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/configuration_manager.h)
 add_library(${PROJECT_NAME} SHARED)
+target_compile_definitions(${PROJECT_NAME} PUBLIC DFTRACER_LOGGER_LEVEL_ERROR)
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCY_LIB})
 add_library(${PROJECT_NAME}_dbg SHARED)
 target_link_libraries(${PROJECT_NAME}_dbg ${DEPENDENCY_LIB})
