@@ -256,6 +256,7 @@ set(DFTRACER_PRELOAD_PRIVATE_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/df
 
 set(DFTRACER_CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/posix.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/stdio.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/finstrument/functions.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/writer/chrome_writer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/posix_internal.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/dftracer.cpp
@@ -270,6 +271,7 @@ set(DFTRACER_CORE_PUBLIC_INCLUDE
 set(DFTRACER_CORE_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/posix_internal.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/utils.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/finstrument/functions.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/posix.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/stdio.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/dftracer_main.h

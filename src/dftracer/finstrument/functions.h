@@ -1,0 +1,62 @@
+//
+// Created by hariharan on 8/8/22.
+//
+
+#ifndef DFTRACER_FUNCTION_H
+#define DFTRACER_FUNCTION_H
+
+/* Internal Header */
+#include <dftracer/core/logging.h>
+#include <dftracer/core/typedef.h>
+#include <dftracer/df_logger.h>
+#include <dftracer/utils/posix_internal.h>
+/* External Header */
+#include <dlfcn.h>
+
+#include <memory>
+#include <mutex>
+#include <shared_mutex>
+#include <unordered_map>
+
+static ConstEventNameType CATEGORY = "FUNC";
+extern "C" {
+void __cyg_profile_func_enter(void *, void *)
+    __attribute__((no_instrument_function));
+void __cyg_profile_func_exit(void *, void *)
+    __attribute__((no_instrument_function));
+}
+namespace dftracer {
+class Function {
+ private:
+  static std::shared_ptr<Function> instance;
+  static bool stop_trace;
+  thread_local static std::unordered_map<ConstEventNameType, TimeResolution>
+      map;
+
+ public:
+  std::shared_ptr<DFTLogger> logger;
+  Function() {
+    DFTRACER_LOG_DEBUG("Function class intercepted", "");
+    logger = DFT_LOGGER_INIT();
+  }
+
+  void finalize() {
+    DFTRACER_LOG_DEBUG("Finalizing Function", "");
+    stop_trace = true;
+  }
+  ~Function() {}
+  static std::shared_ptr<Function> get_instance() {
+    DFTRACER_LOG_DEBUG("POSIX class get_instance", "");
+    if (!stop_trace && instance == nullptr) {
+      instance = std::make_shared<Function>();
+    }
+    return instance;
+  }
+  bool is_active() { return !stop_trace; }
+  int enter_event(ConstEventNameType name);
+  int exit_event(ConstEventNameType name, TimeResolution &start);
+};
+
+}  // namespace dftracer
+
+#endif  // DFTRACER_FUNCTION_H
