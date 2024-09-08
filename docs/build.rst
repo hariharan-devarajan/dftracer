@@ -115,6 +115,7 @@ Build Variables
    DFTRACER_PYTHON_EXE              STRING  Sets path to python executable. Only Cmake.
    DFTRACER_PYTHON_SITE             STRING  Sets path to python site-packages. Only Cmake.
    DFTRACER_BUILD_PYTHON_BINDINGS   STRING  Enable python bindings for DFTracer. Only Cmake.
+   ================================ ======  ===========================================================================
 
 These build variables can be set with cmake as ``-DDISABLE_HWLOC=OFF`` or as environment variables ``export DFTRACER_DISABLE_HWLOC=OFF``
 
