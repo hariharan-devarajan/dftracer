@@ -261,6 +261,19 @@ The name passed to the function should be unique in every scope.
       DFTRACER_C_FUNCTION_END(); // END FUNCTION foo.
     }
 
+----------------------------------------
+DFTracer C/C++ Function Profiling using GCC
+----------------------------------------
+
+GCC supports function level tracing using ``-finstrument-functions``.
+DFTracer allows application to compile with ``-g -finstrument-functions -Wl,-E -fvisibility=default``.
+If the applications are using cmake, they can find_package and then use the CMAKE Variable `DFTRACER_FUNCTION_FLAGS` for compile flags.
+This can be applied globally or on a target. 
+
+Internally DFTracer uses ``dladdr`` to resolve symbol names which work for shared libraries. 
+For executables or binaries, we store the address and the name which can be used to derive the function name at analysis time.
+This can be done using ``nm -D`` or ``readelf -S`` utilities.
+
 -------------------------
 DFTracer Python APIs
 -------------------------
