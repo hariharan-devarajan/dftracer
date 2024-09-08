@@ -31,6 +31,7 @@
 /* Macro flags */
 #cmakedefine DFTRACER_GNU_LINUX 1
 #cmakedefine DFTRACER_MPI_ENABLE 1
+#cmakedefine DFTRACER_FTRACING_ENABLE 1
 
 //==========================
 // Common macro definitions

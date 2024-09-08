@@ -4,7 +4,9 @@
 
 #ifndef DFTRACER_FUNCTION_H
 #define DFTRACER_FUNCTION_H
-
+/* Config Header */
+#include <dftracer/dftracer_config.hpp>
+#ifdef DFTRACER_FTRACING_ENABLE
 /* Internal Header */
 #include <dftracer/core/logging.h>
 #include <dftracer/core/typedef.h>
@@ -57,5 +59,5 @@ class Function {
 };
 
 }  // namespace dftracer
-
+#endif
 #endif  // DFTRACER_FUNCTION_H
