@@ -30,8 +30,7 @@ class Function {
  private:
   static std::shared_ptr<Function> instance;
   static bool stop_trace;
-  thread_local static std::unordered_map<ConstEventNameType, TimeResolution>
-      map;
+  thread_local static std::unordered_map<std::string, TimeResolution> map;
 
  public:
   std::shared_ptr<DFTLogger> logger;
@@ -53,8 +52,8 @@ class Function {
     return instance;
   }
   bool is_active() { return !stop_trace; }
-  int enter_event(ConstEventNameType name);
-  int exit_event(ConstEventNameType name, TimeResolution &start);
+  int enter_event(std::string &name);
+  int exit_event(std::string &name, TimeResolution &start);
 };
 
 }  // namespace dftracer
