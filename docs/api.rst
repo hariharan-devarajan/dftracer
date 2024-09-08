@@ -68,9 +68,9 @@ ENV Variables supported
                                                  DFTRACER_INC_METADATA needs to be enabled.
    DFTRACER_GOTCHA_PRIORITY         INT     PRIORITY of DFTracer in GOTCHA (default: 1).
    DFTRACER_LOG_LEVEL               STRING  Logging level within DFTracer ERROR/WARN/INFO/DEBUG (default ERROR).
-   DFTRACER_DISABLE_IO              STRING  Disable automatic binding of all I/O calls.
-   DFTRACER_DISABLE_POSIX           STRING  Disable automatic binding of POSIX I/O calls.
-   DFTRACER_DISABLE_STDIO           STRING  Disable automatic binding of STDIO I/O calls.
+   DFTRACER_DISABLE_IO              INT     Disable automatic binding of all I/O calls (default: 1).
+   DFTRACER_DISABLE_POSIX           INT     Disable automatic binding of POSIX I/O calls (default: 1).
+   DFTRACER_DISABLE_STDIO           INT     Disable automatic binding of STDIO I/O calls (default: 1).
    DFTRACER_TRACE_COMPRESSION       INT     Enable trace compression (default 1)
    DFTRACER_DISABLE_TIDS            INT     Disable tracing of thread ids (default 0).
    DFTRACER_WRITE_BUFFER_SIZE       INT     Setup the buffering size for write optimization (default 0). Disabled as 

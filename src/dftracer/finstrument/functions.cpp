@@ -1,4 +1,5 @@
 #include <dftracer/finstrument/functions.h>
+#ifdef DFTRACER_FTRACING_ENABLE
 #include <link.h>
 std::shared_ptr<dftracer::Function> dftracer::Function::instance = nullptr;
 
@@ -72,3 +73,4 @@ void __cyg_profile_func_exit(void *func, void *caller) {
     function->logger->exit_event();
   }
 }
+#endif

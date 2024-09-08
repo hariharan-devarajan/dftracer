@@ -110,10 +110,12 @@ bool dftracer::DFTracerCore::finalize() {
       if (stdio_instance != nullptr) {
         stdio_instance->finalize();
       }
+#ifdef DFTRACER_FTRACING_ENABLE
       auto function_instance = dftracer::Function::get_instance();
       if (function_instance != nullptr) {
         function_instance->finalize();
       }
+#endif
     }
     if (logger != nullptr) {
       logger->finalize();
@@ -239,10 +241,14 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
             brahma::STDIODFTracer::get_instance(conf->trace_all_files);
           }
         }
+#ifdef DFTRACER_FTRACING_ENABLE
         dftracer::Function::get_instance();
+#endif
       }
     } else {
+#ifdef DFTRACER_FTRACING_ENABLE
       dftracer::Function::get_instance()->finalize();
+#endif
     }
     is_initialized = true;
   }
