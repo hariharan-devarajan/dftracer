@@ -8,6 +8,8 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+int bar();
 void foo() {
   DFTRACER_C_FUNCTION_START();
   DFTRACER_C_FUNCTION_UPDATE_INT("key", 0);
@@ -16,6 +18,7 @@ void foo() {
   DFTRACER_C_REGION_START(CUSTOM);
   DFTRACER_C_REGION_UPDATE_INT(CUSTOM, "key", 0);
   DFTRACER_C_REGION_UPDATE_STR(CUSTOM, "key", "0");
+  bar();
   sleep(1);
   DFTRACER_C_REGION_START(CUSTOM_BLOCK);
   sleep(1);

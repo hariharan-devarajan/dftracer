@@ -15,10 +15,15 @@ target_link_libraries(test_cpp ${PROJECT_NAME})
 add_dependencies(test_cpp ${PROJECT_NAME})
 add_dependencies(test_cpp ${PROJECT_NAME}_preload)
 
+add_library(testlib SHARED c/testlib.c)
+target_compile_options(testlib PRIVATE "-g" "-finstrument-functions" "-Wl,-E" "-fvisibility=default")
 add_executable(test_c c/test.c)
-target_link_libraries(test_c ${PROJECT_NAME})
+target_compile_options(test_c PRIVATE "-g" "-finstrument-functions" "-Wl,-E" "-fvisibility=default")
+target_link_libraries(test_c ${PROJECT_NAME} testlib)
 add_dependencies(test_c ${PROJECT_NAME})
 add_dependencies(test_c ${PROJECT_NAME}_preload)
+
+
 function(set_common_properties test_name)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_LEVEL=DEBUG)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_TRACE_COMPRESSION=0)

@@ -2,6 +2,7 @@
 // Created by haridev on 10/8/23.
 //
 #include <dftracer/core/dftracer_main.h>
+#include <dftracer/finstrument/functions.h>
 template <>
 std::shared_ptr<dftracer::DFTracerCore>
     dftracer::Singleton<dftracer::DFTracerCore>::instance = nullptr;
@@ -108,6 +109,10 @@ bool dftracer::DFTracerCore::finalize() {
       auto stdio_instance = brahma::STDIODFTracer::get_instance();
       if (stdio_instance != nullptr) {
         stdio_instance->finalize();
+      }
+      auto function_instance = dftracer::Function::get_instance();
+      if (function_instance != nullptr) {
+        function_instance->finalize();
       }
     }
     if (logger != nullptr) {
@@ -234,7 +239,10 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
             brahma::STDIODFTracer::get_instance(conf->trace_all_files);
           }
         }
+        dftracer::Function::get_instance();
       }
+    } else {
+      dftracer::Function::get_instance()->finalize();
     }
     is_initialized = true;
   }

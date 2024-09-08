@@ -85,6 +85,7 @@ if (DFTRACER_INCLUDE_MPI)
         message(FATAL_ERROR "-- [DFTRACER] mpi is needed for ${PROJECT_NAME} build")
     endif ()
 endif()
+set(DFTRACER_FUNCTION_FLAGS "-g" "-finstrument-functions" "-Wl,-E" "-fvisibility=default")
 
 check_required_components(dftracer)
 
