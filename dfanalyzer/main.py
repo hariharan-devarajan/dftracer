@@ -166,7 +166,7 @@ def load_objects(line, fn, time_granularity, time_approximate, condition_fn, loa
             unicode_line = ''.join([i if ord(i) < 128 else '#' for i in line])
             val = json.loads(unicode_line)
             logging.debug(f"Loading dict {val}")
-            if "name" in val:
+            if "name" in val and "cat" in val:
                 d["name"] = val["name"]
                 d["cat"] = val["cat"]
                 d["pid"] = val["pid"]
