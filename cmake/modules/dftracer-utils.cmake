@@ -120,7 +120,16 @@ endfunction()
 ################################################################
 
 include(ExternalProject)
-function(install_external_project name url tag install_prefix configure_args)
+function(install_external_project name var_name url tag install_prefix configure_args)
+  find_package(${name})
+  set(found_var ${name}_FOUND)
+  if (${${found_var}})
+    set(include_var ${${var_name}_INCLUDE_DIRS} ${${var_name}_INCLUDE_DIR})
+    set(library_var ${${var_name}_LIBRARY_DIRS})
+    include_directories(${include_var})
+    link_directories(${library_var})
+    message(STATUS "[${PROJECT_NAME}] found dependency already installed ${name} with include ${include_var} and library ${library_var}")
+  else()
     ExternalProject_Add(
             ${name}
             PREFIX ${CMAKE_BINARY_DIR}
@@ -136,4 +145,5 @@ function(install_external_project name url tag install_prefix configure_args)
     link_directories(${install_prefix}/lib)
     link_directories(${install_prefix}/lib64)
     include_directories(${CMAKE_BINARY_DIR}/src/${name}/include)
+  endif()
 endfunction()
