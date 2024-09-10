@@ -99,7 +99,9 @@ for file in "$LOG_DIR"/*.pfw*; do
       name=${filename%.pfw.gz}
       echo "extracted name $name"
       # get utf lines
-      gunzip -c $OUTPUT_DIR/.tmp.$filename | grep -ax '.*' > $OUTPUT_DIR/$name.pfw
+      gunzip -c $OUTPUT_DIR/.tmp.$filename | grep -axav '.*' > $OUTPUT_DIR/$name.pfw
+      # get non-utf lines
+      gunzip -c $OUTPUT_DIR/.tmp.$filename | grep -avx '.*' >> $OUTPUT_DIR/$name.pfw
       # compress
       if [ $compressed == 1 ]; then
         gzip $OUTPUT_DIR/$name.pfw
@@ -113,6 +115,8 @@ for file in "$LOG_DIR"/*.pfw*; do
       echo "extracted name $name"
       # get utf lines
       grep -ax '.*' $OUTPUT_DIR/.tmp.$filename > $OUTPUT_DIR/$name.pfw
+      # get non-utf lines
+      grep -axv '.*' $OUTPUT_DIR/.tmp.$filename >> $OUTPUT_DIR/$name.pfw
       if [ $compressed == 1 ]; then
         gzip $OUTPUT_DIR/$name.pfw
         echo "Processed $OUTPUT_DIR/$name.pfw.gz"
