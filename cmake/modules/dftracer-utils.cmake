@@ -129,6 +129,13 @@ function(install_external_project name var_name url tag install_prefix configure
     include_directories(${include_var})
     link_directories(${library_var})
     message(STATUS "[${PROJECT_NAME}] found dependency already installed ${name} with include ${include_var} and library ${library_var}")
+    if (NOT TARGET ${name})
+      if (TARGET ${name}::${name})
+        add_library(${name} ALIAS ${name}::${name})
+      else()
+        include(${CMAKE_CURRENT_LIST_DIR}/${name}-targets.cmake)
+      endif()
+    endif (NOT TARGET ${name})
   else()
     ExternalProject_Add(
             ${name}
