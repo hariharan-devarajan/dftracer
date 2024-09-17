@@ -4,7 +4,7 @@ install_external_project(gotcha "gotcha" https://github.com/LLNL/GOTCHA.git 1.0.
 install_external_project(brahma "BRAHMA" https://github.com/hariharan-devarajan/brahma.git v0.0.7 ${CMAKE_INSTALL_PREFIX} "")
 add_dependencies(brahma cpp-logger)
 add_dependencies(brahma gotcha)
-find_package(yaml-cpp QUITE)
+find_package(yaml-cpp QUIET)
 install_external_project(yaml-cpp "YAML_CPP" https://github.com/jbeder/yaml-cpp.git yaml-cpp-0.6.3 ${CMAKE_INSTALL_PREFIX} "-DYAML_CPP_BUILD_TESTS=OFF;-DYAML_BUILD_SHARED_LIBS=ON")
 if (NOT ${yaml-cpp_FOUND})
   add_dependencies(yaml-cpp brahma)
