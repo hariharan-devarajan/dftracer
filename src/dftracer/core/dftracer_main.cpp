@@ -160,10 +160,10 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
           if (exec_cmd[index] == '\0') {
             if (!has_extracted) {
               strcpy(exec_name, basename(exec_cmd + last_index));
-              if (strcmp(exec_name, "python") != 0) {
+              if (exec_name[0] != '-' && strstr(exec_name, "python") == NULL) {
                 has_extracted = true;
+                DFTRACER_LOG_INFO("Extracted process_name %s", exec_name);
               }
-              DFTRACER_LOG_INFO("Extracted process_name %s", exec_name);
             }
             exec_cmd[index] = SEPARATOR;
             last_index = index + 1;
