@@ -120,7 +120,7 @@ class ChromeWriter {
     write_buffer_size = conf->write_buffer_size;
     {
       std::unique_lock<std::shared_mutex> lock(mtx);
-      buffer = std::vector<char>(write_buffer_size + 16384);
+      buffer = std::vector<char>(write_buffer_size + MAX_LINE_SIZE);
       current_index = 0;
     }
 
