@@ -160,7 +160,7 @@ def load_indexed_gzip_files(filename, start, end):
 
 def load_objects(line, fn, time_granularity, time_approximate, condition_fn, load_data):
     d = {}
-    if line is not None and line !="" and len(line) > 0 and "[" != line[0] and line != "\n" :
+    if line is not None and line !="" and len(line) > 0 and "[" != line[0] and "]" != line[0] and line != "\n" :
         val = {}
         try:
             unicode_line = ''.join([i if ord(i) < 128 else '#' for i in line])
