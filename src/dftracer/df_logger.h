@@ -185,6 +185,7 @@ class DFTLogger {
   }
 
   inline uint16_t hash_and_store(char *filename) {
+    if (filename == NULL) return 0;
     auto iter = computed_hash.find(filename);
     uint16_t hash;
     if (iter == computed_hash.end()) {
@@ -207,6 +208,7 @@ class DFTLogger {
   }
 
   inline uint16_t hash_and_store(const char *filename) {
+    if (filename == NULL) return 0;
     auto file = std::string(filename);
     return hash_and_store(file.data());
   }
