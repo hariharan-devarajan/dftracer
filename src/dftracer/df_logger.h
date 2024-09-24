@@ -190,7 +190,10 @@ class DFTLogger {
     uint16_t hash;
     if (iter == computed_hash.end()) {
       md5String(filename, &hash);
-      computed_hash.insert_or_assign(filename, hash);
+      std::string f_str;
+      std::copy(filename, filename + strlen(filename),
+                std::back_inserter(f_str));
+      computed_hash.insert_or_assign(f_str, hash);
       if (this->writer != nullptr) {
         ThreadID tid = 0;
         if (dftracer_tid) {
