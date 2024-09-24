@@ -37,7 +37,7 @@ class DFTLogger {
   std::shared_ptr<dftracer::ChromeWriter> writer;
   uint32_t level;
   std::vector<int> index_stack;
-  std::unordered_map<char *, uint16_t> computed_hash;
+  std::unordered_map<std::string, uint16_t> computed_hash;
   std::atomic_int index;
   bool has_entry;
 #ifdef DFTRACER_MPI_ENABLE
@@ -190,6 +190,7 @@ class DFTLogger {
     uint16_t hash;
     if (iter == computed_hash.end()) {
       md5String(filename, &hash);
+      computed_hash.insert_or_assign(filename, hash);
       if (this->writer != nullptr) {
         ThreadID tid = 0;
         if (dftracer_tid) {
