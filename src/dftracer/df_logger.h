@@ -8,6 +8,7 @@
 #include <dftracer/core/logging.h>
 #include <dftracer/core/singleton.h>
 #include <dftracer/utils/configuration_manager.h>
+#include <dftracer/utils/md5.h>
 #include <dftracer/utils/utils.h>
 #include <dftracer/writer/chrome_writer.h>
 #include <libgen.h>
@@ -36,6 +37,7 @@ class DFTLogger {
   std::shared_ptr<dftracer::ChromeWriter> writer;
   uint32_t level;
   std::vector<int> index_stack;
+  std::unordered_map<char *, uint16_t> computed_hash;
   std::atomic_int index;
   bool has_entry;
 #ifdef DFTRACER_MPI_ENABLE
@@ -48,6 +50,7 @@ class DFTLogger {
         dftracer_tid(false),
         level(0),
         index_stack(),
+        computed_hash(),
         index(0),
         has_entry(false),
 #ifdef DFTRACER_MPI_ENABLE
@@ -97,17 +100,13 @@ class DFTLogger {
 
   inline void enter_event() {
     index++;
-    if (include_metadata) {
-      level++;
-      index_stack.push_back(index.load());
-    }
+    level++;
+    index_stack.push_back(index.load());
   }
 
   inline void exit_event() {
-    if (include_metadata) {
-      level--;
-      index_stack.pop_back();
-    }
+    level--;
+    index_stack.pop_back();
   }
 
   inline TimeResolution get_time() {
@@ -185,6 +184,33 @@ class DFTLogger {
     }
   }
 
+  inline uint16_t hash_and_store(char *filename) {
+    auto iter = computed_hash.find(filename);
+    uint16_t hash;
+    if (iter == computed_hash.end()) {
+      md5String(filename, &hash);
+      if (this->writer != nullptr) {
+        ThreadID tid = 0;
+        if (dftracer_tid) {
+          tid = df_gettid();
+        }
+        this->enter_event();
+        this->writer->log(index_stack[level - 1], filename,
+                          std::to_string(hash).c_str(), EventType::HASH_EVENT,
+                          0, 0, nullptr, this->process_id, tid);
+        this->exit_event();
+      }
+    } else {
+      hash = iter->second;
+    }
+    return hash;
+  }
+
+  inline uint16_t hash_and_store(const char *filename) {
+    auto file = std::string(filename);
+    return hash_and_store(file.data());
+  }
+
   inline void finalize() {
     DFTRACER_LOG_DEBUG("DFTLogger.finalize", "");
     if (this->writer != nullptr) {
@@ -210,14 +236,14 @@ class DFTLogger {
     metadata->insert_or_assign(#value, value);
 #define DFT_LOGGER_START(entity)                                  \
   DFTRACER_LOG_DEBUG("Calling function %s", __FUNCTION__);        \
-  const char *fname = is_traced(entity, __FUNCTION__);            \
-  bool trace = fname != nullptr;                                  \
+  uint16_t fhash = is_traced(entity, __FUNCTION__);               \
+  bool trace = fhash != 0;                                        \
   TimeResolution start_time = 0;                                  \
   std::unordered_map<std::string, std::any> *metadata = nullptr;  \
   if (trace) {                                                    \
     if (this->logger->include_metadata) {                         \
       metadata = new std::unordered_map<std::string, std::any>(); \
-      DFT_LOGGER_UPDATE(fname);                                   \
+      DFT_LOGGER_UPDATE(fhash);                                   \
     }                                                             \
     this->logger->enter_event();                                  \
     start_time = this->logger->get_time();                        \

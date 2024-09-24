@@ -8,6 +8,7 @@
 #include <dftracer/core/constants.h>
 #include <dftracer/core/typedef.h>
 #include <dftracer/utils/configuration_manager.h>
+#include <dftracer/utils/md5.h>
 #include <dftracer/utils/posix_internal.h>
 #include <dftracer/utils/utils.h>
 #if DISABLE_HWLOC == 1
@@ -42,6 +43,7 @@ class ChromeWriter {
 #endif
   FILE *fh;
   char hostname[256];
+  uint16_t hostname_hash;
   static const int MAX_LINE_SIZE = 4096;
   static const int MAX_META_LINE_SIZE = 3000;
   size_t write_buffer_size;
@@ -114,6 +116,7 @@ class ChromeWriter {
     auto conf =
         dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
     get_hostname(hostname);
+    md5String(hostname, &hostname_hash);
     include_metadata = conf->metadata;
     enable_core_affinity = conf->core_affinity;
     enable_compression = conf->compression;

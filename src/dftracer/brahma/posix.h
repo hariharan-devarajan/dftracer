@@ -8,6 +8,7 @@
 #include <brahma/brahma.h>
 #include <dftracer/core/logging.h>
 #include <dftracer/df_logger.h>
+#include <dftracer/utils/md5.h>
 #include <dftracer/utils/utils.h>
 #include <fcntl.h>
 #include <sys/param.h>
@@ -24,56 +25,53 @@ class POSIXDFTracer : public POSIX {
   static bool stop_trace;
   static std::shared_ptr<POSIXDFTracer> instance;
   static const int MAX_FD = 1024;
-  std::string tracked_fd[MAX_FD];
+  uint16_t tracked_fd[MAX_FD];
   std::shared_ptr<DFTLogger> logger;
   bool trace_all_files;
 
-  inline const char *is_traced(int fd, const char *func) {
-    if (fd == -1) return nullptr;
-    const char *trace = tracked_fd[fd % MAX_FD].empty()
-                            ? nullptr
-                            : tracked_fd[fd % MAX_FD].c_str();
-    if (trace != nullptr) {
+  inline uint16_t is_traced(int fd, const char *func) {
+    if (fd == -1) return 0;
+    uint16_t trace = tracked_fd[fd % MAX_FD];
+    if (trace != 0) {
       DFTRACER_LOG_DEBUG(
           "Calling POSIXDFTracer.is_traced for %s and"
           " fd %d trace %d",
-          func, fd, trace != nullptr);
+          func, fd, trace != 0);
     }
     return trace;
   }
 
-  inline const char *is_traced(const char *filename, const char *func) {
-    const char *trace = nullptr;
-    if (stop_trace) return nullptr;
-    if (trace_all_files)
-      return filename;
-    else
-      trace = is_traced_common(filename, func);
-    if (trace != nullptr)
-      DFTRACER_LOG_DEBUG(
-          "Calling POSIXDFTracer.is_traced with "
-          "filename %s for %s trace %d",
-          filename, func, trace != nullptr);
-    return trace;
+  inline uint16_t is_traced(const char *filename, const char *func) {
+    if (stop_trace) return 0;
+    if (trace_all_files) {
+      return logger->hash_and_store(filename);
+    } else {
+      const char *tracefile = is_traced_common(filename, func);
+      if (tracefile != nullptr)
+        DFTRACER_LOG_DEBUG(
+            "Calling POSIXDFTracer.is_traced with "
+            "filename %s for %s trace %d",
+            filename, func, tracefile != nullptr);
+      return logger->hash_and_store(tracefile);
+    }
   }
 
-  inline void trace(int fd, const char *filename) {
-    DFTRACER_LOG_DEBUG("Calling POSIXDFTracer.trace for %d and %s", fd,
-                       filename);
+  inline void trace(int fd, uint16_t hash) {
+    DFTRACER_LOG_DEBUG("Calling POSIXDFTracer.trace for %d and %d", fd, hash);
     if (fd == -1) return;
-    tracked_fd[fd % MAX_FD] = filename;
+    tracked_fd[fd % MAX_FD] = hash;
   }
 
   inline void remove_trace(int fd) {
     DFTRACER_LOG_DEBUG("Calling POSIXDFTracer.remove_trace for %d", fd);
     if (fd == -1) return;
-    tracked_fd[fd % MAX_FD] = std::string();
+    tracked_fd[fd % MAX_FD] = 0;
   }
 
  public:
   POSIXDFTracer(bool trace_all) : POSIX(), trace_all_files(trace_all) {
     DFTRACER_LOG_DEBUG("POSIX class intercepted", "");
-    for (int i = 0; i < MAX_FD; ++i) tracked_fd[i] = std::string();
+    for (int i = 0; i < MAX_FD; ++i) tracked_fd[i] = 0;
     logger = DFT_LOGGER_INIT();
   }
   void finalize() {

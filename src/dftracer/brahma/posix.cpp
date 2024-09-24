@@ -26,7 +26,7 @@ int brahma::POSIXDFTracer::open(const char *pathname, int flags, ...) {
   DFT_LOGGER_UPDATE(flags)
   DFT_LOGGER_UPDATE(ret);
   DFT_LOGGER_END();
-  if (trace) this->trace(ret, pathname);
+  if (trace) this->trace(ret, fhash);
   return ret;
 }
 
@@ -82,7 +82,7 @@ int brahma::POSIXDFTracer::creat64(const char *path, mode_t mode) {
   int ret = __real_creat64(path, mode);
   DFT_LOGGER_UPDATE(ret);
   DFT_LOGGER_END();
-  if (trace) this->trace(ret, path);
+  if (trace) this->trace(ret, fhash);
   return ret;
 }
 
@@ -103,7 +103,7 @@ int brahma::POSIXDFTracer::open64(const char *path, int flags, ...) {
   DFT_LOGGER_UPDATE(flags)
   DFT_LOGGER_UPDATE(ret);
   DFT_LOGGER_END();
-  if (trace) this->trace(ret, path);
+  if (trace) this->trace(ret, fhash);
   return ret;
 }
 
@@ -209,7 +209,7 @@ int brahma::POSIXDFTracer::openat(int dirfd, const char *pathname, int flags,
   }
   DFT_LOGGER_UPDATE(ret);
   DFT_LOGGER_END();
-  if (trace) this->trace(ret, pathname);
+  if (trace) this->trace(ret, fhash);
   return ret;
 }
 

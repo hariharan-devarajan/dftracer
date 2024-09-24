@@ -9,20 +9,21 @@
             "type": "lldb",
             "request": "launch",
             "program": "${cmake.testProgram}",
-            "args": ["${cmake.testArgs}"],
-            "cwd": "${workspaceFolder}/build/vscode",
+            "args": [
+                "${cmake.testArgs}"
+            ],
+            "cwd": "${workspaceFolder}/build",
             "env": {
-                "DLIO_PROFILER_LOG_LEVEL":"DEBUG",
-                "DLIO_PROFILER_TRACE_COMPRESSION":"0",
-                "LD_LIBRARY_PATH":"/workspace/dlio-profiler/build/vscode/lib",
-                "DLIO_PROFILER_DATA_DIR":"/workspace/dlio-profiler/build/vscode/test/data",
-                "DLIO_PROFILER_LOG_FILE":"/workspace/dlio-profiler/build/vscode/test/test_cpp_basic_only",
-                "DLIO_PROFILER_ENABLE":"1",
-                "LD_PRELOAD":"/workspace/dlio-profiler/build/vscode/lib/libdlio_profiler_preload.so",
-                "DLIO_PROFILER_INIT":"PRELOAD",
+                "DFTRACER_LOG_LEVEL": "DEBUG",
+                "DFTRACER_TRACE_COMPRESSION": "0",
+                "LD_LIBRARY_PATH": "${workspaceFolder}/build/lib",
+                "DFTRACER_DATA_DIR": "${workspaceFolder}/build/test/data",
+                "DFTRACER_LOG_FILE": "${workspaceFolder}/build/test/test_cpp_basic_only",
+                "DFTRACER_ENABLE": "1",
+                "DFTRACER_INC_METADATA": "1",
+                "LD_PRELOAD": "${workspaceFolder}/build/lib64/libdftracer_preload_dbg.so",
+                "DFTRACER_INIT": "PRELOAD",
             }
-      },
-
-        
-   ]
+        },
+    ]
 }

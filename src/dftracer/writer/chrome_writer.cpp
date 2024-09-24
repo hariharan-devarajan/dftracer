@@ -33,6 +33,8 @@ void dftracer::ChromeWriter::initialize(char *filename, bool throw_error) {
       setvbuf(fh, NULL, _IOLBF, write_buffer_size + 4096);
       DFTRACER_LOG_INFO("created log file %s", filename);
     }
+    log(0, hostname, std::to_string(hostname_hash).c_str(),
+        EventType::HASH_EVENT, 0, 0, nullptr, df_getpid(), df_gettid());
   }
   DFTRACER_LOG_DEBUG("ChromeWriter.initialize %s", this->filename.c_str());
 }
@@ -167,24 +169,29 @@ void dftracer::ChromeWriter::convert_json(
                     << std::any_cast<std::string>(item.second) << "\"";
         if (i < meta_size - 1) meta_stream << ",";
       } else if (item.second.type() == typeid(size_t)) {
-        meta_stream << "\"" << item.first << "\":\""
-                    << std::any_cast<size_t>(item.second) << "\"";
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<size_t>(item.second) << "";
         if (i < meta_size - 1) meta_stream << ",";
+      } else if (item.second.type() == typeid(uint16_t)) {
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<uint16_t>(item.second) << "";
+        if (i < meta_size - 1) meta_stream << ",";
+
       } else if (item.second.type() == typeid(long)) {
-        meta_stream << "\"" << item.first << "\":\""
-                    << std::any_cast<long>(item.second) << "\"";
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<long>(item.second) << "";
         if (i < meta_size - 1) meta_stream << ",";
       } else if (item.second.type() == typeid(ssize_t)) {
-        meta_stream << "\"" << item.first << "\":\""
-                    << std::any_cast<ssize_t>(item.second) << "\"";
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<ssize_t>(item.second) << "";
         if (i < meta_size - 1) meta_stream << ",";
       } else if (item.second.type() == typeid(off_t)) {
-        meta_stream << "\"" << item.first << "\":\""
-                    << std::any_cast<off_t>(item.second) << "\"";
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<off_t>(item.second) << "";
         if (i < meta_size - 1) meta_stream << ",";
       } else if (item.second.type() == typeid(off64_t)) {
-        meta_stream << "\"" << item.first << "\":\""
-                    << std::any_cast<off64_t>(item.second) << "\"";
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<off64_t>(item.second) << "";
         if (i < meta_size - 1) meta_stream << ",";
       } else {
         DFTRACER_LOG_INFO("No conversion for type %s", item.first.c_str());
@@ -200,16 +207,15 @@ void dftracer::ChromeWriter::convert_json(
         case EventType::COMPLETE_EVENT: {
           auto written_size = sprintf(
               buffer.data() + current_index,
-              R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{"hostname":"%s"%s}})",
+              R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{"hhash":%d%s}})",
               is_first_char, index, event_name, category, process_id, thread_id,
-              start_time, duration, this->hostname, all_stream.str().c_str());
+              start_time, duration, this->hostname_hash,
+              all_stream.str().c_str());
           current_index += written_size;
           break;
         };
-        case EventType::METADATA_EVENT: {
-          break;
-        };
         default: {
+          break;
         }
       }
       buffer[current_index] = '\n';
@@ -234,6 +240,15 @@ void dftracer::ChromeWriter::convert_json(
               R"(%s{"id":%d,"name":"%s","pid":%lu,"tid":%lu,"ph":"M","args":{"name":"%s"}})",
               is_first_char, index, event_name, process_id, thread_id,
               category);
+          current_index += written_size;
+          break;
+        };
+        case EventType::HASH_EVENT: {
+          auto written_size = sprintf(
+              buffer.data() + current_index,
+              R"(%s{"id":%d,"name":"%s","cat":"hash","pid":%lu,"tid":%lu,"ph":"M","args":{"hash":%d}})",
+              is_first_char, index, event_name, process_id, thread_id,
+              std::stoi(category));
           current_index += written_size;
           break;
         };

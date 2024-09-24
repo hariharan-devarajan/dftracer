@@ -22,33 +22,35 @@ class STDIODFTracer : public STDIO {
  private:
   static bool stop_trace;
   static std::shared_ptr<STDIODFTracer> instance;
-  std::unordered_map<FILE *, std::string> tracked_fh;
+  std::unordered_map<FILE *, uint16_t> tracked_fh;
   std::shared_ptr<DFTLogger> logger;
   bool trace_all_files;
 
-  inline const char *is_traced(FILE *fh, const char *func) {
+  inline uint16_t is_traced(FILE *fh, const char *func) {
     DFTRACER_LOG_DEBUG("Calling STDIODFTracer.is_traced for %s", func);
-    if (fh == NULL) return nullptr;
+    if (fh == NULL) return 0;
     auto iter = tracked_fh.find(fh);
     if (iter != tracked_fh.end()) {
-      return iter->second.c_str();
+      return iter->second;
     }
-    return nullptr;
+    return 0;
   }
 
-  inline const char *is_traced(const char *filename, const char *func) {
+  inline uint16_t is_traced(const char *filename, const char *func) {
     DFTRACER_LOG_DEBUG("Calling STDIODFTracer.is_traced with filename for %s",
                        func);
-    if (stop_trace) return nullptr;
+    if (stop_trace) return 0;
     if (trace_all_files)
-      return filename;
-    else
-      return is_traced_common(filename, func);
+      return logger->hash_and_store(filename);
+    else {
+      const char *trace_file = is_traced_common(filename, func);
+      return logger->hash_and_store(trace_file);
+    }
   }
 
-  inline void trace(FILE *fh, const char *filename) {
-    DFTRACER_LOG_DEBUG("Calling STDIODFTracer.trace with filename", "");
-    tracked_fh.insert_or_assign(fh, filename);
+  inline void trace(FILE *fh, uint16_t hash) {
+    DFTRACER_LOG_DEBUG("Calling STDIODFTracer.trace with hash %d", hash);
+    tracked_fh.insert_or_assign(fh, hash);
   }
 
   inline void remove_trace(FILE *fh) {

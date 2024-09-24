@@ -271,6 +271,7 @@ set(DFTRACER_CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/posix.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/dftracer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/dftracer_main.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/configuration_manager.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/md5.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/df_logger.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/utils.cpp)
 set(DFTRACER_CORE_PUBLIC_INCLUDE
@@ -280,6 +281,7 @@ set(DFTRACER_CORE_PUBLIC_INCLUDE
 set(DFTRACER_CORE_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/posix_internal.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/utils.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/md5.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/finstrument/functions.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/posix.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/stdio.h
