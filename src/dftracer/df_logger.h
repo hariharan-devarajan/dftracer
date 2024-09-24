@@ -186,23 +186,25 @@ class DFTLogger {
 
   inline uint16_t hash_and_store(char *filename) {
     if (filename == NULL) return 0;
-    auto file = std::string(filename);
+    char file[PATH_MAX];
+    strcpy(file, filename);
+    file[PATH_MAX - 1] = '\0';
     return hash_and_store_str(file);
   }
 
-  inline uint16_t hash_and_store_str(std::string &filename) {
-    auto iter = computed_hash.find(filename);
+  inline uint16_t hash_and_store_str(char file[PATH_MAX]) {
+    auto iter = computed_hash.find(file);
     uint16_t hash;
     if (iter == computed_hash.end()) {
-      md5String(filename.data(), &hash);
-      computed_hash.insert_or_assign(filename, hash);
+      md5String(file, &hash);
+      computed_hash.insert_or_assign(file, hash);
       if (this->writer != nullptr) {
         ThreadID tid = 0;
         if (dftracer_tid) {
           tid = df_gettid();
         }
         this->enter_event();
-        this->writer->log(index_stack[level - 1], filename.c_str(),
+        this->writer->log(index_stack[level - 1], file,
                           std::to_string(hash).c_str(), EventType::HASH_EVENT,
                           0, 0, nullptr, this->process_id, tid);
         this->exit_event();
@@ -215,7 +217,9 @@ class DFTLogger {
 
   inline uint16_t hash_and_store(const char *filename) {
     if (filename == NULL) return 0;
-    auto file = std::string(filename);
+    char file[PATH_MAX];
+    strcpy(file, filename);
+    file[PATH_MAX - 1] = '\0';
     return hash_and_store_str(file);
   }
 
