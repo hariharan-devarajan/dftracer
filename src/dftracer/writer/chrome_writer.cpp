@@ -90,6 +90,15 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
               "of %ld",
               filename.c_str(), data.size(), written_elements);
         }  // GCOVR_EXCL_STOP
+        data = "]";
+        fseek(fh, 0, SEEK_END);
+        written_elements = fwrite(data.c_str(), sizeof(char), data.size(), fh);
+        if (written_elements != data.size()) {  // GCOVR_EXCL_START
+          DFTRACER_LOG_ERROR(
+              "unable to finalize log write %s for O_WRONLY written only %ld "
+              "of %ld",
+              filename.c_str(), data.size(), written_elements);
+        }  // GCOVR_EXCL_STOP
         status = fclose(fh);
         if (status != 0) {
           DFTRACER_LOG_ERROR("unable to close log file %s for O_WRONLY",
