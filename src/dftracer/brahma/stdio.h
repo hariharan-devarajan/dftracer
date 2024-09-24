@@ -6,7 +6,7 @@
 #define DFTRACER_STDIO_H
 
 #include <brahma/brahma.h>
-#include <dftracer/core/macro.h>
+#include <dftracer/core/logging.h>
 #include <dftracer/df_logger.h>
 #include <dftracer/utils/utils.h>
 #include <fcntl.h>
@@ -27,7 +27,7 @@ class STDIODFTracer : public STDIO {
   bool trace_all_files;
 
   inline const char *is_traced(FILE *fh, const char *func) {
-    DFTRACER_LOGDEBUG("Calling STDIODFTracer.is_traced for %s", func);
+    DFTRACER_LOG_DEBUG("Calling STDIODFTracer.is_traced for %s", func);
     if (fh == NULL) return nullptr;
     auto iter = tracked_fh.find(fh);
     if (iter != tracked_fh.end()) {
@@ -37,8 +37,8 @@ class STDIODFTracer : public STDIO {
   }
 
   inline const char *is_traced(const char *filename, const char *func) {
-    DFTRACER_LOGDEBUG("Calling STDIODFTracer.is_traced with filename for %s",
-                      func);
+    DFTRACER_LOG_DEBUG("Calling STDIODFTracer.is_traced with filename for %s",
+                       func);
     if (stop_trace) return nullptr;
     if (trace_all_files)
       return filename;
@@ -47,29 +47,29 @@ class STDIODFTracer : public STDIO {
   }
 
   inline void trace(FILE *fh, const char *filename) {
-    DFTRACER_LOGDEBUG("Calling STDIODFTracer.trace with filename", "");
+    DFTRACER_LOG_DEBUG("Calling STDIODFTracer.trace with filename", "");
     tracked_fh.insert_or_assign(fh, filename);
   }
 
   inline void remove_trace(FILE *fh) {
-    DFTRACER_LOGDEBUG("Calling STDIODFTracer.remove_trace with filename", "");
+    DFTRACER_LOG_DEBUG("Calling STDIODFTracer.remove_trace with filename", "");
     tracked_fh.erase(fh);
   }
 
  public:
   STDIODFTracer(bool trace_all)
       : STDIO(), tracked_fh(), trace_all_files(trace_all) {
-    DFTRACER_LOGDEBUG("STDIO class intercepted", "");
+    DFTRACER_LOG_DEBUG("STDIO class intercepted", "");
     logger = DFT_LOGGER_INIT();
   }
   void finalize() {
-    DFTRACER_LOGDEBUG("Finalizing STDIODFTracer", "");
+    DFTRACER_LOG_DEBUG("Finalizing STDIODFTracer", "");
     stop_trace = true;
   }
-  ~STDIODFTracer() {};
+  ~STDIODFTracer(){};
 
   static std::shared_ptr<STDIODFTracer> get_instance(bool trace_all = false) {
-    DFTRACER_LOGDEBUG("STDIO class get_instance", "");
+    DFTRACER_LOG_DEBUG("STDIO class get_instance", "");
     if (!stop_trace && instance == nullptr) {
       instance = std::make_shared<STDIODFTracer>(trace_all);
       STDIO::set_instance(instance);
@@ -83,9 +83,9 @@ class STDIODFTracer : public STDIO {
 
   int fclose(FILE *fp) override;
 
-  size_t fread(void *ptr, size_t size, size_t nmemb, FILE *fp) override;
+  size_t fread(void *ptr, size_t size, size_t count, FILE *fp) override;
 
-  size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *fp) override;
+  size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fp) override;
 
   long ftell(FILE *fp) override;
 

@@ -37,7 +37,7 @@
 .cache
 
 # Environment and Dependency
-venv*
+*venv*
 .venv*
 dependency/.spack-env
 dependency/spack.lock

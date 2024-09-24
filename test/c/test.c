@@ -4,9 +4,12 @@
 
 #include <dftracer/dftracer.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
+int bar();
 void foo() {
   DFTRACER_C_FUNCTION_START();
   DFTRACER_C_FUNCTION_UPDATE_INT("key", 0);
@@ -15,6 +18,7 @@ void foo() {
   DFTRACER_C_REGION_START(CUSTOM);
   DFTRACER_C_REGION_UPDATE_INT(CUSTOM, "key", 0);
   DFTRACER_C_REGION_UPDATE_STR(CUSTOM, "key", "0");
+  bar();
   sleep(1);
   DFTRACER_C_REGION_START(CUSTOM_BLOCK);
   sleep(1);
@@ -36,6 +40,19 @@ int main(int argc, char *argv[]) {
   foo();
   FILE *fh = fopen(filename, "w+");
   fwrite("hello", sizeof("hello"), 1, fh);
+  int pid = getpid();
+  int child_pid = fork();  // fork a duplicate process
+  printf("child pid %d\n", child_pid);
+  int child_ppid = getppid();  // get the child's parent pid
+
+  if (child_ppid == pid) {
+    // if the current process is a child of the main process
+    char *arr[] = {"ls", "-l", NULL};
+    execv("/bin/ls", arr);
+    exit(1);
+  }
+  int status = -1;
+  waitpid(child_pid, &status, WEXITED);
   fclose(fh);
   if (init) {
     DFTRACER_C_FINI();

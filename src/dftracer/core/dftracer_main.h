@@ -12,7 +12,7 @@
 #include <dftracer/core/constants.h>
 #include <dftracer/core/enumeration.h>
 #include <dftracer/core/error.h>
-#include <dftracer/core/macro.h>
+#include <dftracer/core/logging.h>
 #include <dftracer/core/singleton.h>
 #include <dftracer/core/typedef.h>
 #include <dftracer/df_logger.h>
@@ -46,13 +46,13 @@ class DFTracerCore {
                const int *process_id = nullptr);
 
   inline bool is_active() {
-    DFTRACER_LOGDEBUG("DFTracerCore.is_active", "");
+    DFTRACER_LOG_DEBUG("DFTracerCore.is_active", "");
     return conf->enable;
   }
 
   TimeResolution get_time();
 
-  void log(ConstEventType event_name, ConstEventType category,
+  void log(ConstEventNameType event_name, ConstEventNameType category,
            TimeResolution start_time, TimeResolution duration,
            std::unordered_map<std::string, std::any> *metadata);
 
@@ -61,7 +61,7 @@ class DFTracerCore {
   inline void exit_event() { logger->exit_event(); }
 
   bool finalize();
-  ~DFTracerCore() { DFTRACER_LOGDEBUG("Destructing DFTracerCore", ""); }
+  ~DFTracerCore() { DFTRACER_LOG_DEBUG("Destructing DFTracerCore", ""); }
 };
 }  // namespace dftracer
 

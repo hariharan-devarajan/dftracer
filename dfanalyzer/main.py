@@ -143,7 +143,7 @@ def get_size(filename):
 def generate_line_batches(filename, max_line):
     conf = get_dft_configuration()
     for start in range(0, max_line, conf.batch_size):
-        end =  min((start + conf.batch_size - 1) , (max_line - 1))
+        end =  min((start + conf.batch_size - 1) , (max_line))
         logging.debug(f"Created a batch for {filename} from [{start}, {end}] lines")
         yield filename, start, end
 
@@ -164,9 +164,9 @@ def load_objects(line, fn, time_granularity, time_approximate, condition_fn, loa
         val = {}
         try:
             unicode_line = ''.join([i if ord(i) < 128 else '#' for i in line])
-            val = json.loads(unicode_line)
+            val = json.loads(unicode_line, strict=False)
             logging.debug(f"Loading dict {val}")
-            if "name" in val:
+            if "name" in val and "cat" in val:
                 d["name"] = val["name"]
                 d["cat"] = val["cat"]
                 d["pid"] = val["pid"]
@@ -232,7 +232,7 @@ def io_function(json_object, current_dict, time_approximate,condition_fn):
         if "POSIX" == json_object["cat"] and "ret" in json_object["args"]:
             if json_object["name"] == "write":
                 d["size"] = int(json_object["args"]["ret"])
-            elif json_object["name"] == "read":
+            elif json_object["name"] in ["read", "pread"]:
                 d["size"] = int(json_object["args"]["ret"])
             elif json_object["name"] == "fwrite":
                 d["size"] = 1

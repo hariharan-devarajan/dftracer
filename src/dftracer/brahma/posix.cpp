@@ -4,7 +4,7 @@
 #include <cpp-logger/logger.h>
 #include <dftracer/brahma/posix.h>
 
-static ConstEventType CATEGORY = "POSIX";
+static ConstEventNameType CATEGORY = "POSIX";
 
 std::shared_ptr<brahma::POSIXDFTracer> brahma::POSIXDFTracer::instance =
     nullptr;
@@ -562,6 +562,155 @@ int brahma::POSIXDFTracer::ftruncate(int fd, off_t length) {
   DFT_LOGGER_UPDATE(fd);
   DFT_LOGGER_UPDATE(length);
   int ret = __real_ftruncate(fd, length);
+  DFT_LOGGER_END();
+  return ret;
+}
+
+int brahma::POSIXDFTracer::execl(const char *pathname, const char *arg, ...) {
+  BRAHMA_MAP_OR_FAIL(execl);
+  DFT_LOGGER_START_ALWAYS();
+  DFT_LOGGER_UPDATE(pathname);
+  DFT_LOGGER_UPDATE(arg);
+  va_list args;
+  va_start(args, arg);
+  int ret = __real_execl(pathname, arg, args);
+  va_end(args);
+  DFT_LOGGER_END();
+  return ret;
+}
+
+int brahma::POSIXDFTracer::execlp(const char *pathname, const char *arg, ...) {
+  BRAHMA_MAP_OR_FAIL(execlp);
+  DFT_LOGGER_START_ALWAYS();
+  DFT_LOGGER_UPDATE(pathname);
+  DFT_LOGGER_UPDATE(arg);
+  va_list args;
+  va_start(args, arg);
+  int ret = __real_execlp(pathname, arg, args);
+  va_end(args);
+  DFT_LOGGER_UPDATE(ret);
+  DFT_LOGGER_END();
+  return ret;
+}
+
+int brahma::POSIXDFTracer::execv(const char *pathname, char *const argv[]) {
+  BRAHMA_MAP_OR_FAIL(execv);
+  DFT_LOGGER_START_ALWAYS();
+  DFT_LOGGER_UPDATE(pathname);
+  const char *val = argv[0];
+  int i = 0;
+  while (val != NULL) {
+    if (i == 0) {
+      const char *arg0 = argv[i];
+      DFT_LOGGER_UPDATE(arg0);
+    } else if (i == 1) {
+      const char *arg1 = argv[i];
+      DFT_LOGGER_UPDATE(arg1);
+    } else if (i == 2) {
+      const char *arg2 = argv[i];
+      DFT_LOGGER_UPDATE(arg2);
+    } else if (i == 3) {
+      const char *arg3 = argv[i];
+      DFT_LOGGER_UPDATE(arg3);
+    } else if (i == 4) {
+      const char *arg4 = argv[i];
+      DFT_LOGGER_UPDATE(arg4);
+    } else if (i == 5) {
+      const char *arg5 = argv[i];
+      DFT_LOGGER_UPDATE(arg5);
+    } else {
+      break;
+    }
+    i++;
+    val = argv[i];
+  }
+
+  int ret = __real_execv(pathname, argv);
+  DFT_LOGGER_UPDATE(ret);
+  DFT_LOGGER_END();
+  return ret;
+}
+
+int brahma::POSIXDFTracer::execvp(const char *pathname, char *const argv[]) {
+  BRAHMA_MAP_OR_FAIL(execvp);
+  DFT_LOGGER_START_ALWAYS();
+  DFT_LOGGER_UPDATE(pathname);
+  const char *val = argv[0];
+  int i = 0;
+  while (val != NULL) {
+    if (i == 0) {
+      const char *arg0 = argv[i];
+      DFT_LOGGER_UPDATE(arg0);
+    } else if (i == 1) {
+      const char *arg1 = argv[i];
+      DFT_LOGGER_UPDATE(arg1);
+    } else if (i == 2) {
+      const char *arg2 = argv[i];
+      DFT_LOGGER_UPDATE(arg2);
+    } else if (i == 3) {
+      const char *arg3 = argv[i];
+      DFT_LOGGER_UPDATE(arg3);
+    } else if (i == 4) {
+      const char *arg4 = argv[i];
+      DFT_LOGGER_UPDATE(arg4);
+    } else if (i == 5) {
+      const char *arg5 = argv[i];
+      DFT_LOGGER_UPDATE(arg5);
+    } else {
+      break;
+    }
+    i++;
+    val = argv[i];
+  }
+  int ret = __real_execvp(pathname, argv);
+  DFT_LOGGER_UPDATE(ret);
+  DFT_LOGGER_END();
+  return ret;
+}
+
+int brahma::POSIXDFTracer::execvpe(const char *pathname, char *const argv[],
+                                   char *const envp[]) {
+  BRAHMA_MAP_OR_FAIL(execvpe);
+  DFT_LOGGER_START_ALWAYS();
+  DFT_LOGGER_UPDATE(pathname);
+  const char *val = argv[0];
+  int i = 0;
+  while (val != NULL) {
+    if (i == 0) {
+      const char *arg0 = argv[i];
+      DFT_LOGGER_UPDATE(arg0);
+    } else if (i == 1) {
+      const char *arg1 = argv[i];
+      DFT_LOGGER_UPDATE(arg1);
+    } else if (i == 2) {
+      const char *arg2 = argv[i];
+      DFT_LOGGER_UPDATE(arg2);
+    } else if (i == 3) {
+      const char *arg3 = argv[i];
+      DFT_LOGGER_UPDATE(arg3);
+    } else if (i == 4) {
+      const char *arg4 = argv[i];
+      DFT_LOGGER_UPDATE(arg4);
+    } else if (i == 5) {
+      const char *arg5 = argv[i];
+      DFT_LOGGER_UPDATE(arg5);
+    } else {
+      break;
+    }
+    i++;
+    val = argv[i];
+  }
+  int ret = __real_execvpe(pathname, argv, envp);
+  DFT_LOGGER_UPDATE(ret);
+  DFT_LOGGER_END();
+  return ret;
+}
+
+int brahma::POSIXDFTracer::fork() {
+  BRAHMA_MAP_OR_FAIL(fork);
+  DFT_LOGGER_START_ALWAYS();
+  int ret = __real_fork();
+  DFT_LOGGER_UPDATE(ret);
   DFT_LOGGER_END();
   return ret;
 }

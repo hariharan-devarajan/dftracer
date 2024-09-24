@@ -14,7 +14,7 @@ set(DFTRACER_PACKAGE_VERSION_MINOR "${DFTRACER_VERSION_PATCH}")
 set(DFTRACER_PACKAGE_STRING "${DFTRACER_PACKAGE_NAME} ${DFTRACER_PACKAGE_VERSION}")
 set(DFTRACER_PACKAGE_TARNAME "${DFTRACER_PACKAGE}")
 
-set(DFTRACER_VERSION "(1, 0, 4)")
+set(DFTRACER_VERSION "(1, 0, 5)")
 
 project(dftracer LANGUAGES C CXX)
 
@@ -111,6 +111,20 @@ option (DFTRACER_DISABLE_HWLOC "Disable HWLOC" On)
 if (NOT DFTRACER_DISABLE_HWLOC) 
     set(DFTRACER_HWLOC_ENABLE 1)
 endif()
+
+# Options
+option (DFTRACER_ENABLE_FTRACING "Enable Function Tracing" OFF)
+if (DFTRACER_ENABLE_FTRACING) 
+    set(DFTRACER_FTRACING_ENABLE 1)
+    set(DFTRACER_FUNCTION_FLAGS "-g" "-finstrument-functions" "-Wl,-E" "-fvisibility=default")
+else()
+    set(DFTRACER_FUNCTION_FLAGS )
+endif()
+
+option (DFTRACER_ENABLE_MPI "Enable MPI" On)
+if (DFTRACER_ENABLE_MPI) 
+    set(DFTRACER_MPI_ENABLE 1)
+endif()
 option (DFTRACER_BUILD_PYTHON_BINDINGS "Build python bindings." ON)
 set(DFTRACER_PYTHON_EXE "python3" CACHE STRING "Python executable to use for building.")
 set(DFTRACER_PYTHON_SITE $ENV{DFTRACER_PYTHON_SITE} CACHE STRING "Python site packages to use for building.")
@@ -194,7 +208,7 @@ if (${cpp-logger_FOUND})
 else ()
     message(FATAL_ERROR "-- [CPP_LOGGER] is needed for ${PROJECT_NAME} build")
 endif ()
-find_package(brahma REQUIRED)
+find_package(brahma 2.0.0 REQUIRED)
 if (${brahma_FOUND})
     message(STATUS "[BRAHMA] found brahma at ${BRAHMA_INCLUDE_DIRS}")
     include_directories(${BRAHMA_INCLUDE_DIRS})
@@ -218,6 +232,18 @@ if (DFTRACER_BUILD_PYTHON_BINDINGS)
     find_package(pybind11 REQUIRED)
     #add_subdirectory(dependency/py11bind)
 endif()
+
+if (DFTRACER_ENABLE_MPI) 
+  find_package(MPI COMPONENTS CXX REQUIRED)
+  if (MPI_FOUND)
+      message(STATUS "[DFTRACER] found mpi.h at ${MPI_CXX_INCLUDE_DIRS}")
+      include_directories(${MPI_CXX_INCLUDE_DIRS})
+      set(DEPENDENCY_LIB ${DEPENDENCY_LIB} ${MPI_CXX_LIBRARIES})
+  else ()
+      message(FATAL_ERROR "-- [DFTRACER] mpi is needed for ${PROJECT_NAME} build")
+  endif ()
+endif()
+
 if (NOT DFTRACER_DISABLE_HWLOC)
     find_package(HWLOC REQUIRED)
     if (${HWLOC_FOUND})
@@ -239,6 +265,7 @@ set(DFTRACER_PRELOAD_PRIVATE_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/df
 
 set(DFTRACER_CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/posix.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/stdio.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/finstrument/functions.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/writer/chrome_writer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/posix_internal.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/dftracer.cpp
@@ -253,22 +280,42 @@ set(DFTRACER_CORE_PUBLIC_INCLUDE
 set(DFTRACER_CORE_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/posix_internal.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/utils.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/finstrument/functions.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/posix.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/stdio.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/dftracer_main.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/macro.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/logging.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/singleton.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/configuration_manager.h)
 add_library(${PROJECT_NAME} SHARED)
+target_compile_definitions(${PROJECT_NAME} PUBLIC DFTRACER_LOGGER_LEVEL_ERROR)
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCY_LIB})
+add_library(${PROJECT_NAME}_dbg SHARED)
+target_link_libraries(${PROJECT_NAME}_dbg ${DEPENDENCY_LIB})
+target_compile_definitions(${PROJECT_NAME}_dbg PUBLIC DFTRACER_LOGGER_CPP_LOGGER)
+target_compile_definitions(${PROJECT_NAME}_dbg PUBLIC DFTRACER_LOGGER_LEVEL_TRACE)
+target_compile_definitions(${PROJECT_NAME}_dbg PUBLIC DFTRACER_LOGGER_LEVEL_DEBUG)
+target_compile_definitions(${PROJECT_NAME}_dbg PUBLIC DFTRACER_LOGGER_LEVEL_INFO)
+target_compile_definitions(${PROJECT_NAME}_dbg PUBLIC DFTRACER_LOGGER_LEVEL_WARN)
+target_compile_definitions(${PROJECT_NAME}_dbg PUBLIC DFTRACER_LOGGER_LEVEL_ERROR)
 add_library(${PROJECT_NAME}_preload SHARED)
 target_link_libraries(${PROJECT_NAME}_preload ${DEPENDENCY_LIB} ${PROJECT_NAME})
+add_library(${PROJECT_NAME}_preload_dbg SHARED)
+target_link_libraries(${PROJECT_NAME}_preload_dbg ${DEPENDENCY_LIB} ${PROJECT_NAME}_dbg)
 if (DFTRACER_BUILD_PYTHON_BINDINGS)
     pybind11_add_module(py${PROJECT_NAME} ${DFTRACER_CORE_SRC} ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/pydftracer.cpp)
     target_compile_definitions(py${PROJECT_NAME} PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
     target_link_libraries(py${PROJECT_NAME} PRIVATE ${DEPENDENCY_LIB})
+
+    pybind11_add_module(py${PROJECT_NAME}_dbg ${DFTRACER_CORE_SRC} ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/pydftracer_dbg.cpp)
+    target_compile_definitions(py${PROJECT_NAME}_dbg PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
+    target_link_libraries(py${PROJECT_NAME}_dbg PRIVATE ${DEPENDENCY_LIB})
 endif()
 target_sources(${PROJECT_NAME}
+        PRIVATE
+        ${DFTRACER_CORE_SRC}
+        )
+target_sources(${PROJECT_NAME}_dbg
         PRIVATE
         ${DFTRACER_CORE_SRC}
         )
@@ -276,7 +323,21 @@ target_sources(${PROJECT_NAME}_preload
         PRIVATE
         ${DFTRACER_PRELOAD_SRC}
         )
+target_sources(${PROJECT_NAME}_preload_dbg
+        PRIVATE
+        ${DFTRACER_PRELOAD_SRC}
+        )
 target_include_directories(${PROJECT_NAME}
+        PRIVATE
+        # where the library itself will look for its internal headers
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        PUBLIC
+        # where top-level project will look for the library's public headers
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        # where external projects will look for the library's public headers
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        )
+target_include_directories(${PROJECT_NAME}_dbg
         PRIVATE
         # where the library itself will look for its internal headers
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -307,13 +368,35 @@ install(
 install(TARGETS ${PROJECT_NAME}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(
+          TARGETS ${PROJECT_NAME}_dbg
+          EXPORT ${DFTRACER_EXPORTED_TARGETS}
+          LIBRARY DESTINATION ${DFTRACER_INSTALL_LIB_DIR}
+          ARCHIVE DESTINATION ${DFTRACER_INSTALL_LIB_DIR}
+          RUNTIME DESTINATION ${DFTRACER_INSTALL_BIN_DIR}
+  )
+install(TARGETS ${PROJECT_NAME}_dbg
+          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+          PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(TARGETS ${PROJECT_NAME}_preload
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(TARGETS ${PROJECT_NAME}_preload_dbg
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(
     TARGETS
     ${PROJECT_NAME}_preload
+    EXPORT
+    ${DFTRACER_EXPORTED_TARGETS}
+    LIBRARY DESTINATION ${DFTRACER_INSTALL_LIB_DIR}
+    ARCHIVE DESTINATION ${DFTRACER_INSTALL_LIB_DIR}
+    RUNTIME DESTINATION ${DFTRACER_INSTALL_BIN_DIR}
+)
+install(
+    TARGETS
+    ${PROJECT_NAME}_preload_dbg
     EXPORT
     ${DFTRACER_EXPORTED_TARGETS}
     LIBRARY DESTINATION ${DFTRACER_INSTALL_LIB_DIR}
@@ -330,6 +413,17 @@ if (DFTRACER_BUILD_PYTHON_BINDINGS)
                 chmod +x ${CMAKE_BINARY_DIR}/symlink.sh
                 . ${CMAKE_BINARY_DIR}/symlink.sh
                 \")")
+
+    
+    install(TARGETS py${PROJECT_NAME}_dbg
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/symlink_dbg.sh CONTENT "echo -- Installing: symlink ${MAIN_PYTHON_SITE_PACKAGES}/$<TARGET_FILE_NAME:py${PROJECT_NAME}_dbg> from ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/$<TARGET_FILE_NAME:py${PROJECT_NAME}_dbg>;ln -sf ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/$<TARGET_FILE_NAME:py${PROJECT_NAME}_dbg> ${MAIN_PYTHON_SITE_PACKAGES}/$<TARGET_FILE_NAME:py${PROJECT_NAME}_dbg>")
+    install(CODE "execute_process(
+                COMMAND bash -c \"set -e
+                chmod +x ${CMAKE_BINARY_DIR}/symlink_dbg.sh
+                . ${CMAKE_BINARY_DIR}/symlink_dbg.sh
+                \")")
 endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_compact ${EXECUTABLE_OUTPUT_PATH}/dftracer_compact COPYONLY)
 install(
@@ -343,6 +437,14 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_merge ${EXECUTABLE_OU
 install(
         FILES
         ${EXECUTABLE_OUTPUT_PATH}/dftracer_merge
+        DESTINATION
+        bin
+)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_sanitize ${EXECUTABLE_OUTPUT_PATH}/dftracer_sanitize COPYONLY)
+install(
+        FILES
+        ${EXECUTABLE_OUTPUT_PATH}/dftracer_sanitize
         DESTINATION
         bin
 )
@@ -393,14 +495,10 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/dftracer-utils.cmake"
 #-----------------------------------------------------------------------------
 # Configure the ${PROJECT_NAME}-config-version .cmake file for the install directory
 #-----------------------------------------------------------------------------
-configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/configure_files/${PROJECT_NAME}-config-version.cmake.in
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}-config-version.cmake @ONLY
-)
 
 install(
         FILES
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}-config-version.cmake
+        ${CMAKE_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
         DESTINATION
         ${DFTRACER_LIBDIR}/cmake/${PROJECT_NAME}
 )
@@ -421,7 +519,7 @@ include(CMakePackageConfigHelpers)
 
 # Write the version file. This is independent of build/install tree.
 write_basic_package_version_file(
-  DFTRACERConfigVersion.cmake
+  dftracer-config-version.cmake
   VERSION "${DFTRACER_PACKAGE_VERSION}"
   COMPATIBILITY SameMajorVersion)
 
@@ -503,6 +601,8 @@ string(APPEND _str
 append_str_tf(_str
   DFTRACER_GNU_LINUX
   DFTRACER_LIBDIR_AS_LIB
+  DFTRACER_ENABLE_FTRACING
+  DFTRACER_ENABLE_MPI
   DFTRACER_USE_CLANG_LIBCXX
   DFTRACER_WARNINGS_AS_ERRORS
   DFTRACER_BUILD_PYTHON_BINDINGS

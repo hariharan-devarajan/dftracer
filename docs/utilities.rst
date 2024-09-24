@@ -48,3 +48,23 @@ Arguments for this script are
 6. **-c** compress output file.
 7. **-v** enable verbose mode.
 8. **-h** display help
+
+
+------------------
+Sanitize script
+------------------
+
+The script sanitizes all trace file to mask non-utf characters.
+
+.. code-block:: bash
+
+    <install-dir>/bin/usage: dftracer_sanitize [-fcv] [-d input_directory] [-o output_directory]
+
+Arguments for this script are:
+
+1. **-f** override output directory.
+2. **-c** compress output file
+3. **-v** enable verbose mode
+4. **-h** display help
+5. **-d input_directory** specify input directories. should contain .pfw or .pfw.gz files.
+6. **-o output_directory** specify output directory.

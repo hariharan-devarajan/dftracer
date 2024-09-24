@@ -68,11 +68,14 @@ ENV Variables supported
                                                  DFTRACER_INC_METADATA needs to be enabled.
    DFTRACER_GOTCHA_PRIORITY         INT     PRIORITY of DFTracer in GOTCHA (default: 1).
    DFTRACER_LOG_LEVEL               STRING  Logging level within DFTracer ERROR/WARN/INFO/DEBUG (default ERROR).
-   DFTRACER_DISABLE_IO              STRING  Disable automatic binding of all I/O calls.
-   DFTRACER_DISABLE_POSIX           STRING  Disable automatic binding of POSIX I/O calls.
-   DFTRACER_DISABLE_STDIO           STRING  Disable automatic binding of STDIO I/O calls.
+   DFTRACER_DISABLE_IO              INT     Disable automatic binding of all I/O calls (default: 1).
+   DFTRACER_DISABLE_POSIX           INT     Disable automatic binding of POSIX I/O calls (default: 1).
+   DFTRACER_DISABLE_STDIO           INT     Disable automatic binding of STDIO I/O calls (default: 1).
    DFTRACER_TRACE_COMPRESSION       INT     Enable trace compression (default 1)
    DFTRACER_DISABLE_TIDS            INT     Disable tracing of thread ids (default 0).
+   DFTRACER_WRITE_BUFFER_SIZE       INT     Setup the buffering size for write optimization (default 0). Disabled as 
+                                            This wont work for AI workloads which uses fork and spawn without a clear exit.
+                                            Also, it does not work for workloads which uses exec and rewrite process buffer state.
    ================================ ======  ===========================================================================
 
 ----------------------------------------
@@ -257,6 +260,19 @@ The name passed to the function should be unique in every scope.
       DFTRACER_C_REGION_END(CUSTOM); // END region CUSTOM.
       DFTRACER_C_FUNCTION_END(); // END FUNCTION foo.
     }
+
+----------------------------------------
+DFTracer C/C++ Function Profiling using GCC
+----------------------------------------
+
+GCC supports function level tracing using ``-finstrument-functions``.
+DFTracer allows application to compile with ``-g -finstrument-functions -Wl,-E -fvisibility=default``.
+If the applications are using cmake, they can find_package and then use the CMAKE Variable `DFTRACER_FUNCTION_FLAGS` for compile flags.
+This can be applied globally or on a target. 
+
+Internally DFTracer uses ``dladdr`` to resolve symbol names which work for shared libraries. 
+For executables or binaries, we store the address and the name which can be used to derive the function name at analysis time.
+This can be done using ``nm -D`` or ``readelf -S`` utilities.
 
 -------------------------
 DFTracer Python APIs

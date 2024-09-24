@@ -5,7 +5,7 @@
 #ifndef DFTRACER_UTILS_H
 #define DFTRACER_UTILS_H
 
-#include <dftracer/core/macro.h>
+#include <dftracer/core/logging.h>
 #include <dftracer/core/singleton.h>
 #include <dftracer/utils/posix_internal.h>
 #include <execinfo.h>
@@ -21,17 +21,17 @@
 void dft_finalize();
 
 inline void signal_handler(int sig) {  // GCOVR_EXCL_START
-  DFTRACER_LOGDEBUG("signal_handler", "");
+  DFTRACER_LOG_DEBUG("signal_handler", "");
   switch (sig) {
     case SIGINT:
     case SIGTERM: {
-      DFTRACER_LOGERROR("signal caught %d", sig);
+      DFTRACER_LOG_ERROR("signal caught %d", sig);
       dft_finalize();
       exit(0);
       break;
     }
     default: {
-      DFTRACER_LOGERROR("signal caught %d", sig);
+      DFTRACER_LOG_ERROR("signal caught %d", sig);
       dft_finalize();
       int j, nptrs;
       const int STACK_SIZE = 40;
@@ -41,7 +41,7 @@ inline void signal_handler(int sig) {  // GCOVR_EXCL_START
       strings = backtrace_symbols(buffer, nptrs);
       if (strings != NULL) {
         for (j = 0; j < nptrs; j++) {
-          DFTRACER_LOGERROR("%s", strings[j]);
+          DFTRACER_LOG_ERROR("%s", strings[j]);
         }
         free(strings);
       }
@@ -51,7 +51,7 @@ inline void signal_handler(int sig) {  // GCOVR_EXCL_START
 }  // GCOVR_EXCL_STOP
 
 inline void set_signal() {
-  DFTRACER_LOGDEBUG("set_signal", "");
+  DFTRACER_LOG_DEBUG("set_signal", "");
   struct sigaction sa;
   sa.sa_handler = signal_handler;
   sigemptyset(&sa.sa_mask);
@@ -72,7 +72,7 @@ class Trie {
     bool end;
     TrieNode* child[MAX_INDEX];
     TrieNode() {
-      DFTRACER_LOGDEBUG("TrieNode.TrieNode", "");
+      DFTRACER_LOG_DEBUG("TrieNode.TrieNode", "");
       end = false;
       for (int i = 0; i < MAX_INDEX; i++) {
         child[i] = nullptr;
@@ -84,7 +84,7 @@ class Trie {
 
   void insert(TrieNode* root, const char* word, unsigned long n,
               bool reverse = false) {
-    DFTRACER_LOGDEBUG("Trie.insert inserting string %s with size %d", word, n);
+    DFTRACER_LOG_DEBUG("Trie.insert inserting string %s with size %d", word, n);
     TrieNode* curr = root;
     unsigned long start = 0, end = n, inc = 1;
     if (reverse) start = n - 1, end = -1, inc = -1;
@@ -99,7 +99,7 @@ class Trie {
   }
   bool startsWith(TrieNode* root, const char* prefix, unsigned long n,
                   bool reverse = false) {
-    DFTRACER_LOGDEBUG("Trie.startsWith", "");
+    DFTRACER_LOG_DEBUG("Trie.startsWith", "");
     TrieNode* curr = root;
     if (curr == nullptr || curr->end) return false;
     unsigned long start = 0, end = n, inc = 1;
@@ -114,48 +114,48 @@ class Trie {
 
  public:
   Trie() {
-    DFTRACER_LOGDEBUG("Trie.Trie We have %d child in prefix tree", MAX_INDEX);
+    DFTRACER_LOG_DEBUG("Trie.Trie We have %d child in prefix tree", MAX_INDEX);
     inclusion_prefix = new TrieNode();
     exclusion_prefix = new TrieNode();
   }
 
   inline int get_id(char c) {
-    DFTRACER_LOGDEBUG("Trie.get_id for %d", c);
+    DFTRACER_LOG_DEBUG("Trie.get_id for %d", c);
     return c % MAX_INDEX;
   }
 
   void include(const char* word, unsigned long n) {
-    DFTRACER_LOGDEBUG("Trie.include", "");
+    DFTRACER_LOG_DEBUG("Trie.include", "");
     if (inclusion_prefix == nullptr) return;
     insert(inclusion_prefix, word, n, false);
   }
   void exclude(const char* word, unsigned long n) {
-    DFTRACER_LOGDEBUG("Trie.exclude", "");
+    DFTRACER_LOG_DEBUG("Trie.exclude", "");
     if (exclusion_prefix == nullptr) return;
     insert(exclusion_prefix, word, n, false);
   }
   void include_reverse(const char* word, unsigned long n) {
-    DFTRACER_LOGDEBUG("Trie.include_reverse", "");
+    DFTRACER_LOG_DEBUG("Trie.include_reverse", "");
     if (inclusion_prefix == nullptr) return;
     insert(inclusion_prefix, word, n, true);
   }
   void exclude_reverse(const char* word, unsigned long n) {
-    DFTRACER_LOGDEBUG("Trie.exclude_reverse", "");
+    DFTRACER_LOG_DEBUG("Trie.exclude_reverse", "");
     if (exclusion_prefix == nullptr) return;
     insert(exclusion_prefix, word, n, true);
   }
   bool is_included(const char* word, unsigned long n, bool reverse = false) {
-    DFTRACER_LOGDEBUG("Trie.is_included", "");
+    DFTRACER_LOG_DEBUG("Trie.is_included", "");
     if (inclusion_prefix == nullptr) return false;
     return startsWith(inclusion_prefix, word, n, reverse);
   }
   bool is_excluded(const char* word, unsigned long n, bool reverse = false) {
-    DFTRACER_LOGDEBUG("Trie.is_excluded", "");
+    DFTRACER_LOG_DEBUG("Trie.is_excluded", "");
     if (exclusion_prefix == nullptr) return false;
     return startsWith(exclusion_prefix, word, n, reverse);
   }
   void finalize_root(TrieNode* node) {
-    DFTRACER_LOGDEBUG("Trie.finalize_root", "");
+    DFTRACER_LOG_DEBUG("Trie.finalize_root", "");
     if (node != nullptr) {
       if (!node->end) {
         for (unsigned long i = 0; i < MAX_INDEX; i++) {
@@ -166,7 +166,7 @@ class Trie {
     }
   }
   void finalize() {
-    DFTRACER_LOGDEBUG("Finalizing Trie", "");
+    DFTRACER_LOG_DEBUG("Finalizing Trie", "");
     if (inclusion_prefix != nullptr) {
       finalize_root(inclusion_prefix);
       inclusion_prefix = nullptr;
@@ -182,7 +182,7 @@ const int MAX_PREFIX = 128;
 const int MAX_EXT = 4;
 
 inline std::vector<std::string> split(std::string str, char delimiter) {
-  DFTRACER_LOGDEBUG("split", "");
+  DFTRACER_LOG_DEBUG("split", "");
   std::vector<std::string> res;
   if (str.find(delimiter) == std::string::npos) {
     res.push_back(str);
@@ -199,7 +199,7 @@ inline std::vector<std::string> split(std::string str, char delimiter) {
 }
 
 inline std::string get_filename(int fd) {
-  DFTRACER_LOGDEBUG("get_filename", "");
+  DFTRACER_LOG_DEBUG("get_filename", "");
   char proclnk[PATH_MAX];
   char filename[PATH_MAX];
   snprintf(proclnk, PATH_MAX, "/proc/self/fd/%d", fd);
@@ -209,7 +209,7 @@ inline std::string get_filename(int fd) {
 }
 
 inline const char* is_traced_common(const char* filename, const char* func) {
-  DFTRACER_LOGDEBUG("is_traced_common", "");
+  DFTRACER_LOG_DEBUG("is_traced_common", "");
   auto tri_ptr = dftracer::Singleton<Trie>::get_instance();
   if (tri_ptr == nullptr) return nullptr;
   auto file_len = strlen(filename);
@@ -217,13 +217,13 @@ inline const char* is_traced_common(const char* filename, const char* func) {
   if (tri_ptr->is_excluded(filename, file_len, true)) return nullptr;
   bool is_traced = tri_ptr->is_included(filename, file_len);
   if (!is_traced) {
-    DFTRACER_LOGDEBUG(
+    DFTRACER_LOG_DEBUG(
         "Profiler Intercepted POSIX not tracing file %s for func %s", filename,
         func);
     return nullptr;
   }
-  DFTRACER_LOGWARN("Profiler Intercepted POSIX tracing file %s for func %s",
-                   filename, func);
+  DFTRACER_LOG_WARN("Profiler Intercepted POSIX tracing file %s for func %s",
+                    filename, func);
   return filename;
 }
 

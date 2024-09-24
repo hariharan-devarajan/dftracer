@@ -98,23 +98,26 @@ Download the latest DFTracer release from the Releases_ page or clone the develo
 branch ('develop') from the DFTracer repository
 `https://github.com/hariharan-devarajan/dftracer <https://github.com/hariharan-devarajan/dftracer>`_.
 
-------------------------------------------
-Build ENV Variables
-------------------------------------------
-For pip based installations we can enable HWLOC using
-.. code-block:: Bash
+---------------
+Build Variables
+---------------
 
-    export DFTRACER_DISABLE_HWLOC=Off
+.. table:: section - main build settings using env variables or cmake flags
+   :widths: auto
 
-------------------------------------------
-Build CMAKE Variables
-------------------------------------------
-For Cmake based build, we can enable HWLOC using
-.. code-block:: Bash
+   ================================ ======  ===========================================================================
+   Environment Variable             Type    Description
+   ================================ ======  ===========================================================================
+   DFTRACER_BUILD_TYPE              STRING  Sets the build type for DFTRACER (default Release). Values are Debug or Release
+   DFTRACER_ENABLE_FTRACING         BOOL    Enables function tracing (default OFF).
+   DFTRACER_ENABLE_MPI              BOOL    Enables MPI Rank (default ON).
+   DFTRACER_DISABLE_HWLOC           BOOL    Disables HWLOC (default ON).
+   DFTRACER_PYTHON_EXE              STRING  Sets path to python executable. Only Cmake.
+   DFTRACER_PYTHON_SITE             STRING  Sets path to python site-packages. Only Cmake.
+   DFTRACER_BUILD_PYTHON_BINDINGS   STRING  Enable python bindings for DFTracer. Only Cmake.
+   ================================ ======  ===========================================================================
 
-    cmake -DDISABLE_HWLOC=Off <source dir>
-
-
+These build variables can be set with cmake as ``-DDISABLE_HWLOC=OFF`` or as environment variables ``export DFTRACER_DISABLE_HWLOC=OFF``
 
 Build DFTracer Dependencies
 ********************************

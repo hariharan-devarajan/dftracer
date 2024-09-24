@@ -15,10 +15,15 @@ target_link_libraries(test_cpp ${PROJECT_NAME})
 add_dependencies(test_cpp ${PROJECT_NAME})
 add_dependencies(test_cpp ${PROJECT_NAME}_preload)
 
+add_library(testlib SHARED c/testlib.c)
+target_compile_options(testlib PRIVATE ${DFTRACER_FUNCTION_FLAGS})
 add_executable(test_c c/test.c)
-target_link_libraries(test_c ${PROJECT_NAME})
+target_compile_options(test_c PRIVATE ${DFTRACER_FUNCTION_FLAGS})
+target_link_libraries(test_c ${PROJECT_NAME} testlib)
 add_dependencies(test_c ${PROJECT_NAME})
 add_dependencies(test_c ${PROJECT_NAME}_preload)
+
+
 function(set_common_properties test_name)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_LOG_LEVEL=DEBUG)
     set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_TRACE_COMPRESSION=0)
@@ -70,7 +75,7 @@ set_tests_properties(check_file_exists_${test_name} PROPERTIES DEPENDS ${test_na
 set(test_name test_c_basic_only)
 df_add_test(${test_name} ${CMAKE_BINARY_DIR}/bin/test_c ${CMAKE_CURRENT_BINARY_DIR}/data)
 set_common_properties(${test_name})
-set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload.so)
+set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT LD_PRELOAD=${CMAKE_BINARY_DIR}/${DFTRACER_LIBDIR}/libdftracer_preload_dbg.so)
 set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT DFTRACER_INIT=PRELOAD)
 
 df_add_test(check_file_exists_${test_name} ${BASH_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/check_file_at_least.sh ${CMAKE_CURRENT_BINARY_DIR}/${test_name}* 4)

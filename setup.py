@@ -72,6 +72,10 @@ class CMakeBuild(build_ext):
         # auxiliary "native" libs
         build_type = os.environ.get("DFTRACER_BUILD_TYPE", "Release")
         cmake_args += [f"-DCMAKE_BUILD_TYPE={build_type}"]
+        enable_ftracing = os.environ.get("DFTRACER_ENABLE_FTRACING", "OFF")
+        cmake_args += [f"-DDFTRACER_ENABLE_FTRACING={enable_ftracing}"]
+        enable_mpi = os.environ.get("DFTRACER_ENABLE_MPI", "ON")
+        cmake_args += [f"-DDFTRACER_ENABLE_MPI={enable_mpi}"]
         disable_hwloc = os.environ.get("DFTRACER_DISABLE_HWLOC", "ON")
         cmake_args += [f"-DDFTRACER_DISABLE_HWLOC={disable_hwloc}"]
         cmake_args += [f"-DDFTRACER_PYTHON_EXE={sys.executable}"]
@@ -154,7 +158,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="pydftracer",
-    version="1.0.4",
+    version="1.0.5",
     description="I/O profiler for deep learning python apps. Specifically for dlio_benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -187,12 +191,15 @@ setup(
         "Bug Reports": "https://github.com/hariharan-devarajan/dftracer/issues",
         "Source": "https://github.com/hariharan-devarajan/dftracer",
     },
-    packages=(find_namespace_packages(include=['dftracer', 'dfanalyzer'])),
+    packages=(find_namespace_packages(include=['dftracer', 'dftracer_dbg', 'dfanalyzer'])),
     scripts=['script/dftracer_compact',
-             'script/dftracer_merge'],
-    package_dir={"dftracer": "dftracer",
+             'script/dftracer_merge',
+             'script/dftracer_sanitize'],
+    package_dir={"dftracer": "dftracer", 
+                 "dftracer_dbg": "dftracer_dbg",
                  "dfanalyzer": "dfanalyzer"},
-    ext_modules=[CMakeExtension("dftracer.pydftracer"),],
+    ext_modules=[CMakeExtension("dftracer.pydftracer"),
+                 CMakeExtension("dftracer.pydftracer_dbg")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"],
