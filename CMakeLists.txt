@@ -451,6 +451,14 @@ install(
         bin
 )
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_anonymize ${EXECUTABLE_OUTPUT_PATH}/dftracer_anonymize COPYONLY)
+install(
+        FILES
+        ${EXECUTABLE_OUTPUT_PATH}/dftracer_anonymize
+        DESTINATION
+        bin
+)
+
 #cmake_policy(SET CMP0079 NEW) # In case that we need more control over the target building order
 
 if(DFTRACER_ENABLE_TESTS)
