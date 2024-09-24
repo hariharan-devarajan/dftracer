@@ -201,7 +201,7 @@ class dft_fn(object):
                         elif name == "image_size":
                             self._arguments["image_size"] = str(value)
                         elif name == "step":
-                            self._arguments["image_size"] = str(value)
+                            self._arguments["step"] = str(value)
 
                 start = dftracer.get_instance().get_time()
                 dftracer.get_instance().enter_event()
