@@ -254,7 +254,7 @@ void dftracer::ChromeWriter::convert_json(
         case EventType::REDUCE_EVENT: {
           auto written_size = sprintf(
               buffer.data() + current_index,
-              R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"R","args":{"value":%s}})",
+              R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"value":%s}})",
               is_first_char, index, event_name, process_id, thread_id,
               category);
           current_index += written_size;
