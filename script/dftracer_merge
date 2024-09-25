@@ -116,7 +116,7 @@ fi
 
 echo "Extracting events"
 
-sed -i 's/^\[//g;/^$/d;s/^ *//;s/ *$//' $d2
+sed -i 's/^\[//g;/^$/d;s/^ *//;s/ *$//;s/^\]\[//;s/^\]//' $d2
 tmp_file=$(mktemp)
 echo "[" | cat - $d2 > $tmp_file
 echo "]" >> $tmp_file
