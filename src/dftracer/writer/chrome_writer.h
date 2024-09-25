@@ -5,15 +5,12 @@
 #ifndef DFTRACER_CHROME_WRITER_H
 #define DFTRACER_CHROME_WRITER_H
 
+#include <assert.h>
 #include <dftracer/core/constants.h>
 #include <dftracer/core/typedef.h>
 #include <dftracer/utils/configuration_manager.h>
 #include <dftracer/utils/posix_internal.h>
 #include <dftracer/utils/utils.h>
-#if DISABLE_HWLOC == 1
-#include <hwloc.h>
-#endif
-#include <assert.h>
 #include <unistd.h>
 
 #include <any>
@@ -37,11 +34,9 @@ class ChromeWriter {
   bool include_metadata, enable_compression;
 
   bool enable_core_affinity;
-#if DISABLE_HWLOC == 1
-  hwloc_topology_t topology;
-#endif
+
   FILE *fh;
-  char hostname[256];
+  uint16_t hostname_hash;
   static const int MAX_LINE_SIZE = 4096;
   static const int MAX_META_LINE_SIZE = 3000;
   size_t write_buffer_size;
@@ -77,27 +72,6 @@ class ChromeWriter {
     }  // GCOVR_EXCL_STOP
     return written_elements;
   }
-  std::vector<unsigned> core_affinity() {
-    DFTRACER_LOG_DEBUG("ChromeWriter.core_affinity", "");
-    auto cores = std::vector<unsigned>();
-#if DISABLE_HWLOC == 1
-    if (enable_core_affinity) {
-      hwloc_cpuset_t set = hwloc_bitmap_alloc();
-      hwloc_get_cpubind(topology, set, HWLOC_CPUBIND_PROCESS);
-      for (unsigned id = hwloc_bitmap_first(set); id != -1;
-           id = hwloc_bitmap_next(set, id)) {
-        cores.push_back(id);
-      }
-      hwloc_bitmap_free(set);
-    }
-#endif
-    return cores;
-  }
-
-  void get_hostname(char *hostname) {
-    DFTRACER_LOG_DEBUG("ChromeWriter.get_hostname", "");
-    gethostname(hostname, 256);
-  }
 
  public:
   ChromeWriter()
@@ -113,7 +87,6 @@ class ChromeWriter {
     DFTRACER_LOG_DEBUG("ChromeWriter.ChromeWriter", "");
     auto conf =
         dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
-    get_hostname(hostname);
     include_metadata = conf->metadata;
     enable_core_affinity = conf->core_affinity;
     enable_compression = conf->compression;
@@ -123,16 +96,9 @@ class ChromeWriter {
       buffer = std::vector<char>(write_buffer_size + 4096);
       current_index = 0;
     }
-
-    if (enable_core_affinity) {
-#if DISABLE_HWLOC == 1
-      hwloc_topology_init(&topology);  // initialization
-      hwloc_topology_load(topology);   // actual detection
-#endif
-    }
   }
   ~ChromeWriter() { DFTRACER_LOG_DEBUG("Destructing ChromeWriter", ""); }
-  void initialize(char *filename, bool throw_error);
+  void initialize(char *filename, bool throw_error, uint16_t hostname_hash);
 
   void log(int index, ConstEventNameType event_name,
            ConstEventNameType category, EventType type,

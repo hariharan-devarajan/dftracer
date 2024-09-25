@@ -21,7 +21,9 @@ std::shared_ptr<dftracer::ChromeWriter>
 template <>
 bool dftracer::Singleton<dftracer::ChromeWriter>::stop_creating_instances =
     false;
-void dftracer::ChromeWriter::initialize(char *filename, bool throw_error) {
+void dftracer::ChromeWriter::initialize(char *filename, bool throw_error,
+                                        uint16_t hostname_hash) {
+  this->hostname_hash = hostname_hash;
   this->throw_error = throw_error;
   this->filename = filename;
   if (fh == nullptr) {
@@ -88,6 +90,15 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
               "of %ld",
               filename.c_str(), data.size(), written_elements);
         }  // GCOVR_EXCL_STOP
+        data = "]";
+        fseek(fh, 0, SEEK_END);
+        written_elements = fwrite(data.c_str(), sizeof(char), data.size(), fh);
+        if (written_elements != data.size()) {  // GCOVR_EXCL_START
+          DFTRACER_LOG_ERROR(
+              "unable to finalize log write %s for O_WRONLY written only %ld "
+              "of %ld",
+              filename.c_str(), data.size(), written_elements);
+        }  // GCOVR_EXCL_STOP
         status = fclose(fh);
         if (status != 0) {
           DFTRACER_LOG_ERROR("unable to close log file %s for O_WRONLY",
@@ -134,16 +145,6 @@ void dftracer::ChromeWriter::convert_json(
   if (!is_first_write) is_first_char[0] = '\0';
   if (include_metadata && metadata != nullptr) {
     std::stringstream all_stream;
-    auto cores = core_affinity();
-    auto cores_size = cores.size();
-    if (cores_size > 0) {
-      all_stream << ", \"core_affinity\": [";
-      for (long unsigned int i = 0; i < cores_size; ++i) {
-        all_stream << cores[i];
-        if (i < cores_size - 1) all_stream << ",";
-      }
-      all_stream << "]";
-    }
     bool has_meta = false;
     std::stringstream meta_stream;
     auto meta_size = metadata->size();
@@ -167,24 +168,29 @@ void dftracer::ChromeWriter::convert_json(
                     << std::any_cast<std::string>(item.second) << "\"";
         if (i < meta_size - 1) meta_stream << ",";
       } else if (item.second.type() == typeid(size_t)) {
-        meta_stream << "\"" << item.first << "\":\""
-                    << std::any_cast<size_t>(item.second) << "\"";
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<size_t>(item.second) << "";
         if (i < meta_size - 1) meta_stream << ",";
+      } else if (item.second.type() == typeid(uint16_t)) {
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<uint16_t>(item.second) << "";
+        if (i < meta_size - 1) meta_stream << ",";
+
       } else if (item.second.type() == typeid(long)) {
-        meta_stream << "\"" << item.first << "\":\""
-                    << std::any_cast<long>(item.second) << "\"";
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<long>(item.second) << "";
         if (i < meta_size - 1) meta_stream << ",";
       } else if (item.second.type() == typeid(ssize_t)) {
-        meta_stream << "\"" << item.first << "\":\""
-                    << std::any_cast<ssize_t>(item.second) << "\"";
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<ssize_t>(item.second) << "";
         if (i < meta_size - 1) meta_stream << ",";
       } else if (item.second.type() == typeid(off_t)) {
-        meta_stream << "\"" << item.first << "\":\""
-                    << std::any_cast<off_t>(item.second) << "\"";
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<off_t>(item.second) << "";
         if (i < meta_size - 1) meta_stream << ",";
       } else if (item.second.type() == typeid(off64_t)) {
-        meta_stream << "\"" << item.first << "\":\""
-                    << std::any_cast<off64_t>(item.second) << "\"";
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<off64_t>(item.second) << "";
         if (i < meta_size - 1) meta_stream << ",";
       } else {
         DFTRACER_LOG_INFO("No conversion for type %s", item.first.c_str());
@@ -200,16 +206,15 @@ void dftracer::ChromeWriter::convert_json(
         case EventType::COMPLETE_EVENT: {
           auto written_size = sprintf(
               buffer.data() + current_index,
-              R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{"hostname":"%s"%s}})",
+              R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{"hhash":%d%s}})",
               is_first_char, index, event_name, category, process_id, thread_id,
-              start_time, duration, this->hostname, all_stream.str().c_str());
+              start_time, duration, this->hostname_hash,
+              all_stream.str().c_str());
           current_index += written_size;
           break;
         };
-        case EventType::METADATA_EVENT: {
-          break;
-        };
         default: {
+          break;
         }
       }
       buffer[current_index] = '\n';
@@ -231,7 +236,25 @@ void dftracer::ChromeWriter::convert_json(
         case EventType::METADATA_EVENT: {
           auto written_size = sprintf(
               buffer.data() + current_index,
-              R"(%s{"id":%d,"name":"%s","pid":%lu,"tid":%lu,"ph":"M","args":{"name":"%s"}})",
+              R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"name":"%s"}})",
+              is_first_char, index, event_name, process_id, thread_id,
+              category);
+          current_index += written_size;
+          break;
+        };
+        case EventType::HASH_EVENT: {
+          auto written_size = sprintf(
+              buffer.data() + current_index,
+              R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"H","args":{"hash":%d}})",
+              is_first_char, index, event_name, process_id, thread_id,
+              std::stoi(category));
+          current_index += written_size;
+          break;
+        };
+        case EventType::REDUCE_EVENT: {
+          auto written_size = sprintf(
+              buffer.data() + current_index,
+              R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"value":%s}})",
               is_first_char, index, event_name, process_id, thread_id,
               category);
           current_index += written_size;

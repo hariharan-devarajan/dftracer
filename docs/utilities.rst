@@ -68,3 +68,22 @@ Arguments for this script are:
 4. **-h** display help
 5. **-d input_directory** specify input directories. should contain .pfw or .pfw.gz files.
 6. **-o output_directory** specify output directory.
+
+------------------
+Anonymize script
+------------------
+
+The removes system and file information from the trace and only maintain consistent hashes.
+
+.. code-block:: bash
+
+    <install-dir>/bin/usage: dftracer_anonymize [-fcv] [-d input_directory] [-o output_directory]
+
+Arguments for this script are:
+
+1. **-f** override output directory.
+2. **-c** compress output file
+3. **-v** enable verbose mode
+4. **-h** display help
+5. **-d input_directory** specify input directories. should contain .pfw or .pfw.gz files.
+6. **-o output_directory** specify output directory.

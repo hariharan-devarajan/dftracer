@@ -199,7 +199,7 @@ if (DFTRACER_INSTALL_DEPENDENCIES)
 else()
 # Required Dependencies
 # =============================================================================
-set(DEPENDENCY_LIB "")
+set(DEPENDENCY_LIB ${CMAKE_EXE_LINKER_FLAGS} $ENV{LDFLAGS})
 find_package(cpp-logger 1.0.0 REQUIRED)
 if (${cpp-logger_FOUND})
     include_directories(${CPP_LOGGER_INCLUDE_DIRS})
@@ -271,6 +271,7 @@ set(DFTRACER_CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/posix.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/dftracer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/core/dftracer_main.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/configuration_manager.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/md5.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/df_logger.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/utils.cpp)
 set(DFTRACER_CORE_PUBLIC_INCLUDE
@@ -280,6 +281,7 @@ set(DFTRACER_CORE_PUBLIC_INCLUDE
 set(DFTRACER_CORE_PRIVATE_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/posix_internal.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/utils.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/utils/md5.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/finstrument/functions.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/posix.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dftracer/brahma/stdio.h
@@ -449,6 +451,14 @@ install(
         bin
 )
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_anonymize ${EXECUTABLE_OUTPUT_PATH}/dftracer_anonymize COPYONLY)
+install(
+        FILES
+        ${EXECUTABLE_OUTPUT_PATH}/dftracer_anonymize
+        DESTINATION
+        bin
+)
+
 #cmake_policy(SET CMP0079 NEW) # In case that we need more control over the target building order
 
 if(DFTRACER_ENABLE_TESTS)
@@ -603,6 +613,7 @@ append_str_tf(_str
   DFTRACER_LIBDIR_AS_LIB
   DFTRACER_ENABLE_FTRACING
   DFTRACER_ENABLE_MPI
+  DFTRACER_DISABLE_HWLOC
   DFTRACER_USE_CLANG_LIBCXX
   DFTRACER_WARNINGS_AS_ERRORS
   DFTRACER_BUILD_PYTHON_BINDINGS
