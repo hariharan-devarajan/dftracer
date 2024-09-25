@@ -103,7 +103,13 @@ class DFTLogger {
     this->process_id = process_id;
     this->writer = dftracer::Singleton<dftracer::ChromeWriter>::get_instance();
     if (this->writer != nullptr) {
-      this->writer->initialize(log_file.data(), this->throw_error);
+      char hostname[256];
+      gethostname(hostname, 256);
+      uint16_t hostname_hash;
+      md5String(hostname, &hostname_hash);
+      this->writer->initialize(log_file.data(), this->throw_error,
+                               hostname_hash);
+      hostname_hash = hash_and_store(hostname);
       std::unordered_map<std::string, std::any> *meta = nullptr;
       if (include_metadata) {
         meta = new std::unordered_map<std::string, std::any>();

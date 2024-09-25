@@ -5,14 +5,12 @@
 #ifndef DFTRACER_CHROME_WRITER_H
 #define DFTRACER_CHROME_WRITER_H
 
+#include <assert.h>
 #include <dftracer/core/constants.h>
 #include <dftracer/core/typedef.h>
 #include <dftracer/utils/configuration_manager.h>
-#include <dftracer/utils/md5.h>
 #include <dftracer/utils/posix_internal.h>
 #include <dftracer/utils/utils.h>
-
-#include <assert.h>
 #include <unistd.h>
 
 #include <any>
@@ -38,7 +36,6 @@ class ChromeWriter {
   bool enable_core_affinity;
 
   FILE *fh;
-  char hostname[256];
   uint16_t hostname_hash;
   static const int MAX_LINE_SIZE = 4096;
   static const int MAX_META_LINE_SIZE = 3000;
@@ -76,11 +73,6 @@ class ChromeWriter {
     return written_elements;
   }
 
-  void get_hostname(char *hostname) {
-    DFTRACER_LOG_DEBUG("ChromeWriter.get_hostname", "");
-    gethostname(hostname, 256);
-  }
-
  public:
   ChromeWriter()
       : metadata(),
@@ -95,8 +87,6 @@ class ChromeWriter {
     DFTRACER_LOG_DEBUG("ChromeWriter.ChromeWriter", "");
     auto conf =
         dftracer::Singleton<dftracer::ConfigurationManager>::get_instance();
-    get_hostname(hostname);
-    md5String(hostname, &hostname_hash);
     include_metadata = conf->metadata;
     enable_core_affinity = conf->core_affinity;
     enable_compression = conf->compression;
@@ -106,11 +96,9 @@ class ChromeWriter {
       buffer = std::vector<char>(write_buffer_size + 4096);
       current_index = 0;
     }
-
-
   }
   ~ChromeWriter() { DFTRACER_LOG_DEBUG("Destructing ChromeWriter", ""); }
-  void initialize(char *filename, bool throw_error);
+  void initialize(char *filename, bool throw_error, uint16_t hostname_hash);
 
   void log(int index, ConstEventNameType event_name,
            ConstEventNameType category, EventType type,

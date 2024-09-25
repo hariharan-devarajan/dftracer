@@ -21,7 +21,9 @@ std::shared_ptr<dftracer::ChromeWriter>
 template <>
 bool dftracer::Singleton<dftracer::ChromeWriter>::stop_creating_instances =
     false;
-void dftracer::ChromeWriter::initialize(char *filename, bool throw_error) {
+void dftracer::ChromeWriter::initialize(char *filename, bool throw_error,
+                                        uint16_t hostname_hash) {
+  this->hostname_hash = hostname_hash;
   this->throw_error = throw_error;
   this->filename = filename;
   if (fh == nullptr) {
@@ -33,8 +35,6 @@ void dftracer::ChromeWriter::initialize(char *filename, bool throw_error) {
       setvbuf(fh, NULL, _IOLBF, write_buffer_size + 4096);
       DFTRACER_LOG_INFO("created log file %s", filename);
     }
-    log(0, hostname, std::to_string(hostname_hash).c_str(),
-        EventType::HASH_EVENT, 0, 0, nullptr, df_getpid(), df_gettid());
   }
   DFTRACER_LOG_DEBUG("ChromeWriter.initialize %s", this->filename.c_str());
 }
