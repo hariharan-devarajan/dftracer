@@ -76,9 +76,12 @@ class DFTLogger {
       std::unordered_map<std::string, std::any> *meta = nullptr;
       if (include_metadata) {
         meta = new std::unordered_map<std::string, std::any>();
+        uint16_t cmd_hash = hash_and_store(cmd.data());
+        uint16_t exec_hash = hash_and_store(exec_name.data());
+
         meta->insert_or_assign("version", DFTRACER_VERSION);
-        meta->insert_or_assign("exec", exec_name);
-        meta->insert_or_assign("cmd", cmd);
+        meta->insert_or_assign("exec", exec_hash);
+        meta->insert_or_assign("cmd", cmd_hash);
         time_t ltime;       /* calendar time */
         ltime = time(NULL); /* get current cal time */
         char timestamp[1024];
