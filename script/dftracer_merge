@@ -7,6 +7,7 @@
 #  -f                      override output file
 #  -c                      compress output file
 #  -v                      enable verbose mode
+#  -g                      process gzip files only
 #  -h                      display help
 #  -d input_directory      specify input directories. should contain .pfw or .pfw.gz files.
 #  -o output_file          specify output file. should have extension .pfw
@@ -15,18 +16,20 @@ override=0
 folder=$PWD
 compressed=0
 dest="combined.pfw"
+gzip=0
 
 function usage {
-    echo "usage: $(basename $0) [-fcv] [-d input_directory] [-o OUTPUT_FILE]"
+    echo "usage: $(basename $0) [-fcvg] [-d input_directory] [-o OUTPUT_FILE]"
     echo "  -f                      override output file"
     echo "  -c                      compress output file"
     echo "  -v                      enable verbose mode"
+    echo "  -g                      process gzip files only"
     echo "  -h                      display help"
     echo "  -d input_directory      specify input directories. should contain .pfw or .pfw.gz files."
     echo "  -o output_file          specify output file. should have extension .pfw"
     exit 1
 }
-while getopts ':cvfd:o:h' opt; do
+while getopts ':cvfgd:o:h' opt; do
   case "$opt" in
     d)
       folder="${OPTARG}"
@@ -38,7 +41,9 @@ while getopts ':cvfd:o:h' opt; do
         echo "output_file should have .pfw extension".
       fi
       ;;
-
+    g)
+      gz=1
+      ;;
     f)
       override=1
       ;;
@@ -72,12 +77,17 @@ if [[ "$override" == "1" ]]; then
 rm -rf $dest ${dest}.gz
 fi
 
-pfw_count=`ls -1 $folder/*.pfw 2> /dev/null | wc -l`
-gz_count=`ls -1 $folder/*.gz 2> /dev/null | wc -l`
-total=$((pfw_count + gz_count))
-if [ $total == 0 ]; then
-    echo "The folder does not contain any pfw or pfw.gz files."
-    exit 0
+gz_count=0
+pfw_count=0
+if [[ "$gz" == "1" ]]; then
+  gz_count=`ls -1 $folder/*.gz 2> /dev/null | wc -l`
+  total=$((pfw_count + gz_count))
+  if [ $total == 0 ]; then
+      echo "The folder does not contain any pfw or pfw.gz files."
+      exit 0
+  fi
+else
+  pfw_count=`ls -1 $folder/*.pfw 2> /dev/null | wc -l`
 fi
 
 if [[ "$compressed" == "1" ]]; then
