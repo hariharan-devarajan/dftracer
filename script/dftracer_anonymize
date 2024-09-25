@@ -67,7 +67,7 @@ shift "$(($OPTIND -1))"
 
 mkdir -p ${OUTPUT_DIR}
 
-if [ -z "$( ls -A '${OUTPUT_DIR}' )" ] && [ $override -eq 0 ]; then
+if [ -n "$( ls -A "${OUTPUT_DIR}" )" ] && [ $override -eq 0 ]; then
   echo "The directory is not empty. Please pass a clean directory or pass -f flag."
   exit 0
 fi
@@ -75,7 +75,6 @@ fi
 echo "Setting up output directory"
 rm -rf ${OUTPUT_DIR}
 mkdir -p ${OUTPUT_DIR}
-
 
 pfw_count=`ls -1 $LOG_DIR/*.pfw 2> /dev/null | wc -l`
 gz_count=`ls -1 $LOG_DIR/*.gz 2> /dev/null | wc -l`
@@ -119,7 +118,7 @@ for file in "$LOG_DIR"/*.pfw*; do
       else
         echo "Processed $OUTPUT_DIR/$name.pfw"
       fi
-    fi    
+    fi
     # remove temp file
     rm $OUTPUT_DIR/.tmp.$filename
   fi
