@@ -199,7 +199,7 @@ if (DFTRACER_INSTALL_DEPENDENCIES)
 else()
 # Required Dependencies
 # =============================================================================
-set(DEPENDENCY_LIB "")
+set(DEPENDENCY_LIB ${CMAKE_EXE_LINKER_FLAGS} $ENV{LDFLAGS})
 find_package(cpp-logger 1.0.0 REQUIRED)
 if (${cpp-logger_FOUND})
     include_directories(${CPP_LOGGER_INCLUDE_DIRS})
