@@ -84,6 +84,8 @@ if [ $total == 0 ]; then
     exit 0
 fi
 
+count=1
+
 # loop over logs
 for file in "$LOG_DIR"/*.pfw*; do
   # only look at files
@@ -95,7 +97,7 @@ for file in "$LOG_DIR"/*.pfw*; do
     cp $LOG_DIR/$filename $OUTPUT_DIR/.tmp.$filename
     if [ "$ext" == "gz" ]; then
       # if file is gz get the name
-      name=${filename%.pfw.gz}
+      name=${count%.pfw.gz}
       echo "extracted name $name"
       # replace non utf characters
       gunzip -c $OUTPUT_DIR/.tmp.$filename | grep -v "\"cat\":\"hash\"" > $OUTPUT_DIR/$name.pfw
@@ -108,7 +110,7 @@ for file in "$LOG_DIR"/*.pfw*; do
       fi
     else
       # if file is pfw get the name
-      name=${filename%.pfw}
+      name=${count%.pfw}
       echo "extracted name $name"
       # replace non utf characters
       cat $OUTPUT_DIR/.tmp.$filename | grep -v "\"cat\":\"hash\"" > $OUTPUT_DIR/$name.pfw
@@ -122,4 +124,5 @@ for file in "$LOG_DIR"/*.pfw*; do
     # remove temp file
     rm $OUTPUT_DIR/.tmp.$filename
   fi
+  count=$((count+1))
 done
