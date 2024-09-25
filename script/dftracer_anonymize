@@ -100,7 +100,7 @@ for file in "$LOG_DIR"/*.pfw*; do
       name=${count%.pfw.gz}
       echo "extracted name $name"
       # replace non utf characters
-      gunzip -c $OUTPUT_DIR/.tmp.$filename | grep -v "\"ph\":\"H\"" > $OUTPUT_DIR/$name.pfw
+      gunzip -c $OUTPUT_DIR/.tmp.$filename | sed -e "s/${USER}/USER/g" > $OUTPUT_DIR/$name.pfw
       # compress
       if [ $compressed == 1 ]; then
         gzip $OUTPUT_DIR/$name.pfw
@@ -113,7 +113,7 @@ for file in "$LOG_DIR"/*.pfw*; do
       name=${count%.pfw}
       echo "extracted name $name"
       # replace non utf characters
-      cat $OUTPUT_DIR/.tmp.$filename | grep -v "\"ph\":\"H\"" > $OUTPUT_DIR/$name.pfw
+      cat $OUTPUT_DIR/.tmp.$filename | sed -e "s/${USER}/USER/g" > $OUTPUT_DIR/$name.pfw
       if [ $compressed == 1 ]; then
         gzip $OUTPUT_DIR/$name.pfw
         echo "Processed $OUTPUT_DIR/$name.pfw.gz"
