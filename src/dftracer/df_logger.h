@@ -306,6 +306,13 @@ class DFTLogger {
 #define DFT_LOGGER_UPDATE(value)               \
   if (trace && this->logger->include_metadata) \
     metadata->insert_or_assign(#value, value);
+
+#define DFT_LOGGER_UPDATE_HASH(value)                            \
+  if (trace && this->logger->include_metadata) {                 \
+    uint16_t value##_hash = this->logger->hash_and_store(value); \
+    DFT_LOGGER_UPDATE(value##_hash);                             \
+  }
+
 #define DFT_LOGGER_START(entity)                                  \
   DFTRACER_LOG_DEBUG("Calling function %s", __FUNCTION__);        \
   uint16_t fhash = is_traced(entity, __FUNCTION__);               \
