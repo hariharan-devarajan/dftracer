@@ -122,7 +122,7 @@ class DFTLogger {
       thread_name[size] = '\0';
       this->enter_event();
       this->writer->log_metadata(
-          index_stack[level - 1], METADATA_NAME_THREAD_NAME, thread_name,
+          index_stack[level - 1], thread_name, METADATA_NAME_THREAD_NAME,
           METADATA_NAME_THREAD_NAME, this->process_id, tid);
       this->exit_event();
       std::unordered_map<std::string, std::any> *meta = nullptr;
@@ -239,7 +239,7 @@ class DFTLogger {
         process_name[size] = '\0';
         this->enter_event();
         this->writer->log_metadata(
-            index_stack[level - 1], METADATA_NAME_PROCESS_NAME, process_name,
+            index_stack[level - 1], process_name, METADATA_NAME_PROCESS_NAME,
             METADATA_NAME_PROCESS_NAME, this->process_id, tid);
         this->exit_event();
 
