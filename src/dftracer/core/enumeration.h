@@ -47,6 +47,7 @@ inline void convert(const std::string &s, cpplogger::LoggerType &type) {
 
 #define METADATA_NAME_PROCESS "PR"
 #define METADATA_NAME_PROCESS_NAME "process_name"
+#define METADATA_NAME_THREAD_NAME "thread_name"
 #define METADATA_NAME_FILE_HASH "FH"
 #define METADATA_NAME_HOSTNAME_HASH "HH"
 #define METADATA_NAME_STRING_HASH "SH"

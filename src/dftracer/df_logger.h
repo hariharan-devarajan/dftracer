@@ -22,6 +22,9 @@
 #include <cstring>
 #include <dftracer/dftracer_config.hpp>
 #include <unordered_map>
+
+#include "core/enumeration.h"
+#include "utils/posix_internal.h"
 #ifdef DFTRACER_HWLOC_ENABLE
 #include <hwloc.h>
 #endif
@@ -100,7 +103,11 @@ class DFTLogger {
   inline void update_log_file(std::string log_file, std::string exec_name,
                               std::string cmd, ProcessID process_id = -1) {
     DFTRACER_LOG_DEBUG("DFTLogger.update_log_file %s", log_file.c_str());
-    this->process_id = process_id;
+    this->process_id = df_getpid();
+    ThreadID tid = 0;
+    if (dftracer_tid) {
+      tid = df_gettid();
+    }
     this->writer = dftracer::Singleton<dftracer::ChromeWriter>::get_instance();
     if (this->writer != nullptr) {
       char hostname[256];
@@ -110,6 +117,14 @@ class DFTLogger {
       this->writer->initialize(log_file.data(), this->throw_error,
                                hostname_hash);
       hostname_hash = hash_and_store(hostname, METADATA_NAME_HOSTNAME_HASH);
+      char thread_name[128];
+      auto size = sprintf(thread_name, "%lu - %lu", this->process_id, tid);
+      thread_name[size] = '\0';
+      this->enter_event();
+      this->writer->log_metadata(
+          index_stack[level - 1], METADATA_NAME_THREAD_NAME, thread_name,
+          METADATA_NAME_THREAD_NAME, this->process_id, tid);
+      this->exit_event();
       std::unordered_map<std::string, std::any> *meta = nullptr;
       if (include_metadata) {
         meta = new std::unordered_map<std::string, std::any>();
@@ -192,7 +207,7 @@ class DFTLogger {
     DFTRACER_LOG_DEBUG("DFTLogger.log", "");
     ThreadID tid = 0;
     if (dftracer_tid) {
-      tid = df_gettid() + this->process_id;
+      tid = df_gettid();
     }
     int local_index;
     if (!include_metadata) {
