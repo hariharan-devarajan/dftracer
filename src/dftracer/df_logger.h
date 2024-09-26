@@ -118,7 +118,7 @@ class DFTLogger {
                                hostname_hash);
       hostname_hash = hash_and_store(hostname, METADATA_NAME_HOSTNAME_HASH);
       char thread_name[128];
-      auto size = sprintf(thread_name, "%lu - %lu", this->process_id, tid);
+      auto size = sprintf(thread_name, "%lu", this->process_id);
       thread_name[size] = '\0';
       this->enter_event();
       this->writer->log_metadata(
