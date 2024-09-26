@@ -109,12 +109,14 @@ class DFTLogger {
       md5String(hostname, &hostname_hash);
       this->writer->initialize(log_file.data(), this->throw_error,
                                hostname_hash);
-      hostname_hash = hash_and_store(hostname);
+      hostname_hash = hash_and_store(hostname, METADATA_NAME_HOSTNAME_HASH);
       std::unordered_map<std::string, std::any> *meta = nullptr;
       if (include_metadata) {
         meta = new std::unordered_map<std::string, std::any>();
-        uint16_t cmd_hash = hash_and_store(cmd.data());
-        uint16_t exec_hash = hash_and_store(exec_name.data());
+        uint16_t cmd_hash =
+            hash_and_store(cmd.data(), METADATA_NAME_STRING_HASH);
+        uint16_t exec_hash =
+            hash_and_store(exec_name.data(), METADATA_NAME_STRING_HASH);
 
         meta->insert_or_assign("version", DFTRACER_VERSION);
         meta->insert_or_assign("exec_hash", exec_hash);
@@ -151,9 +153,10 @@ class DFTLogger {
               tid = df_gettid() + this->process_id;
             }
             this->enter_event();
-            this->writer->log(index_stack[level - 1], "core_affinity",
-                              all_stream.str().c_str(), EventType::REDUCE_EVENT,
-                              0, 0, nullptr, this->process_id, tid);
+            this->writer->log_metadata(index_stack[level - 1], "core_affinity",
+                                       all_stream.str().c_str(),
+                                       METADATA_NAME_PROCESS, this->process_id,
+                                       tid, false);
             this->exit_event();
           }
         }
@@ -211,21 +214,18 @@ class DFTLogger {
           this->writer != nullptr) {
         int rank;
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        auto meta = std::unordered_map<std::string, std::any>();
-        meta.insert_or_assign("rank", rank);
-        auto start = this->get_time();
         this->enter_event();
-        this->writer->log(index_stack[level - 1], "mpi", "dftracer",
-                          EventType::COMPLETE_EVENT, start, 0, &meta,
-                          this->process_id, tid);
+        this->writer->log_metadata(
+            index_stack[level - 1], "rank", std::to_string(rank).c_str(),
+            METADATA_NAME_PROCESS, this->process_id, tid);
         this->exit_event();
         char process_name[1024];
         auto size = sprintf(process_name, "Rank %d", rank);
         process_name[size] = '\0';
         this->enter_event();
-        this->writer->log(index_stack[level - 1], "process_name", process_name,
-                          EventType::METADATA_EVENT, 0, 0, nullptr,
-                          this->process_id, tid);
+        this->writer->log_metadata(
+            index_stack[level - 1], METADATA_NAME_PROCESS_NAME, process_name,
+            METADATA_NAME_PROCESS_NAME, this->process_id, tid);
         this->exit_event();
 
         mpi_event = true;
@@ -236,12 +236,11 @@ class DFTLogger {
     if (this->writer != nullptr) {
       if (include_metadata) {
         this->writer->log(index_stack[level - 1], event_name, category,
-                          EventType::COMPLETE_EVENT, start_time, duration,
-                          metadata, this->process_id, tid);
+                          start_time, duration, metadata, this->process_id,
+                          tid);
       } else {
-        this->writer->log(local_index, event_name, category,
-                          EventType::COMPLETE_EVENT, start_time, duration,
-                          metadata, this->process_id, tid);
+        this->writer->log(local_index, event_name, category, start_time,
+                          duration, metadata, this->process_id, tid);
       }
 
       has_entry = true;
@@ -250,15 +249,16 @@ class DFTLogger {
     }
   }
 
-  inline uint16_t hash_and_store(char *filename) {
+  inline uint16_t hash_and_store(char *filename, ConstEventNameType name) {
     if (filename == NULL) return 0;
     char file[PATH_MAX];
     strcpy(file, filename);
     file[PATH_MAX - 1] = '\0';
-    return hash_and_store_str(file);
+    return hash_and_store_str(file, name);
   }
 
-  inline uint16_t hash_and_store_str(char file[PATH_MAX]) {
+  inline uint16_t hash_and_store_str(char file[PATH_MAX],
+                                     ConstEventNameType name) {
     auto iter = computed_hash.find(file);
     uint16_t hash;
     if (iter == computed_hash.end()) {
@@ -270,9 +270,9 @@ class DFTLogger {
           tid = df_gettid();
         }
         this->enter_event();
-        this->writer->log(index_stack[level - 1], file,
-                          std::to_string(hash).c_str(), EventType::HASH_EVENT,
-                          0, 0, nullptr, this->process_id, tid);
+        this->writer->log_metadata(index_stack[level - 1], file,
+                                   std::to_string(hash).c_str(), name,
+                                   this->process_id, tid, false);
         this->exit_event();
       }
     } else {
@@ -281,12 +281,13 @@ class DFTLogger {
     return hash;
   }
 
-  inline uint16_t hash_and_store(const char *filename) {
+  inline uint16_t hash_and_store(const char *filename,
+                                 ConstEventNameType name) {
     if (filename == NULL) return 0;
     char file[PATH_MAX];
     strcpy(file, filename);
     file[PATH_MAX - 1] = '\0';
-    return hash_and_store_str(file);
+    return hash_and_store_str(file, name);
   }
 
   inline void finalize() {
@@ -313,10 +314,11 @@ class DFTLogger {
   if (trace && this->logger->include_metadata) \
     metadata->insert_or_assign(#value, value);
 
-#define DFT_LOGGER_UPDATE_HASH(value)                            \
-  if (trace && this->logger->include_metadata) {                 \
-    uint16_t value##_hash = this->logger->hash_and_store(value); \
-    DFT_LOGGER_UPDATE(value##_hash);                             \
+#define DFT_LOGGER_UPDATE_HASH(value)                                   \
+  if (trace && this->logger->include_metadata) {                        \
+    uint16_t value##_hash =                                             \
+        this->logger->hash_and_store(value, METADATA_NAME_STRING_HASH); \
+    DFT_LOGGER_UPDATE(value##_hash);                                    \
   }
 
 #define DFT_LOGGER_START(entity)                                  \

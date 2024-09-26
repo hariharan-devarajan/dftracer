@@ -41,17 +41,33 @@ void dftracer::ChromeWriter::initialize(char *filename, bool throw_error,
 
 void dftracer::ChromeWriter::log(
     int index, ConstEventNameType event_name, ConstEventNameType category,
-    EventType type, TimeResolution start_time, TimeResolution duration,
+    TimeResolution start_time, TimeResolution duration,
     std::unordered_map<std::string, std::any> *metadata, ProcessID process_id,
     ThreadID thread_id) {
   DFTRACER_LOG_DEBUG("ChromeWriter.log", "");
 
   if (fh != nullptr) {
-    convert_json(index, event_name, category, type, start_time, duration,
-                 metadata, process_id, thread_id);
+    convert_json(index, event_name, category, start_time, duration, metadata,
+                 process_id, thread_id);
     write_buffer_op();
   } else {
     DFTRACER_LOG_ERROR("ChromeWriter.log invalid", "");
+  }
+  is_first_write = false;
+}
+
+void dftracer::ChromeWriter::log_metadata(int index, ConstEventNameType name,
+                                          ConstEventNameType value,
+                                          ConstEventNameType ph,
+                                          ProcessID process_id, ThreadID tid,
+                                          bool is_string) {
+  DFTRACER_LOG_DEBUG("ChromeWriter.log_metadata", "");
+
+  if (fh != nullptr) {
+    convert_json_metadata(index, name, value, ph, process_id, tid, is_string);
+    write_buffer_op();
+  } else {
+    DFTRACER_LOG_ERROR("ChromeWriter.log_metadata invalid", "");
   }
   is_first_write = false;
 }
@@ -135,7 +151,7 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
 
 void dftracer::ChromeWriter::convert_json(
     int index, ConstEventNameType event_name, ConstEventNameType category,
-    EventType type, TimeResolution start_time, TimeResolution duration,
+    TimeResolution start_time, TimeResolution duration,
     std::unordered_map<std::string, std::any> *metadata, ProcessID process_id,
     ThreadID thread_id) {
   auto previous_index = current_index;
@@ -202,71 +218,61 @@ void dftracer::ChromeWriter::convert_json(
     }
     {
       std::unique_lock<std::shared_mutex> lock(mtx);
-      switch (type) {
-        case EventType::COMPLETE_EVENT: {
-          auto written_size = sprintf(
-              buffer.data() + current_index,
-              R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{"hhash":%d%s}})",
-              is_first_char, index, event_name, category, process_id, thread_id,
-              start_time, duration, this->hostname_hash,
-              all_stream.str().c_str());
-          current_index += written_size;
-          break;
-        };
-        default: {
-          break;
-        }
-      }
+      auto written_size = sprintf(
+          buffer.data() + current_index,
+          R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{"hhash":%d%s}})",
+          is_first_char, index, event_name, category, process_id, thread_id,
+          start_time, duration, this->hostname_hash, all_stream.str().c_str());
+      current_index += written_size;
       buffer[current_index] = '\n';
       current_index++;
     }
   } else {
     {
       std::unique_lock<std::shared_mutex> lock(mtx);
-      switch (type) {
-        case EventType::COMPLETE_EVENT: {
-          auto written_size = sprintf(
-              buffer.data() + current_index,
-              R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X"})",
-              is_first_char, index, event_name, category, process_id, thread_id,
-              start_time, duration);
-          current_index += written_size;
-          break;
-        };
-        case EventType::METADATA_EVENT: {
-          auto written_size = sprintf(
-              buffer.data() + current_index,
-              R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"name":"%s"}})",
-              is_first_char, index, event_name, process_id, thread_id,
-              category);
-          current_index += written_size;
-          break;
-        };
-        case EventType::HASH_EVENT: {
-          auto written_size = sprintf(
-              buffer.data() + current_index,
-              R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"H","args":{"hash":%d}})",
-              is_first_char, index, event_name, process_id, thread_id,
-              std::stoi(category));
-          current_index += written_size;
-          break;
-        };
-        case EventType::REDUCE_EVENT: {
-          auto written_size = sprintf(
-              buffer.data() + current_index,
-              R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"value":%s}})",
-              is_first_char, index, event_name, process_id, thread_id,
-              category);
-          current_index += written_size;
-          break;
-        };
-        default: {
-        }
-      }
+      auto written_size = sprintf(
+          buffer.data() + current_index,
+          R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X"})",
+          is_first_char, index, event_name, category, process_id, thread_id,
+          start_time, duration);
+      current_index += written_size;
       buffer[current_index] = '\n';
       current_index++;
     }
   }
   DFTRACER_LOG_DEBUG("ChromeWriter.convert_json %s on %s",
+                     buffer.data() + previous_index, this->filename.c_str());
+}
+
+void dftracer::ChromeWriter::convert_json_metadata(
+    int index, ConstEventNameType name, ConstEventNameType value,
+    ConstEventNameType ph, ProcessID process_id, ThreadID thread_id,
+    bool is_string) {
+  auto previous_index = current_index;
+
+  (void)previous_index;
+  char is_first_char[3] = "  ";
+  if (!is_first_write) is_first_char[0] = '\0';
+
+  {
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    auto written_size = 0;
+    if (is_string) {
+      written_size = sprintf(
+          buffer.data() + current_index,
+          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"name":"%s","value":"%s"}})",
+          is_first_char, index, ph, process_id, thread_id, name, value);
+    } else {
+      written_size = sprintf(
+          buffer.data() + current_index,
+          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"name":"%s","value":%s}})",
+          is_first_char, index, ph, process_id, thread_id, name, value);
+    }
+    current_index += written_size;
+    buffer[current_index] = '\n';
+    current_index++;
+  }
+
+  DFTRACER_LOG_DEBUG("ChromeWriter.convert_json_metadata %s on %s",
                      buffer.data() + previous_index, this->filename.c_str());
 }

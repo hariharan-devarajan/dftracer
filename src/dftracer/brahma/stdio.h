@@ -41,10 +41,10 @@ class STDIODFTracer : public STDIO {
                        func);
     if (stop_trace) return 0;
     if (trace_all_files)
-      return logger->hash_and_store(filename);
+      return logger->hash_and_store(filename, METADATA_NAME_FILE_HASH);
     else {
       const char *trace_file = is_traced_common(filename, func);
-      return logger->hash_and_store(trace_file);
+      return logger->hash_and_store(trace_file, METADATA_NAME_FILE_HASH);
     }
   }
 
