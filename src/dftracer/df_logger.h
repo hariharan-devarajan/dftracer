@@ -222,7 +222,7 @@ class DFTLogger {
       metadata->insert_or_assign("p_idx", parent_index_value);
     }
 #ifdef DFTRACER_MPI_ENABLE
-    if (!mpi_event && include_metadata) {
+    if (!mpi_event) {
       int initialized;
       int status = MPI_Initialized(&initialized);
       if (status == MPI_SUCCESS && initialized == true &&
