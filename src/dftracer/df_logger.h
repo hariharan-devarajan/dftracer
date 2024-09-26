@@ -329,11 +329,11 @@ class DFTLogger {
   if (trace && this->logger->include_metadata) \
     metadata->insert_or_assign(#value, value);
 
-#define DFT_LOGGER_UPDATE_HASH(value)                                   \
-  if (trace && this->logger->include_metadata) {                        \
-    uint16_t value##_hash =                                             \
-        this->logger->hash_and_store(value, METADATA_NAME_STRING_HASH); \
-    DFT_LOGGER_UPDATE(value##_hash);                                    \
+#define DFT_LOGGER_UPDATE_HASH(value)                                 \
+  if (trace && this->logger->include_metadata) {                      \
+    uint16_t value##_hash =                                           \
+        this->logger->hash_and_store(value, METADATA_NAME_FILE_HASH); \
+    DFT_LOGGER_UPDATE(value##_hash);                                  \
   }
 
 #define DFT_LOGGER_START(entity)                                  \
