@@ -44,10 +44,15 @@ class ChromeWriter {
   size_t current_index;
   std::vector<char> buffer;
   void convert_json(int index, ConstEventNameType event_name,
-                    ConstEventNameType category, EventType type,
-                    TimeResolution start_time, TimeResolution duration,
+                    ConstEventNameType category, TimeResolution start_time,
+                    TimeResolution duration,
                     std::unordered_map<std::string, std::any> *metadata,
                     ProcessID process_id, ThreadID thread_id);
+
+  void convert_json_metadata(int index, ConstEventNameType name,
+                             ConstEventNameType value, ConstEventNameType ph,
+                             ProcessID process_id, ThreadID thread_id,
+                             bool is_string);
 
   bool is_first_write;
   inline size_t write_buffer_op(bool force = false) {
@@ -101,10 +106,14 @@ class ChromeWriter {
   void initialize(char *filename, bool throw_error, uint16_t hostname_hash);
 
   void log(int index, ConstEventNameType event_name,
-           ConstEventNameType category, EventType type,
-           TimeResolution start_time, TimeResolution duration,
+           ConstEventNameType category, TimeResolution start_time,
+           TimeResolution duration,
            std::unordered_map<std::string, std::any> *metadata,
            ProcessID process_id, ThreadID tid);
+
+  void log_metadata(int index, ConstEventNameType name,
+                    ConstEventNameType value, ConstEventNameType ph, ProcessID process_id,
+                    ThreadID tid, bool is_string = true);
 
   void finalize(bool has_entry);
 };

@@ -44,7 +44,7 @@ class POSIXDFTracer : public POSIX {
   inline uint16_t is_traced(const char *filename, const char *func) {
     if (stop_trace) return 0;
     if (trace_all_files) {
-      return logger->hash_and_store(filename);
+      return logger->hash_and_store(filename, METADATA_NAME_FILE_HASH);
     } else {
       const char *tracefile = is_traced_common(filename, func);
       if (tracefile != nullptr)
@@ -52,7 +52,7 @@ class POSIXDFTracer : public POSIX {
             "Calling POSIXDFTracer.is_traced with "
             "filename %s for %s trace %d",
             filename, func, tracefile != nullptr);
-      return logger->hash_and_store(tracefile);
+      return logger->hash_and_store(tracefile, METADATA_NAME_FILE_HASH);
     }
   }
 
