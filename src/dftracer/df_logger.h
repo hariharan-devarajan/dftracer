@@ -227,7 +227,7 @@ class DFTLogger {
       int status = MPI_Initialized(&initialized);
       if (status == MPI_SUCCESS && initialized == true &&
           this->writer != nullptr) {
-        int rank;
+        int rank = 0;
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
         this->enter_event();
         this->writer->log_metadata(
