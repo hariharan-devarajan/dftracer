@@ -253,7 +253,6 @@ void dftracer::ChromeWriter::convert_json_metadata(
   (void)previous_index;
   char is_first_char[3] = "  ";
   if (!is_first_write) is_first_char[0] = '\0';
-
   {
     std::unique_lock<std::shared_mutex> lock(mtx);
     auto written_size = 0;

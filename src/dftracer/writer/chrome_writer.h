@@ -37,8 +37,7 @@ class ChromeWriter {
 
   FILE *fh;
   uint16_t hostname_hash;
-  static const int MAX_LINE_SIZE = 4096;
-  static const int MAX_META_LINE_SIZE = 3000;
+  static const int MAX_LINE_SIZE = 16*1024L;
   size_t write_buffer_size;
 
   size_t current_index;
@@ -98,7 +97,7 @@ class ChromeWriter {
     write_buffer_size = conf->write_buffer_size;
     {
       std::unique_lock<std::shared_mutex> lock(mtx);
-      buffer = std::vector<char>(write_buffer_size + 4096);
+      buffer = std::vector<char>(write_buffer_size + MAX_LINE_SIZE);
       current_index = 0;
     }
   }
