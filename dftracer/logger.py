@@ -103,8 +103,6 @@ class dftracer:
     def log_metadata_event(self, key, value):
         if DFTRACER_ENABLE and self.logger:
             logging.debug(f"logger.log_metadata_event {key} {value}")
-            if string_args is None:
-                string_args = {}
             self.logger.log_metadata_event(key=key, value=value)
 
     def finalize(self):
@@ -230,7 +228,7 @@ class dft_fn(object):
 
     def log_metadata(self, key, value):
         if DFTRACER_ENABLE and self._enable:
-            dftracer.get_instance().log_event(key=key, value=value)
+            dftracer.get_instance().log_metadata_event(key=key, value=value)
             
     def iter(self, func, iter_name="step"):
         if DFTRACER_ENABLE and self._enable:
