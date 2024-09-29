@@ -58,24 +58,24 @@ ENV Variables supported
    ================================ ======  ===========================================================================
    DFTRACER_CONFIGURATION           STRING  PATH to the yaml configuration
    DFTRACER_ENABLE                  INT     Enable or Disable DFTracer (default 0).
-   DFTRACER_INIT                    STRING  DFTracer Mode FUNCTION/PRELOAD (default FUNCTION).
-                                                 For Hybrid use PRELOAD mode.
+   DFTRACER_INIT                    STRING  DFTracer Mode ``FUNCTION``/``PRELOAD`` (default ``FUNCTION``).
+                                            For Hybrid use ``PRELOAD`` mode.
    DFTRACER_LOG_FILE                STRING  PATH To log file. In this case process id and app name is appended to file.
    DFTRACER_DATA_DIR                STRING  Colon separated paths that will be traced for I/O accesses by profiler.
-                                                 For tracing all directories use the string "all" (not recommended).
+                                            For tracing all directories use the string "all" (not recommended).
    DFTRACER_INC_METADATA            INT     Include or exclude metadata (default 0)
    DFTRACER_SET_CORE_AFFINITY       INT     Include or exclude core affinity (default 0).
-                                                 DFTRACER_INC_METADATA needs to be enabled.
+                                            ``DFTRACER_INC_METADATA`` needs to be enabled.
    DFTRACER_GOTCHA_PRIORITY         INT     PRIORITY of DFTracer in GOTCHA (default: 1).
-   DFTRACER_LOG_LEVEL               STRING  Logging level within DFTracer ERROR/WARN/INFO/DEBUG (default ERROR).
+   DFTRACER_LOG_LEVEL               STRING  Logging level within DFTracer ``ERROR``/``WARN``/``INFO``/``DEBUG`` (default ``ERROR``).
    DFTRACER_DISABLE_IO              INT     Disable automatic binding of all I/O calls (default: 0).
    DFTRACER_DISABLE_POSIX           INT     Disable automatic binding of POSIX I/O calls (default: 0).
    DFTRACER_DISABLE_STDIO           INT     Disable automatic binding of STDIO I/O calls (default: 0).
    DFTRACER_TRACE_COMPRESSION       INT     Enable trace compression (default 0).
    DFTRACER_DISABLE_TIDS            INT     Disable tracing of thread ids (default 0).
-   DFTRACER_WRITE_BUFFER_SIZE       INT     Setup the buffering size for write optimization (default 0). Disabled as 
-                                            This wont work for AI workloads which uses fork and spawn without a clear exit.
-                                            Also, it does not work for workloads which uses exec and rewrite process buffer state.
+   DFTRACER_WRITE_BUFFER_SIZE       INT     Setup the buffering size for write optimization (default 0). Note: Disabled as 
+                                            this won't work for AI workloads which uses ``fork`` and ``spawn`` without a clear ``exit``.
+                                            Also, it does not work for workloads which uses ``exec`` and rewrite process buffer state.
    ================================ ======  ===========================================================================
 
 ----------------------------------------
