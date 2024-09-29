@@ -120,7 +120,7 @@ endfunction()
 ################################################################
 
 include(ExternalProject)
-function(install_external_project name var_name url tag install_prefix configure_args)
+function(install_external_project name version var_name url tag install_prefix configure_args)
   find_package(${name} QUIET)
   set(found_var ${name}_FOUND)
   if (${${found_var}})
