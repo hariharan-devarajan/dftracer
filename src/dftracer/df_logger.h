@@ -127,27 +127,31 @@ class DFTLogger {
           index_stack[level - 1], thread_name, METADATA_NAME_THREAD_NAME,
           METADATA_NAME_THREAD_NAME, this->process_id, tid);
       this->exit_event();
-      auto meta = std::unordered_map<std::string, std::any>();
+      std::unordered_map<std::string, std::any>* meta = nullptr;
       if (include_metadata) {
+        meta = new std::unordered_map<std::string, std::any>();
         cmd_hash =
             hash_and_store(cmd.data(), METADATA_NAME_STRING_HASH);
         exec_hash =
             hash_and_store(exec_name.data(), METADATA_NAME_STRING_HASH);
 
-        meta.insert_or_assign("version", DFTRACER_VERSION);
-        meta.insert_or_assign("exec_hash", exec_hash);
-        meta.insert_or_assign("cmd_hash", cmd_hash);
+        meta->insert_or_assign("version", DFTRACER_VERSION);
+        meta->insert_or_assign("exec_hash", exec_hash);
+        meta->insert_or_assign("cmd_hash", cmd_hash);
         time_t ltime;       /* calendar time */
         ltime = time(NULL); /* get current cal time */
         char timestamp[1024];
         auto size = sprintf(timestamp, "%s", asctime(localtime(&ltime)));
         timestamp[size - 1] = '\0';
-        meta.insert_or_assign("date", std::string(timestamp));
-        meta.insert_or_assign("ppid", getppid());
+        meta->insert_or_assign("date", std::string(timestamp));
+        meta->insert_or_assign("ppid", getppid());
       }
       this->enter_event();
-      this->log("start", "dftracer", this->get_time(), 0, &meta);
+      this->log("start", "dftracer", this->get_time(), 0, meta);
       this->exit_event();
+      if (include_metadata) {
+        delete(meta);
+      }
       if (enable_core_affinity) {
 #ifdef DFTRACER_HWLOC_ENABLE
         auto cores = core_affinity();
