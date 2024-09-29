@@ -273,7 +273,7 @@ class DFTLogger {
   inline uint16_t hash_and_store_str(char file[PATH_MAX],
                                      ConstEventNameType name) {
     auto iter = computed_hash.find(file);
-    uint16_t hash;
+    uint16_t hash = 0;
     if (iter == computed_hash.end()) {
       md5String(file, &hash);
       computed_hash.insert_or_assign(file, hash);
