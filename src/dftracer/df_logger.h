@@ -109,10 +109,12 @@ class DFTLogger {
       tid = df_gettid();
     }
     this->writer = dftracer::Singleton<dftracer::ChromeWriter>::get_instance();
+    uint16_t hostname_hash;
+    uint16_t cmd_hash;
+    uint16_t exec_hash;
     if (this->writer != nullptr) {
       char hostname[256];
       gethostname(hostname, 256);
-      uint16_t hostname_hash;
       md5String(hostname, &hostname_hash);
       this->writer->initialize(log_file.data(), this->throw_error,
                                hostname_hash);
@@ -128,9 +130,9 @@ class DFTLogger {
       std::unordered_map<std::string, std::any> *meta = nullptr;
       if (include_metadata) {
         meta = new std::unordered_map<std::string, std::any>();
-        uint16_t cmd_hash =
+        cmd_hash =
             hash_and_store(cmd.data(), METADATA_NAME_STRING_HASH);
-        uint16_t exec_hash =
+        exec_hash =
             hash_and_store(exec_name.data(), METADATA_NAME_STRING_HASH);
 
         meta->insert_or_assign("version", DFTRACER_VERSION);
@@ -146,7 +148,7 @@ class DFTLogger {
       }
       this->enter_event();
       this->log("start", "dftracer", this->get_time(), 0, meta);
-      if (include_metadata) {
+      if (include_metadata && meta !=nullptr) {
         delete (meta);
       }
       this->exit_event();
