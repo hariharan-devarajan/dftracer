@@ -127,13 +127,11 @@ class DFTLogger {
           index_stack[level - 1], thread_name, METADATA_NAME_THREAD_NAME,
           METADATA_NAME_THREAD_NAME, this->process_id, tid);
       this->exit_event();
-      std::unordered_map<std::string, std::any>* meta = nullptr;
+      std::unordered_map<std::string, std::any> *meta = nullptr;
       if (include_metadata) {
         meta = new std::unordered_map<std::string, std::any>();
-        cmd_hash =
-            hash_and_store(cmd.data(), METADATA_NAME_STRING_HASH);
-        exec_hash =
-            hash_and_store(exec_name.data(), METADATA_NAME_STRING_HASH);
+        cmd_hash = hash_and_store(cmd.data(), METADATA_NAME_STRING_HASH);
+        exec_hash = hash_and_store(exec_name.data(), METADATA_NAME_STRING_HASH);
 
         meta->insert_or_assign("version", DFTRACER_VERSION);
         meta->insert_or_assign("exec_hash", exec_hash);
@@ -150,7 +148,7 @@ class DFTLogger {
       this->log("start", "dftracer", this->get_time(), 0, meta);
       this->exit_event();
       if (include_metadata) {
-        delete(meta);
+        delete (meta);
       }
       if (enable_core_affinity) {
 #ifdef DFTRACER_HWLOC_ENABLE
@@ -203,26 +201,7 @@ class DFTLogger {
     return t;
   }
 
-  inline void log(ConstEventNameType event_name, ConstEventNameType category,
-                  TimeResolution start_time, TimeResolution duration,
-                  std::unordered_map<std::string, std::any> *metadata) {
-    DFTRACER_LOG_DEBUG("DFTLogger.log", "");
-    ThreadID tid = 0;
-    if (dftracer_tid) {
-      tid = df_gettid();
-    }
-    int local_index;
-    if (!include_metadata) {
-      local_index = index.load();
-    }
-    if (metadata != nullptr) {
-      metadata->insert_or_assign("level", level);
-      int parent_index_value = -1;
-      if (level > 1) {
-        parent_index_value = index_stack[level - 2];
-      }
-      metadata->insert_or_assign("p_idx", parent_index_value);
-    }
+  inline void handle_mpi(ThreadID tid) {
 #ifdef DFTRACER_MPI_ENABLE
     if (!mpi_event) {
       int initialized;
@@ -249,7 +228,29 @@ class DFTLogger {
       }
     }
 #endif
+  }
 
+  inline void log(ConstEventNameType event_name, ConstEventNameType category,
+                  TimeResolution start_time, TimeResolution duration,
+                  std::unordered_map<std::string, std::any> *metadata) {
+    DFTRACER_LOG_DEBUG("DFTLogger.log", "");
+    ThreadID tid = 0;
+    if (dftracer_tid) {
+      tid = df_gettid();
+    }
+    int local_index;
+    if (!include_metadata) {
+      local_index = index.load();
+    }
+    if (metadata != nullptr) {
+      metadata->insert_or_assign("level", level);
+      int parent_index_value = -1;
+      if (level > 1) {
+        parent_index_value = index_stack[level - 2];
+      }
+      metadata->insert_or_assign("p_idx", parent_index_value);
+    }
+    handle_mpi(tid);
     if (this->writer != nullptr) {
       if (include_metadata) {
         this->writer->log(index_stack[level - 1], event_name, category,
@@ -263,6 +264,26 @@ class DFTLogger {
       has_entry = true;
     } else {
       DFTRACER_LOG_ERROR("DFTLogger.log writer not initialized", "");
+    }
+  }
+
+  inline void log_metadata(ConstEventNameType key, ConstEventNameType value) {
+    DFTRACER_LOG_DEBUG("DFTLogger.log_metadata", "");
+    ThreadID tid = 0;
+    if (dftracer_tid) {
+      tid = df_gettid();
+    }
+    int local_index;
+    if (!include_metadata) {
+      local_index = index.load();
+    }
+    handle_mpi(tid);
+    if (this->writer != nullptr) {
+      this->writer->log_metadata(index_stack[level - 1], key, value,
+                                 CUSTOM_METADATA, this->process_id, tid);
+      has_entry = true;
+    } else {
+      DFTRACER_LOG_ERROR("DFTLogger.log_metadata writer not initialized", "");
     }
   }
 

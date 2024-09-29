@@ -31,5 +31,7 @@ PYBIND11_MODULE(pydftracer, m) {
         py::arg("int_args") = std::unordered_map<std::string, int>(),
         py::arg("string_args") = std::unordered_map<std::string, std::string>(),
         py::arg("float_args") = std::unordered_map<std::string, float>());
+  m.def("log_metadata_event", &dftracer::log_metadata_event,
+        "log metadata event", py::arg("key"), py::arg("value"));
   m.def("finalize", &dftracer::finalize, "finalize dftracer");
 }

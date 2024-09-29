@@ -89,6 +89,16 @@ void dftracer::DFTracerCore::log(
   }
 }
 
+void dftracer::DFTracerCore::log_metadata(ConstEventNameType key, ConstEventNameType value) {
+  DFTRACER_LOG_DEBUG("DFTracerCore::log", "");
+  if (this->is_initialized && conf->enable) {
+    if (logger != nullptr) {
+      logger->log_metadata(key, value);
+    } else {
+      DFTRACER_LOG_ERROR("DFTracerCore::log logger not initialized", "");
+    }
+  }
+}
 bool dftracer::DFTracerCore::finalize() {
   DFTRACER_LOG_DEBUG("DFTracerCore::finalize", "");
   if (this->is_initialized && conf->enable) {

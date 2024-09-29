@@ -55,6 +55,8 @@ class DFTracerCore {
   void log(ConstEventNameType event_name, ConstEventNameType category,
            TimeResolution start_time, TimeResolution duration,
            std::unordered_map<std::string, std::any> *metadata);
+  
+  void log_metadata(ConstEventNameType key, ConstEventNameType value);
 
   inline void enter_event() { logger->enter_event(); }
 
