@@ -109,10 +109,12 @@ class DFTLogger {
       tid = df_gettid();
     }
     this->writer = dftracer::Singleton<dftracer::ChromeWriter>::get_instance();
+    uint16_t hostname_hash;
+    uint16_t cmd_hash;
+    uint16_t exec_hash;
     if (this->writer != nullptr) {
       char hostname[256];
       gethostname(hostname, 256);
-      uint16_t hostname_hash;
       md5String(hostname, &hostname_hash);
       this->writer->initialize(log_file.data(), this->throw_error,
                                hostname_hash);
@@ -125,12 +127,12 @@ class DFTLogger {
           index_stack[level - 1], thread_name, METADATA_NAME_THREAD_NAME,
           METADATA_NAME_THREAD_NAME, this->process_id, tid);
       this->exit_event();
-      std::unordered_map<std::string, std::any> *meta = nullptr;
+      std::unordered_map<std::string, std::any>* meta = nullptr;
       if (include_metadata) {
         meta = new std::unordered_map<std::string, std::any>();
-        uint16_t cmd_hash =
+        cmd_hash =
             hash_and_store(cmd.data(), METADATA_NAME_STRING_HASH);
-        uint16_t exec_hash =
+        exec_hash =
             hash_and_store(exec_name.data(), METADATA_NAME_STRING_HASH);
 
         meta->insert_or_assign("version", DFTRACER_VERSION);
@@ -146,10 +148,10 @@ class DFTLogger {
       }
       this->enter_event();
       this->log("start", "dftracer", this->get_time(), 0, meta);
-      if (include_metadata) {
-        delete (meta);
-      }
       this->exit_event();
+      if (include_metadata) {
+        delete(meta);
+      }
       if (enable_core_affinity) {
 #ifdef DFTRACER_HWLOC_ENABLE
         auto cores = core_affinity();
@@ -227,7 +229,7 @@ class DFTLogger {
       int status = MPI_Initialized(&initialized);
       if (status == MPI_SUCCESS && initialized == true &&
           this->writer != nullptr) {
-        int rank;
+        int rank = 0;
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
         this->enter_event();
         this->writer->log_metadata(
@@ -275,7 +277,7 @@ class DFTLogger {
   inline uint16_t hash_and_store_str(char file[PATH_MAX],
                                      ConstEventNameType name) {
     auto iter = computed_hash.find(file);
-    uint16_t hash;
+    uint16_t hash = 0;
     if (iter == computed_hash.end()) {
       md5String(file, &hash);
       computed_hash.insert_or_assign(file, hash);
