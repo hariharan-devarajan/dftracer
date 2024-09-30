@@ -78,17 +78,14 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
     DFTRACER_LOG_INFO("Profiler finalizing writer %s", filename.c_str());
     write_buffer_op(true);
     fflush(fh);
-    int last_off = ftell(fh);
-    (void)last_off;
     int status = fclose(fh);
     if (status != 0) {
       DFTRACER_LOG_ERROR("unable to close log file %s for a+",
                          filename.c_str());  // GCOVR_EXCL_LINE
     }
     if (!has_entry) {
-      DFTRACER_LOG_INFO(
-          "No trace data written as offset is %d. Deleting file %s", last_off,
-          filename.c_str());
+      DFTRACER_LOG_INFO("No trace data written deleting file %s",
+                        filename.c_str());
       df_unlink(filename.c_str());
     } else {
       DFTRACER_LOG_INFO("Profiler writing the final symbol", "");
@@ -154,8 +151,7 @@ void dftracer::ChromeWriter::convert_json(
     TimeResolution start_time, TimeResolution duration,
     std::unordered_map<std::string, std::any> *metadata, ProcessID process_id,
     ThreadID thread_id) {
-  auto previous_index = current_index;
-
+  size_t previous_index = 0;
   (void)previous_index;
   char is_first_char[3] = "  ";
   if (!is_first_write) is_first_char[0] = '\0';
@@ -218,6 +214,7 @@ void dftracer::ChromeWriter::convert_json(
     }
     {
       std::unique_lock<std::shared_mutex> lock(mtx);
+      previous_index = current_index;
       auto written_size = sprintf(
           buffer.data() + current_index,
           R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{"hhash":%d%s}})",
@@ -230,6 +227,7 @@ void dftracer::ChromeWriter::convert_json(
   } else {
     {
       std::unique_lock<std::shared_mutex> lock(mtx);
+      previous_index = current_index;
       auto written_size = sprintf(
           buffer.data() + current_index,
           R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X"})",
@@ -248,13 +246,14 @@ void dftracer::ChromeWriter::convert_json_metadata(
     int index, ConstEventNameType name, ConstEventNameType value,
     ConstEventNameType ph, ProcessID process_id, ThreadID thread_id,
     bool is_string) {
-  auto previous_index = current_index;
+  size_t previous_index = 0;
 
   (void)previous_index;
   char is_first_char[3] = "  ";
   if (!is_first_write) is_first_char[0] = '\0';
   {
     std::unique_lock<std::shared_mutex> lock(mtx);
+    previous_index = current_index;
     auto written_size = 0;
     if (is_string) {
       written_size = sprintf(
