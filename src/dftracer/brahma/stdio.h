@@ -28,6 +28,7 @@ class STDIODFTracer : public STDIO {
 
   inline uint16_t is_traced(FILE *fh, const char *func) {
     DFTRACER_LOG_DEBUG("Calling STDIODFTracer.is_traced for %s", func);
+    if (stop_trace) return 0;
     if (fh == NULL) return 0;
     auto iter = tracked_fh.find(fh);
     if (iter != tracked_fh.end()) {
