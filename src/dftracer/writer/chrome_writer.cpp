@@ -78,8 +78,6 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
     DFTRACER_LOG_INFO("Profiler finalizing writer %s", filename.c_str());
     write_buffer_op(true);
     fflush(fh);
-    int last_off = ftell(fh);
-    (void)last_off;
     int status = fclose(fh);
     if (status != 0) {
       DFTRACER_LOG_ERROR("unable to close log file %s for a+",
@@ -87,8 +85,7 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
     }
     if (!has_entry) {
       DFTRACER_LOG_INFO(
-          "No trace data written as offset is %d. Deleting file %s", last_off,
-          filename.c_str());
+          "No trace data written deleting file %s", filename.c_str());
       df_unlink(filename.c_str());
     } else {
       DFTRACER_LOG_INFO("Profiler writing the final symbol", "");
