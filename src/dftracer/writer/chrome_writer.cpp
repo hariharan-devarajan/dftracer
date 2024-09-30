@@ -90,10 +90,7 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
     } else {
       DFTRACER_LOG_INFO("Profiler writing the final symbol", "");
       fh = fopen(this->filename.c_str(), "r+");
-      if (fh == nullptr) {
-        DFTRACER_LOG_ERROR("unable to open log file %s with O_WRONLY",
-                           this->filename.c_str());  // GCOVR_EXCL_LINE
-      } else {
+      if (fh != nullptr) {
         std::string data = "[\n";
         auto written_elements =
             fwrite(data.c_str(), sizeof(char), data.size(), fh);
