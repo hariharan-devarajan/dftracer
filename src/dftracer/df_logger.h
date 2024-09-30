@@ -37,6 +37,7 @@ typedef std::chrono::high_resolution_clock chrono;
 class DFTLogger {
  private:
   std::shared_mutex level_mtx;
+  std::shared_mutex map_mtx;
   bool throw_error;
   bool is_init, dftracer_tid;
   ProcessID process_id;
@@ -217,6 +218,18 @@ class DFTLogger {
     return -1;
   }
 
+  inline uint16_t has_hash(ConstEventNameType key) {
+    std::shared_lock<std::shared_mutex> lock(map_mtx);
+    auto iter = computed_hash.find(key);
+    if (iter != computed_hash.end()) iter->second;
+    return 0;
+  }
+
+  inline void insert_hash(ConstEventNameType key, uint16_t hash) {
+    std::unique_lock<std::shared_mutex> lock(map_mtx);
+    computed_hash.insert_or_assign(key, hash);
+  }
+
   inline TimeResolution get_time() {
     DFTRACER_LOG_DEBUG("DFTLogger.get_time", "");
     struct timeval tv {};
@@ -295,11 +308,10 @@ class DFTLogger {
 
   inline uint16_t hash_and_store_str(char file[PATH_MAX],
                                      ConstEventNameType name) {
-    auto iter = computed_hash.find(file);
-    uint16_t hash = 0;
-    if (iter == computed_hash.end()) {
+    uint16_t hash = has_hash(file);
+    if (hash == 0) {
       md5String(file, &hash);
-      computed_hash.insert_or_assign(file, hash);
+      insert_hash(file, hash);
       if (this->writer != nullptr) {
         ThreadID tid = 0;
         if (dftracer_tid) {
@@ -311,8 +323,6 @@ class DFTLogger {
                                    this->process_id, tid, false);
         this->exit_event();
       }
-    } else {
-      hash = iter->second;
     }
     return hash;
   }
