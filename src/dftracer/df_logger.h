@@ -200,7 +200,7 @@ class DFTLogger {
   }
 
   inline int get_parent() {
-    std::unique_lock<std::shared_mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     if (level > 1 && index_stack.size() > 1) {
       return index_stack[level - 2];
     }
@@ -208,7 +208,7 @@ class DFTLogger {
   }
 
   inline int get_current() {
-    std::unique_lock<std::shared_mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     if (level > 0 && index_stack.size() > 0) {
       return index_stack[level - 1];
     }
@@ -216,7 +216,7 @@ class DFTLogger {
   }
 
   inline uint16_t has_hash(ConstEventNameType key) {
-    std::unique_lock<std::shared_mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     auto iter = computed_hash.find(key);
     if (iter == computed_hash.end())
       return 0;
@@ -252,8 +252,7 @@ class DFTLogger {
     if (metadata != nullptr) {
       metadata->insert_or_assign("level", level);
       int parent_index_value = get_parent();
-      ConstEventNameType pidx = "p_idx";
-      metadata->emplace(pidx, parent_index_value);
+      metadata->emplace("p_idx", parent_index_value);
     }
 #ifdef DFTRACER_MPI_ENABLE
     if (!mpi_event) {
