@@ -70,9 +70,9 @@ class ChromeWriter {
 
     if (written_elements != 1) {  // GCOVR_EXCL_START
       DFTRACER_LOG_ERROR(
-          "unable to log write only %ld of %d with error code "
+          "unable to log write only %ld of %d trying to write %d with error code "
           "%d",
-          written_elements, 1, errno);
+          written_elements, 1, current_index, errno);
     }  // GCOVR_EXCL_STOP
     return written_elements;
   }
