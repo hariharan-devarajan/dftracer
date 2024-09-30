@@ -382,11 +382,21 @@ ssize_t brahma::POSIXDFTracer::readlink(const char *path, char *buf,
 ssize_t brahma::POSIXDFTracer::readlinkat(int fd, const char *path, char *buf,
                                           size_t bufsize) {
   BRAHMA_MAP_OR_FAIL(readlinkat);
-  DFT_LOGGER_START(fd);
-  DFT_LOGGER_UPDATE(fd);
-  DFT_LOGGER_UPDATE(bufsize);
-  ssize_t ret = __real_readlinkat(fd, path, buf, bufsize);
-  DFT_LOGGER_END();
+  ssize_t ret;
+  if (fd != AT_FDCWD) {
+    DFT_LOGGER_START(fd);
+    DFT_LOGGER_UPDATE(fd);
+    DFT_LOGGER_UPDATE(path);
+    DFT_LOGGER_UPDATE(bufsize);
+    ret = __real_readlinkat(fd, path, buf, bufsize);
+    DFT_LOGGER_END();
+  } else {
+    DFT_LOGGER_START(path);
+    DFT_LOGGER_UPDATE(fd);
+    DFT_LOGGER_UPDATE(bufsize);
+    ret = __real_readlinkat(fd, path, buf, bufsize);
+    DFT_LOGGER_END();
+  }
   return ret;
 }
 
