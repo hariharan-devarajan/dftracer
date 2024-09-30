@@ -84,8 +84,8 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
                          filename.c_str());  // GCOVR_EXCL_LINE
     }
     if (!has_entry) {
-      DFTRACER_LOG_INFO(
-          "No trace data written deleting file %s", filename.c_str());
+      DFTRACER_LOG_INFO("No trace data written deleting file %s",
+                        filename.c_str());
       df_unlink(filename.c_str());
     } else {
       DFTRACER_LOG_INFO("Profiler writing the final symbol", "");

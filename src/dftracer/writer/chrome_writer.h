@@ -37,7 +37,7 @@ class ChromeWriter {
 
   FILE *fh;
   uint16_t hostname_hash;
-  static const int MAX_LINE_SIZE = 16*1024L;
+  static const int MAX_LINE_SIZE = 16 * 1024L;
   size_t write_buffer_size;
 
   size_t current_index;
@@ -67,7 +67,8 @@ class ChromeWriter {
     funlockfile(fh);
     if (written_elements != 1) {  // GCOVR_EXCL_START
       DFTRACER_LOG_ERROR(
-          "unable to log write only %ld of %d trying to write %d with error code "
+          "unable to log write only %ld of %d trying to write %d with error "
+          "code "
           "%d",
           written_elements, 1, current_index, errno);
     }  // GCOVR_EXCL_STOP
@@ -108,8 +109,8 @@ class ChromeWriter {
            ProcessID process_id, ThreadID tid);
 
   void log_metadata(int index, ConstEventNameType name,
-                    ConstEventNameType value, ConstEventNameType ph, ProcessID process_id,
-                    ThreadID tid, bool is_string = true);
+                    ConstEventNameType value, ConstEventNameType ph,
+                    ProcessID process_id, ThreadID tid, bool is_string = true);
 
   void finalize(bool has_entry);
 };
