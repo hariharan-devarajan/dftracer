@@ -121,7 +121,7 @@ else()
     set(DFTRACER_FUNCTION_FLAGS )
 endif()
 
-option (DFTRACER_ENABLE_MPI "Enable MPI" On)
+option (DFTRACER_ENABLE_MPI "Enable MPI" OFF)
 if (DFTRACER_ENABLE_MPI) 
     set(DFTRACER_MPI_ENABLE 1)
 endif()
