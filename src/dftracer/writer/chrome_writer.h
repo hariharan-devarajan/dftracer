@@ -64,8 +64,8 @@ class ChromeWriter {
       std::unique_lock<std::shared_mutex> lock(mtx);
       flockfile(fh);
       written_elements = fwrite(buffer.data(), current_index, sizeof(char), fh);
-      funlockfile(fh);
       current_index = 0;
+      funlockfile(fh);
     }
 
     if (written_elements != 1) {  // GCOVR_EXCL_START
