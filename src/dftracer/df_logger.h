@@ -37,15 +37,16 @@ typedef std::chrono::high_resolution_clock chrono;
 
 class DFTLogger {
  private:
+  std::shared_mutex mtx;
   bool throw_error;
   bool is_init, dftracer_tid;
   ProcessID process_id;
   std::shared_ptr<dftracer::ChromeWriter> writer;
   std::atomic_int index;
   bool has_entry;
-  thread_local static uint32_t level;
-  thread_local static std::vector<int> index_stack;
-  thread_local static std::unordered_map<std::string, uint16_t> computed_hash;
+  uint32_t level;
+  std::vector<int> index_stack;
+  std::unordered_map<std::string, uint16_t> computed_hash;
 #ifdef DFTRACER_MPI_ENABLE
   bool mpi_event;
 #endif
@@ -77,6 +78,9 @@ class DFTLogger {
         dftracer_tid(false),
         index(0),
         has_entry(false),
+        level(0),
+        index_stack(),
+        computed_hash(),
 #ifdef DFTRACER_MPI_ENABLE
         mpi_event(false),
 #endif
@@ -181,6 +185,7 @@ class DFTLogger {
   }
 
   inline int enter_event() {
+    std::unique_lock<std::shared_mutex> lock(mtx);
     index++;
     level++;
     int current_index = index.load();
@@ -189,11 +194,13 @@ class DFTLogger {
   }
 
   inline void exit_event() {
+    std::unique_lock<std::shared_mutex> lock(mtx);
     level--;
     index_stack.pop_back();
   }
 
   inline int get_parent() {
+    std::unique_lock<std::shared_mutex> lock(mtx);
     if (level > 1 && index_stack.size() > 1) {
       return index_stack[level - 2];
     }
@@ -201,10 +208,25 @@ class DFTLogger {
   }
 
   inline int get_current() {
+    std::unique_lock<std::shared_mutex> lock(mtx);
     if (level > 0 && index_stack.size() > 0) {
       return index_stack[level - 1];
     }
     return -1;
+  }
+
+  inline uint16_t has_hash(ConstEventNameType key) {
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    auto iter = computed_hash.find(key);
+    if (iter == computed_hash.end())
+      return 0;
+    else
+      iter->second;
+  }
+
+  inline void insert_hash(ConstEventNameType key, uint16_t hash) {
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    computed_hash.insert_or_assign(key, hash);
   }
 
   inline TimeResolution get_time() {
@@ -231,7 +253,7 @@ class DFTLogger {
       metadata->insert_or_assign("level", level);
       int parent_index_value = get_parent();
       ConstEventNameType pidx = "p_idx";
-      metadata->insert_or_assign(pidx, parent_index_value);
+      metadata->emplace(pidx, parent_index_value);
     }
 #ifdef DFTRACER_MPI_ENABLE
     if (!mpi_event) {
@@ -285,11 +307,10 @@ class DFTLogger {
 
   inline uint16_t hash_and_store_str(char file[PATH_MAX],
                                      ConstEventNameType name) {
-    auto iter = computed_hash.find(file);
-    uint16_t hash = 0;
-    if (iter == computed_hash.end()) {
+    uint16_t hash = has_hash(file);
+    if (hash == 0) {
       md5String(file, &hash);
-      computed_hash.insert_or_assign(file, hash);
+      insert_hash(file, hash);
       if (this->writer != nullptr) {
         ThreadID tid = 0;
         if (dftracer_tid) {
@@ -301,8 +322,6 @@ class DFTLogger {
                                    this->process_id, tid, false);
         this->exit_event();
       }
-    } else {
-      hash = iter->second;
     }
     return hash;
   }
