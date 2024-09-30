@@ -30,7 +30,7 @@ class POSIXDFTracer : public POSIX {
   bool trace_all_files;
 
   inline uint16_t is_traced(int fd, const char *func) {
-    if (fd == -1) return 0;
+    if (fd < 0) return 0;
     uint16_t trace = tracked_fd[fd % MAX_FD];
     if (trace != 0) {
       DFTRACER_LOG_DEBUG(
