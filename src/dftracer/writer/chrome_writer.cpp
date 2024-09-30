@@ -94,8 +94,9 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
       DFTRACER_LOG_INFO("Profiler writing the final symbol", "");
       fh = fopen(this->filename.c_str(), "r+");
       if (fh == nullptr) {
-        DFTRACER_LOG_ERROR("unable to open log file %s with O_WRONLY",
-                           this->filename.c_str());  // GCOVR_EXCL_LINE
+        DFTRACER_LOG_ERROR(
+            "unable to open log file %s with O_WRONLY error_code %d",
+            this->filename.c_str(), errno);  // GCOVR_EXCL_LINE
       } else {
         std::string data = "[\n";
         auto written_elements =
@@ -103,8 +104,8 @@ void dftracer::ChromeWriter::finalize(bool has_entry) {
         if (written_elements != data.size()) {  // GCOVR_EXCL_START
           DFTRACER_LOG_ERROR(
               "unable to finalize log write %s for O_WRONLY written only %ld "
-              "of %ld",
-              filename.c_str(), data.size(), written_elements);
+              "of %ld with error %d",
+              filename.c_str(), data.size(), written_elements, errno);
         }  // GCOVR_EXCL_STOP
         data = "]";
         fseek(fh, 0, SEEK_END);

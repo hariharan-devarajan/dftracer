@@ -230,7 +230,8 @@ class DFTLogger {
     if (metadata != nullptr) {
       metadata->insert_or_assign("level", level);
       int parent_index_value = get_parent();
-      metadata->insert_or_assign("p_idx", parent_index_value);
+      ConstEventNameType pidx = "p_idx";
+      metadata->insert_or_assign(pidx, parent_index_value);
     }
 #ifdef DFTRACER_MPI_ENABLE
     if (!mpi_event) {
