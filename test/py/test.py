@@ -30,18 +30,18 @@ os.makedirs(f"{args.data_dir}/{args.format}", exist_ok=True)
 
 @dft_fn.log
 def log_events(index):
-    sleep(1)
+    sleep(0.001)
 
 
 def custom_events():
     log_inst.enter_event()
     start = log_inst.get_time()
-    sleep(1)
+    sleep(0.001)
     end = log_inst.get_time()
     log_inst.log_event("test", "cat2", start, end - start)
     log_inst.exit_event()
     for i in dft_fn.iter(range(2)):
-        sleep(1)
+        sleep(0.001)
 
 
 def posix_calls(val):
