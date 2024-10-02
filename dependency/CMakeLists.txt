@@ -5,7 +5,7 @@ install_external_project(brahma 2.0.0 "BRAHMA" https://github.com/hariharan-deva
 add_dependencies(brahma cpp-logger)
 add_dependencies(brahma gotcha)
 find_package(yaml-cpp QUIET)
-install_external_project(yaml-cpp 0.6.3 "YAML_CPP" https://github.com/jbeder/yaml-cpp.git yaml-cpp-0.6.3 ${CMAKE_INSTALL_PREFIX} "-DYAML_CPP_BUILD_TESTS=OFF;-DYAML_BUILD_SHARED_LIBS=ON")
+install_external_project(yaml-cpp "" "YAML_CPP" https://github.com/jbeder/yaml-cpp.git yaml-cpp-0.6.3 ${CMAKE_INSTALL_PREFIX} "-DYAML_CPP_BUILD_TESTS=OFF;-DYAML_BUILD_SHARED_LIBS=ON")
 if (NOT ${yaml-cpp_FOUND})
   add_dependencies(yaml-cpp brahma)
   add_dependencies(yaml-cpp gotcha)

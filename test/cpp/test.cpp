@@ -18,15 +18,15 @@ void foo() {
 
   DFTRACER_CPP_FUNCTION_UPDATE("key", 0);
   DFTRACER_CPP_FUNCTION_UPDATE("key", "0");
-  sleep(1);
+  usleep(1000);
   {
     DFTRACER_CPP_REGION(CUSTOM);
     DFTRACER_CPP_REGION_UPDATE(CUSTOM, "key", "0");
-    sleep(1);
+    usleep(1000);
     DFTRACER_CPP_REGION_START(CUSTOM_BLOCK);
     DFTRACER_CPP_REGION_UPDATE(CUSTOM, "key", 0);
     DFTRACER_CPP_REGION_DYN_UPDATE(CUSTOM_BLOCK, "key", 0);
-    sleep(1);
+    usleep(1000);
     DFTRACER_CPP_REGION_END(CUSTOM_BLOCK);
   }
 }

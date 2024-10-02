@@ -37,7 +37,7 @@ class ChromeWriter {
 
   FILE *fh;
   uint16_t hostname_hash;
-  static const int MAX_LINE_SIZE = 16*1024L;
+  static const int MAX_LINE_SIZE = 16 * 1024L;
   size_t write_buffer_size;
 
   size_t current_index;
@@ -55,24 +55,22 @@ class ChromeWriter {
 
   bool is_first_write;
   inline size_t write_buffer_op(bool force = false) {
+    std::unique_lock<std::shared_mutex> lock(mtx);
     if (current_index == 0 || (!force && current_index < write_buffer_size))
       return 0;
     DFTRACER_LOG_DEBUG("ChromeWriter.write_buffer_op %s",
                        this->filename.c_str());
     size_t written_elements = 0;
-    {
-      std::unique_lock<std::shared_mutex> lock(mtx);
-      flockfile(fh);
-      written_elements = fwrite(buffer.data(), current_index, sizeof(char), fh);
-      funlockfile(fh);
-      current_index = 0;
-    }
-
+    flockfile(fh);
+    written_elements = fwrite(buffer.data(), current_index, sizeof(char), fh);
+    current_index = 0;
+    funlockfile(fh);
     if (written_elements != 1) {  // GCOVR_EXCL_START
       DFTRACER_LOG_ERROR(
-          "unable to log write only %ld of %d with error code "
+          "unable to log write only %ld of %d trying to write %d with error "
+          "code "
           "%d",
-          written_elements, 1, errno);
+          written_elements, 1, current_index, errno);
     }  // GCOVR_EXCL_STOP
     return written_elements;
   }
@@ -111,8 +109,8 @@ class ChromeWriter {
            ProcessID process_id, ThreadID tid);
 
   void log_metadata(int index, ConstEventNameType name,
-                    ConstEventNameType value, ConstEventNameType ph, ProcessID process_id,
-                    ThreadID tid, bool is_string = true);
+                    ConstEventNameType value, ConstEventNameType ph,
+                    ProcessID process_id, ThreadID tid, bool is_string = true);
 
   void finalize(bool has_entry);
 };

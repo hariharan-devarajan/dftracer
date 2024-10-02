@@ -121,7 +121,7 @@ endfunction()
 
 include(ExternalProject)
 function(install_external_project name version var_name url tag install_prefix configure_args)
-  find_package(${name} QUIET)
+  find_package(${name} ${version} QUIET)
   set(found_var ${name}_FOUND)
   if (${${found_var}})
     set(include_var ${${var_name}_INCLUDE_DIRS} ${${var_name}_INCLUDE_DIR})
