@@ -143,7 +143,7 @@ def get_size(filename):
 def generate_line_batches(filename, max_line):
     conf = get_dft_configuration()
     for start in range(0, max_line, conf.batch_size):
-        end =  min((start + conf.batch_size - 1) , (max_line))
+        end =  min((start + conf.batch_size - 1) , (max_line - 1))
         logging.debug(f"Created a batch for {filename} from [{start}, {end}] lines")
         yield filename, start, end
 
@@ -160,32 +160,60 @@ def load_indexed_gzip_files(filename, start, end):
 
 def load_objects(line, fn, time_granularity, time_approximate, condition_fn, load_data):
     d = {}
-    if line is not None and line !="" and len(line) > 0 and "[" != line[0] and "]" != line[0] and line != "\n" :
+    if line is not None and line !="" and len(line) > 0 and "[" != line[0] and line != "\n" :
         val = {}
         try:
             unicode_line = ''.join([i if ord(i) < 128 else '#' for i in line])
             val = json.loads(unicode_line, strict=False)
             logging.debug(f"Loading dict {val}")
-            if "name" in val and "cat" in val:
+            if "name" in val:
                 d["name"] = val["name"]
+            if "cat" in val:
                 d["cat"] = val["cat"]
-                d["pid"] = val["pid"]
-                d["tid"] = val["tid"]
-                val["dur"] = int(val["dur"])
-                val["ts"] = int(val["ts"])
-                d["ts"] = val["ts"]
-                d["dur"] = val["dur"]
-                d["te"] = d["ts"] + d["dur"]
-                if not time_approximate:
-                    d["tinterval"] = I.to_string(I.closed(val["ts"] , val["ts"] + val["dur"]))
-                d["trange"] = int(((val["ts"] + val["dur"])/2.0) / time_granularity)
+            if "M" == val["ph"]:
+                if d["name"] == "FH":
+                    d["type"] = 1 # 1-> file hash
+                    if "args" in val and "name" in val["args"] and "value" in val["args"]:
+                        d["name"] = val["args"]["name"]
+                        d["hash"] = val["args"]["value"]
+                elif d["name"] == "HH":
+                    d["type"] = 2 # 2-> hostname hash
+                    if "args" in val and "name" in val["args"] and "value" in val["args"]:
+                        d["name"] = val["args"]["name"]
+                        d["hash"] = val["args"]["value"]
+                elif d["name"] == "SH":
+                    d["type"] = 3 # 3-> string hash
+                    if "args" in val and "name" in val["args"] and "value" in val["args"]:
+                        d["name"] = val["args"]["name"]
+                        d["hash"] = val["args"]["value"]
+                else:
+                    d["type"] = 4 # 4-> others
+                    if "args" in val and "name" in val["args"] and "value" in val["args"]:
+                        d["name"] = val["args"]["name"]
+                        d["value"] = str(val["args"]["value"])
+            else:
+                d["type"] = 0 # 0->regular event
+                if "pid" in val:
+                    d["pid"] = val["pid"]
+                if "tid" in val:
+                    d["tid"] = val["tid"]
+                if "dur" in val:
+                    val["dur"] = int(val["dur"])
+                    val["ts"] = int(val["ts"])
+                    d["ts"] = val["ts"]
+                    d["dur"] = val["dur"]
+                    d["te"] = d["ts"] + d["dur"]
+                    if not time_approximate:
+                        d["tinterval"] = I.to_string(I.closed(val["ts"] , val["ts"] + val["dur"]))
+                    d["trange"] = int(((val["ts"] + val["dur"])/2.0) / time_granularity)
                 d.update(io_function(val, d, time_approximate,condition_fn))
-                if fn:
-                    d.update(fn(val, d, time_approximate,condition_fn, load_data))
-                logging.debug(f"built an dictionary for line {d}")
+            if fn:
+                d.update(fn(val, d, time_approximate,condition_fn, load_data))
+            logging.debug(f"built an dictionary for line {d}")
         except ValueError as error:
             logging.error(f"Processing {line} failed with {error}")
     return d
+
 def io_function(json_object, current_dict, time_approximate,condition_fn):
     d = {}
     d["phase"] = 0
@@ -224,42 +252,34 @@ def io_function(json_object, current_dict, time_approximate,condition_fn):
             d["total_time"] = I.to_string(I.empty())
             d["io_time"] = I.to_string(I.empty())
     if "args" in json_object:
-        if "fname" in json_object["args"]:
-            d["filename"] = json_object["args"]["fname"]
-        if "hostname" in json_object["args"]:
-            d["hostname"] = json_object["args"]["hostname"]
+        if "fhash" in json_object["args"]:
+            d["fhash"] = json_object["args"]["fhash"]
+        if "hhash" in json_object["args"]:
+            d["hhash"] = json_object["args"]["hhash"]
 
         if "POSIX" == json_object["cat"] and "ret" in json_object["args"]:
-            if json_object["name"] == "write":
-                d["size"] = int(json_object["args"]["ret"])
-            elif json_object["name"] in ["read", "pread"]:
-                d["size"] = int(json_object["args"]["ret"])
-            elif json_object["name"] == "fwrite":
-                d["size"] = 1
-                if "ret" in json_object["args"]:
-                    d["size"] *= int(json_object["args"]["ret"]) 
-                if "size" in json_object["args"]:
-                    d["size"] *= int(json_object["args"]["size"])
-            elif json_object["name"] == "fread":               
-                d["size"] = 1
-                if "ret" in json_object["args"]:
-                    d["size"] *= int(json_object["args"]["ret"]) 
-                if "size" in json_object["args"]:
-                    d["size"] *= int(json_object["args"]["size"])
+            size = int(json_object["args"]["ret"])
+            if size > 0:
+                if "write" in json_object["name"]:
+                    d["size"] = size
+                elif "read" in json_object["name"] and "readdir" not in json_object["name"]:
+                    d["size"] = size
         else:
             if "image_size" in json_object["args"]:
-                d["size"] = int(json_object["args"]["image_size"])
+                size = int(json_object["args"]["image_size"])
+                if size > 0:
+                    d["size"] = size
     return d
 
 def io_columns():
     conf = get_dft_configuration()
     return {
-        'hostname': "string[pyarrow]",
+        'hhash': "uint32[pyarrow]",
         'compute_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'app_io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'total_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
-        'filename': "string[pyarrow]",
+        'fhash': "uint32[pyarrow]",
         'phase': "uint16[pyarrow]",
         'size': "uint64[pyarrow]"
     }
@@ -353,7 +373,7 @@ def human_format_time(num):
 
 class DFAnalyzer:
 
-    def __init__(self, file_pattern, load_fn=None, load_cols={}, load_data = {}):
+    def __init__(self, file_pattern, load_fn=None, load_cols={}, load_data = {}, metadata_cols = {}):
 
         self.conf = get_dft_configuration()
         if self.conf.dask_scheduler:
@@ -420,13 +440,35 @@ class DFAnalyzer:
         elif len(pfw_pattern) > 0:
             main_bag = pfw_bag
         if main_bag:
-            columns = {'name': "string[pyarrow]", 'cat': "string[pyarrow]",
+            columns = {'name': "string[pyarrow]", 'cat': "string[pyarrow]",'type': "uint8[pyarrow]", 
                        'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]",
                        'ts': "uint64[pyarrow]", 'te': "uint64[pyarrow]", 'dur': "uint64[pyarrow]",
                        'tinterval': "string[pyarrow]" if not self.conf.time_approximate else "uint64[pyarrow]", 'trange': "uint64[pyarrow]"}
             columns.update(io_columns())
             columns.update(load_cols)
-            events = main_bag.to_dataframe(meta=columns)
+            file_hash_columns = {'name': "string[pyarrow]", 'hash':"string[pyarrow]"}
+            hostname_hash_columns = {'name': "string[pyarrow]", 'hash':"string[pyarrow]"}
+            string_hash_columns = {'name': "string[pyarrow]", 'hash':"string[pyarrow]"}
+            other_metadata_columns = { 'name':"string[pyarrow]" ,'value':"string[pyarrow]" }
+            if "FH" in metadata_cols:
+                file_hash_columns.update(metadata_cols["FH"])
+            if "HH" in metadata_cols:
+                hostname_hash_columns.update(metadata_cols["HH"])
+            if "SH" in metadata_cols:
+                string_hash_columns.update(metadata_cols["SH"])
+            if "M" in metadata_cols:
+                other_metadata_columns.update(metadata_cols["M"])
+            columns.update(file_hash_columns)
+            columns.update(hostname_hash_columns)
+            columns.update(string_hash_columns)
+            columns.update(other_metadata_columns)
+            
+            all_events = main_bag.to_dataframe(meta=columns)
+            events = all_events.query("type == 0")
+            self.file_hash = all_events.query("type == 1")[list(file_hash_columns.keys())].set_index('hash').persist()
+            self.host_hash = all_events.query("type == 2")[list(hostname_hash_columns.keys())].set_index('hash').persist()
+            self.string_hash = all_events.query("type == 3")[list(string_hash_columns.keys())].set_index('hash').persist()
+            self.metadata = all_events.query("type == 4")[list(other_metadata_columns.keys())].persist() 
             self.n_partition = math.ceil(total_size.compute() / (128 * 1024 ** 2))
             logging.debug(f"Number of partitions used are {self.n_partition}")
             self.events = events.repartition(npartitions=self.n_partition).persist()
@@ -436,7 +478,7 @@ class DFAnalyzer:
             self.events['trange'] = (self.events['ts'] // self.conf.time_granularity).astype('uint16[pyarrow]')
             self.events = self.events.persist()
      
-            _ = wait(self.events)
+            _ = wait([self.file_hash, self.host_hash, self.string_hash, self.metadata, self.events])
         else:
             logging.error(f"Unable to load Traces")
             exit(1)
@@ -456,12 +498,6 @@ class DFAnalyzer:
             grouped_df = self.events.groupby(["trange", "pid", "tid"]) \
                             .agg({"compute_time": sum, "io_time": sum, "app_io_time": sum}) \
                             .groupby(["trange"]).max()
-            # check if the max io_time > time_granularity
-            max_io_time = grouped_df.max().compute()['io_time']
-            if max_io_time > self.conf.time_granularity:
-                # throw a warning, running with large granuality
-                logging.warn(f"The max io_time {max_io_time} exceeds the time_granularity {self.conf.time_granularity}. " \
-                             f"Please adjust the time_granularity to {int(2 * max_io_time /1e6)}e6 and rerun the analyzer.")
             grouped_df["io_time"] = grouped_df["io_time"].fillna(0)
             grouped_df["compute_time"] = grouped_df["compute_time"].fillna(0)
             grouped_df["app_io_time"] = grouped_df["app_io_time"].fillna(0)
@@ -542,14 +578,6 @@ class DFAnalyzer:
         logging.info(f"List after removing numbers {list(item_sets)}")
         return list(item_sets)
 
-    def _check_hosts_time_skew(self):
-        # check if there is time skew across nodes
-        hosts_ts_df = self.events.groupby('hostname').agg({'ts': 'min'}).compute()
-        # filter the hosts if time skew exceeds 30 seconds
-        max_time_skew = 30e6
-        if np.std(hosts_ts_df['ts']) > max_time_skew:
-           logging.warn(f"The time skew exceeds {max_time_skew // 1e6} sec across hosts {hosts_ts_df.index.tolist()}")
-
     def summary(self):
         num_events = len(self.events)
         logging.info(f"Total number of events in the workload are {num_events}")
@@ -568,8 +596,6 @@ class DFAnalyzer:
 
         hosts_used = hosts_used.to_list()
         #hosts_used_regex_str = self._create_host_intervals(hosts_used)
-        if len(hosts_used) > 1:
-            self._check_hosts_time_skew()
 
         filenames_accessed = filenames_accessed.to_list()
         #filename_basename_regex_str = self._remove_numbers(filenames_accessed)
