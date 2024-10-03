@@ -472,9 +472,9 @@ class DFAnalyzer:
             
             all_events = main_bag.to_dataframe(meta=columns)
             events = all_events.query("type == 0")
-            self.file_hash = all_events.query("type == 1")[list(file_hash_columns.keys())].set_index('hash').persist()
-            self.host_hash = all_events.query("type == 2")[list(hostname_hash_columns.keys())].set_index('hash').persist()
-            self.string_hash = all_events.query("type == 3")[list(string_hash_columns.keys())].set_index('hash').persist()
+            self.file_hash = all_events.query("type == 1")[list(file_hash_columns.keys())].groupby('hash').first().persist()
+            self.host_hash = all_events.query("type == 2")[list(hostname_hash_columns.keys())].groupby('hash').first().persist()
+            self.string_hash = all_events.query("type == 3")[list(string_hash_columns.keys())].groupby('hash').first().persist()
             self.metadata = all_events.query("type == 4")[list(other_metadata_columns.keys())].persist() 
             self.n_partition = math.ceil(total_size.compute() / (128 * 1024 ** 2))
             logging.debug(f"Number of partitions used are {self.n_partition}")
