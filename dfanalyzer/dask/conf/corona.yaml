@@ -9,14 +9,16 @@ dask:
 job:
   num_nodes: 1
   wall_time_min: 60
+  cores: 48
   env_id: FLUX_JOB_ID
+  queue: pdebug
 scheduler:
-  cmd: srun -N ${DFTRACER_JOB_NUM_NODES} -t ${DFTRACER_JOB_WALL_TIME_MIN}
+  cmd: flux alloc -N ${DFTRACER_JOB_NUM_NODES} -t ${DFTRACER_JOB_WALL_TIME_MIN} -q ${DFTRACER_JOB_QUEUE}
   port: 10005
   kill: flux cancel --all
 worker:
   ppn: 48
-  cmd: srun -N ${DFTRACER_JOB_NUM_NODES} --ntasks-per-node=${DFTRACER_WORKER_PPN}
+  cmd: flux run -N ${DFTRACER_JOB_NUM_NODES} --tasks-per-node=${DFTRACER_WORKER_PPN} --cores=$((DFTRACER_JOB_CORES*DFTRACER_JOB_NUM_NODES))
   per_core: 1
   threads: 1
   local_dir: /l/ssd/$USER/dask-workspace
