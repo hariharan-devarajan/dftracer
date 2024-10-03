@@ -453,9 +453,9 @@ class DFAnalyzer:
                        'tinterval': "string[pyarrow]" if not self.conf.time_approximate else "uint64[pyarrow]", 'trange': "uint64[pyarrow]"}
             columns.update(io_columns())
             columns.update(load_cols)
-            file_hash_columns = {'name': "string[pyarrow]", 'hash':"string[pyarrow]"}
-            hostname_hash_columns = {'name': "string[pyarrow]", 'hash':"string[pyarrow]"}
-            string_hash_columns = {'name': "string[pyarrow]", 'hash':"string[pyarrow]"}
+            file_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]"}
+            hostname_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]"}
+            string_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]"}
             other_metadata_columns = { 'name':"string[pyarrow]" ,'value':"string[pyarrow]" }
             if "FH" in metadata_cols:
                 file_hash_columns.update(metadata_cols["FH"])
