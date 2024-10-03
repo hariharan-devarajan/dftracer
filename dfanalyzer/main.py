@@ -143,7 +143,7 @@ def get_size(filename):
 def generate_line_batches(filename, max_line):
     conf = get_dft_configuration()
     for start in range(0, max_line, conf.batch_size):
-        end =  min((start + conf.batch_size - 1) , (max_line - 1))
+        end =  min((start + conf.batch_size - 1) , (max_line))
         logging.debug(f"Created a batch for {filename} from [{start}, {end}] lines")
         yield filename, start, end
 
