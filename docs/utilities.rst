@@ -87,3 +87,21 @@ Arguments for this script are:
 4. **-h** display help
 5. **-d input_directory** specify input directories. should contain .pfw or .pfw.gz files.
 6. **-o output_directory** specify output directory.
+
+------------------
+Create Index script
+------------------
+
+The script compresses and creates index for all dftracer traces
+
+.. code-block:: bash
+
+    <install-dir>/bin/usage: dftracer_create_index [-fcv] [-d input_directory]
+
+Arguments for this script are:
+
+1. **-f** override indices.
+2. **-c** compress input file
+3. **-v** enable verbose mode
+4. **-h** display help
+5. **-d input_directory** specify input directories. should contain .pfw or .pfw.gz files.

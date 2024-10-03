@@ -76,18 +76,30 @@ echo "Setting up output directory"
 rm -rf ${OUTPUT_DIR}
 mkdir -p ${OUTPUT_DIR}
 
-pfw_count=`ls -1 $LOG_DIR/*.pfw 2> /dev/null | wc -l`
-gz_count=`ls -1 $LOG_DIR/*.gz 2> /dev/null | wc -l`
-total=$((pfw_count + gz_count))
+total=0
+for file in *.pfw*; do total=1; break; done
 if [ $total == 0 ]; then
     echo "The folder does not contain any pfw or pfw.gz files."
     exit 0
 fi
 
-count=1
-
+files=("$LOG_DIR"/*.pfw*)
+total=${#files[@]}
+JOBS_LIMIT=64
 # loop over logs
-for file in "$LOG_DIR"/*.pfw*; do
+for file_index in "${!files[@]}"; do
+  file=${files[$file_index]}
+  running_jobs=$(jobs -rp | wc -l)
+  if [ $running_jobs -ge $JOBS_LIMIT ]; then
+    date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
+    while [ $running_jobs -ge $JOBS_LIMIT ]
+    do        
+        sleep 1
+        running_jobs=$(jobs -rp | wc -l)
+    done
+    date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
+  fi
+  {
   # only look at files
   if [ -f "$file" ]; then
     # calculate basename and copy files
@@ -97,7 +109,7 @@ for file in "$LOG_DIR"/*.pfw*; do
     cp $LOG_DIR/$filename $OUTPUT_DIR/.tmp.$filename
     if [ "$ext" == "gz" ]; then
       # if file is gz get the name
-      name=${count%.pfw.gz}
+      name=${file_index%.pfw.gz}
       echo "extracted name $name"
       # replace non utf characters
       gunzip -c $OUTPUT_DIR/.tmp.$filename | sed -e "s/${USER}/USER/g" > $OUTPUT_DIR/$name.pfw
@@ -110,7 +122,7 @@ for file in "$LOG_DIR"/*.pfw*; do
       fi
     else
       # if file is pfw get the name
-      name=${count%.pfw}
+      name=${file_index%.pfw}
       echo "extracted name $name"
       # replace non utf characters
       cat $OUTPUT_DIR/.tmp.$filename | sed -e "s/${USER}/USER/g" > $OUTPUT_DIR/$name.pfw
@@ -124,5 +136,9 @@ for file in "$LOG_DIR"/*.pfw*; do
     # remove temp file
     rm $OUTPUT_DIR/.tmp.$filename
   fi
-  count=$((count+1))
+  } &
 done
+
+wait
+
+date_echo Finished anonymization of traces.
