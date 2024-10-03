@@ -208,12 +208,19 @@ def load_objects(line, fn, time_granularity, time_approximate, condition_fn, loa
                     d["trange"] = int(((val["ts"] + val["dur"])/2.0) / time_granularity)
                 d.update(io_function(val, d, time_approximate,condition_fn))
             if fn:
-                d.update(fn(val, d, time_approximate,condition_fn, load_data))
+                user_d = fn(val, d, time_approximate,condition_fn, load_data)
+                if type(user_d) is list:
+                    for user_dict in user_d[1:]:
+                        yield user_dict
+                    d.update(user_d[0])
+                else:
+                    d.update(user_d)
             logging.debug(f"built an dictionary for line {d}")
+             yield d
         except ValueError as error:
             logging.error(f"Processing {line} failed with {error}")
-    return d
-
+    return {}
+  
 def io_function(json_object, current_dict, time_approximate,condition_fn):
     d = {}
     d["phase"] = 0
