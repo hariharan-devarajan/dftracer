@@ -593,7 +593,7 @@ class DFAnalyzer:
 
     def _check_hosts_time_skew(self):
         # check if there is time skew across nodes
-        hosts_ts_df = self.events.groupby('hostname').agg({'ts': 'min'}).compute()
+        hosts_ts_df = self.events.groupby('hhash').agg({'ts': 'min'}).compute()
         # filter the hosts if time skew exceeds 30 seconds
         max_time_skew = 30e6
         if np.std(hosts_ts_df['ts']) > max_time_skew:
@@ -605,8 +605,8 @@ class DFAnalyzer:
         total_time, total_io_time, total_compute_time, total_app_io_time, \
         only_io, only_compute, only_app_io, only_app_compute = self._calculate_time() #(0, 0, 0, 0, 0, 0, 0, 0, 0)
         hosts_used, filenames_accessed, num_procs, compute_tid, posix_tid, io_by_operations = dask.compute(
-            self.events["hostname"].unique(),
-            self.events["filename"].unique(),
+            self.host_hash["name"].unique(),
+            self.file_hash["name"].unique(),
             self.events["pid"].unique(),
             self.events.query("phase == 1")["tid"].unique(),
             self.events.query("phase == 2")["tid"].unique(),
