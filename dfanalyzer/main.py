@@ -216,7 +216,7 @@ def load_objects(line, fn, time_granularity, time_approximate, condition_fn, loa
                 else:
                     d.update(user_d)
             logging.debug(f"built an dictionary for line {d}")
-             yield d
+            yield d
         except ValueError as error:
             logging.error(f"Processing {line} failed with {error}")
     return {}
