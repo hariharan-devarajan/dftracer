@@ -505,12 +505,12 @@ class DFAnalyzer:
             grouped_df = self.events.groupby(["trange", "pid", "tid"]) \
                             .agg({"compute_time": sum, "io_time": sum, "app_io_time": sum}) \
                             .groupby(["trange"]).max()
-             # check if the max io_time > time_granularity
-             max_io_time = grouped_df.max().compute()['io_time']
-             if max_io_time > self.conf.time_granularity:
-                 # throw a warning, running with large granuality
-                 logging.warn(f"The max io_time {max_io_time} exceeds the time_granularity {self.conf.time_granularity}. " \
-                              f"Please adjust the time_granularity to {int(2 * max_io_time /1e6)}e6 and rerun the analyzer.")
+            # check if the max io_time > time_granularity
+            max_io_time = grouped_df.max().compute()['io_time']
+            if max_io_time > self.conf.time_granularity:
+                # throw a warning, running with large granuality
+                logging.warn(f"The max io_time {max_io_time} exceeds the time_granularity {self.conf.time_granularity}. " \
+                             f"Please adjust the time_granularity to {int(2 * max_io_time /1e6)}e6 and rerun the analyzer.")
             grouped_df["io_time"] = grouped_df["io_time"].fillna(0)
             grouped_df["compute_time"] = grouped_df["compute_time"].fillna(0)
             grouped_df["app_io_time"] = grouped_df["app_io_time"].fillna(0)
