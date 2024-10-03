@@ -432,14 +432,14 @@ class DFAnalyzer:
                                     time_granularity=self.conf.time_granularity,
                                     time_approximate=self.conf.time_approximate,
                                     condition_fn=self.conf.conditions,
-                                    load_data=load_data).filter(lambda x: "name" in x)
+                                    load_data=load_data).flatten().filter(lambda x: "name" in x)
         main_bag = None
         if len(pfw_pattern) > 0:
             pfw_bag = dask.bag.read_text(pfw_pattern).map(load_objects, fn=load_fn,
                                                           time_granularity=self.conf.time_granularity,
                                                           time_approximate=self.conf.time_approximate,
                                                           condition_fn=self.conf.conditions,
-                                                          load_data=load_data).filter(lambda x: "name" in x)
+                                                          load_data=load_data).flatten().filter(lambda x: "name" in x)
         if len(pfw_gz_pattern) > 0 and len(pfw_pattern) > 0:
             main_bag = dask.bag.concat([pfw_bag, gz_bag])
         elif len(pfw_gz_pattern) > 0:
