@@ -591,13 +591,13 @@ class DFAnalyzer:
         logging.info(f"List after removing numbers {list(item_sets)}")
         return list(item_sets)
 
-     def _check_hosts_time_skew(self):
-         # check if there is time skew across nodes
-         hosts_ts_df = self.events.groupby('hostname').agg({'ts': 'min'}).compute()
-         # filter the hosts if time skew exceeds 30 seconds
-         max_time_skew = 30e6
-         if np.std(hosts_ts_df['ts']) > max_time_skew:
-            logging.warn(f"The time skew exceeds {max_time_skew // 1e6} sec across hosts {hosts_ts_df.index.tolist()}")
+    def _check_hosts_time_skew(self):
+        # check if there is time skew across nodes
+        hosts_ts_df = self.events.groupby('hostname').agg({'ts': 'min'}).compute()
+        # filter the hosts if time skew exceeds 30 seconds
+        max_time_skew = 30e6
+        if np.std(hosts_ts_df['ts']) > max_time_skew:
+           logging.warn(f"The time skew exceeds {max_time_skew // 1e6} sec across hosts {hosts_ts_df.index.tolist()}")
 
     def summary(self):
         num_events = len(self.events)
