@@ -616,9 +616,9 @@ class DFAnalyzer:
 
 
         hosts_used = hosts_used.to_list()
-         #hosts_used_regex_str = self._create_host_intervals(hosts_used)
-         if len(hosts_used) > 1:
-             self._check_hosts_time_skew()
+        #hosts_used_regex_str = self._create_host_intervals(hosts_used)
+        if len(hosts_used) > 1:
+            self._check_hosts_time_skew()
 
         filenames_accessed = filenames_accessed.to_list()
         #filename_basename_regex_str = self._remove_numbers(filenames_accessed)
