@@ -51,4 +51,5 @@ inline void convert(const std::string &s, cpplogger::LoggerType &type) {
 #define METADATA_NAME_FILE_HASH "FH"
 #define METADATA_NAME_HOSTNAME_HASH "HH"
 #define METADATA_NAME_STRING_HASH "SH"
+#define CUSTOM_METADATA "CM"
 #endif  // DFTRACER_ENUMERATION_H

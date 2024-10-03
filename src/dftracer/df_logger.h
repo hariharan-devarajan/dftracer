@@ -238,23 +238,7 @@ class DFTLogger {
     return t;
   }
 
-  inline void log(ConstEventNameType event_name, ConstEventNameType category,
-                  TimeResolution start_time, TimeResolution duration,
-                  std::unordered_map<std::string, std::any> *metadata) {
-    DFTRACER_LOG_DEBUG("DFTLogger.log", "");
-    ThreadID tid = 0;
-    if (dftracer_tid) {
-      tid = df_gettid();
-    }
-    int local_index;
-    if (!include_metadata) {
-      local_index = index.load();
-    }
-    if (metadata != nullptr) {
-      metadata->insert_or_assign("level", level);
-      int parent_index_value = get_parent();
-      metadata->insert_or_assign("p_idx", parent_index_value);
-    }
+  inline void handle_mpi(ThreadID tid) {
 #ifdef DFTRACER_MPI_ENABLE
     if (!mpi_event) {
       int initialized;
@@ -281,7 +265,26 @@ class DFTLogger {
       }
     }
 #endif
+  }
 
+  inline void log(ConstEventNameType event_name, ConstEventNameType category,
+                  TimeResolution start_time, TimeResolution duration,
+                  std::unordered_map<std::string, std::any> *metadata) {
+    DFTRACER_LOG_DEBUG("DFTLogger.log", "");
+    ThreadID tid = 0;
+    if (dftracer_tid) {
+      tid = df_gettid();
+    }
+    int local_index;
+    if (!include_metadata) {
+      local_index = index.load();
+    }
+    if (metadata != nullptr) {
+      metadata->insert_or_assign("level", level);
+      int parent_index_value = get_parent();
+      metadata->insert_or_assign("p_idx", parent_index_value);
+    }
+    handle_mpi(tid);
     if (this->writer != nullptr) {
       if (include_metadata) {
         int current_index = get_current();
@@ -295,6 +298,26 @@ class DFTLogger {
       has_entry = true;
     } else {
       DFTRACER_LOG_ERROR("DFTLogger.log writer not initialized", "");
+    }
+  }
+
+  inline void log_metadata(ConstEventNameType key, ConstEventNameType value) {
+    DFTRACER_LOG_DEBUG("DFTLogger.log_metadata", "");
+    ThreadID tid = 0;
+    if (dftracer_tid) {
+      tid = df_gettid();
+    }
+    int local_index;
+    if (!include_metadata) {
+      local_index = index.load();
+    }
+    handle_mpi(tid);
+    if (this->writer != nullptr) {
+      this->writer->log_metadata(index_stack[level - 1], key, value,
+                                 CUSTOM_METADATA, this->process_id, tid);
+      has_entry = true;
+    } else {
+      DFTRACER_LOG_ERROR("DFTLogger.log_metadata writer not initialized", "");
     }
   }
 

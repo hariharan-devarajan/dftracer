@@ -148,6 +148,7 @@ def with_default_args(step=2):
 
 
 def main():
+    dft_fn.log_metadata("key", "value")
     posix_calls((20, False))
     t1 = threading.Thread(target=posix_calls, args=((10, False),))
     custom_events()

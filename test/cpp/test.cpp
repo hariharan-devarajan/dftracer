@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
       init = 1;
     }
   }
+  DFTRACER_CPP_METADATA(meta, "key", "value");
   char filename[1024];
   sprintf(filename, "%s/demofile.txt", argv[1]);
   char filename_link[1024];

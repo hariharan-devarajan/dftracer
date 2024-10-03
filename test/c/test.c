@@ -35,6 +35,7 @@ int main(int argc, char *argv[]) {
       init = 1;
     }
   }
+  DFTRACER_C_METADATA(meta, "key", "value");
   char filename[1024];
   sprintf(filename, "%s/demofile_c.txt", argv[1]);
   foo();
