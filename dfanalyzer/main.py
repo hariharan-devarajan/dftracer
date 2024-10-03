@@ -281,7 +281,7 @@ def io_function(json_object, current_dict, time_approximate,condition_fn):
 def io_columns():
     conf = get_dft_configuration()
     return {
-        'hhash': "uint32[pyarrow]",
+        'hhash': "uint64[pyarrow]",
         'compute_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'app_io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
