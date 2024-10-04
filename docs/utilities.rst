@@ -132,9 +132,11 @@ Counting DFTracer traces' events
 The script will count number of valid events of traces
 
 .. code-block:: bash
+
     <install-dir>/bin/usage: dftracer_event_count [-c] [-d input_directory]
 
 Arguments for this script are:
+
 1. **-d input_directory** specify input directories. should contain .pfw or .pfw.gz files.
 2. **-c** disable create index (assuming index exists, if not will throw error)
 3. **-h** display help
