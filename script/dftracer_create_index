@@ -94,8 +94,7 @@ fi
 
 pushd $LOG_DIR
 JOBS_LIMIT=$(nproc --all)
-files=("$LOG_DIR"/*.pfw)
-files+=("$LOG_DIR"/*.pfw.gz)
+files=("$LOG_DIR"/*.pfw*)
 total=${#files[@]}
 # loop over logs
 for file_index in "${!files[@]}"; do
@@ -122,7 +121,7 @@ for file_index in "${!files[@]}"; do
       if [ ! -f "$file.zindex" ]; then
         $zindex_exec $file --index-file file:$file.zindex --regex 'id:([0-9]+)' --numeric --unique
       fi
-      date_echo "Created index for file $file.gz $file_index of $total"
+      date_echo "Created index for file $file $file_index of $total"
       } &
     else
       {

@@ -121,9 +121,9 @@ if [ "$override" == "1" ]; then
 fi
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-$SCRIPT_DIR/dftracer_create_index -c -d $LOG_DIR $EXTRA_CREATE_INDEX_ARGS
+$SCRIPT_DIR/dftracer_create_index -c -d $LOG_DIR -f
 
-pushd $LOG_DIR > /dev/null
+pushd $LOG_DIR
 PY_OUT=$(cat <<-EOF | python3 | jq -c '.'
 import zindex_py as zindex
 import glob
@@ -172,6 +172,8 @@ for file in sorted(glob.glob("*.pfw.gz")):
       accumulated_size += file_size_mb
       CHUNKS.append({"path": file, "size": file_size_mb, "start": start + 1, "end": max_lines + 1})
       file_size_mb = 0
+  if accumulated_size > 0:
+    print(json.dumps({"chunks": CHUNKS, "size": accumulated_size}))
 EOF)
 
 i=0
