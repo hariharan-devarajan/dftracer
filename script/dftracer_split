@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# The script creates indices for the dftracer traces
+# The script splits the traces into equal sized chunk optiimzed for analysis
 # This has the following signature.
 #
-# usage: dftracer_create_index [-fcv] [-d input_directory]
+# usage: dftracer_split [-fv] [-n app_name] [-d input_directory] [-o output_directory] [-s chunk_size]
 #   -n app_name             specify app name
 #   -f                      override generated files
 #   -c                      compress input
+#   -s size                 chunk size (in MB)
 #   -v                      enable verbose mode
 #   -h                      display help
 #   -d input_directory      specify input directories. should contain .pfw or .pfw.gz files.
@@ -29,7 +30,7 @@ function usage {
     echo "  -n app_name             specify app name"
     echo "  -f                      override generated files"
     echo "  -c                      compress input"
-    echo "  -s                      chunk size (in MB)"
+    echo "  -s size                 chunk size (in MB)"
     echo "  -v                      enable verbose mode"
     echo "  -h                      display help"
     echo "  -d input_directory      specify input directories. should contain .pfw or .pfw.gz files."

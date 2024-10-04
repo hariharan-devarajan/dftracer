@@ -105,3 +105,24 @@ Arguments for this script are:
 3. **-v** enable verbose mode
 4. **-h** display help
 5. **-d input_directory** specify input directories. should contain .pfw or .pfw.gz files.
+
+------------------
+Splitting DFTracer traces
+------------------
+
+The script splits the traces into equal sized chunk optiimzed for analysis
+
+.. code-block:: bash
+
+    <install-dir>/bin/usage: dftracer_split [-fv] [-n app_name] [-d input_directory] [-o output_directory] [-s chunk_size]
+
+Arguments for this script are:
+
+1. **-n app_name** specify app name.
+2. **-f** override indices.
+3. **-c** compress input file
+4. **-s size** chunk size (in MB)
+5. **-v** enable verbose mode
+6. **-h** display help
+7. **-d input_directory** specify input directories. should contain .pfw or .pfw.gz files.
+8. **-o output_directory** specify output directory.
