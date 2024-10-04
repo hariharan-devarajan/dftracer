@@ -126,7 +126,6 @@ pushd $LOG_DIR > /dev/null
 PY_OUT=$(cat <<-EOF | python3 | jq -c '.'
 import zindex_py as zindex
 import glob
-import os
 import json
 
 CHUNK_SIZE_MB=${chunk_size}
