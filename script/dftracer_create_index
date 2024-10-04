@@ -89,7 +89,11 @@ fi
 
 if [ "$override" == "1" ]; then
   date_echo "Removing existing indices as override is passed."
-  rm $LOG_DIR/*.zindex
+  files=("$LOG_DIR"/*.zindex)
+  for file_index in "${!files[@]}"; do
+  file=${files[$file_index]}
+  rm $file
+  done
 fi
 
 pushd $LOG_DIR
@@ -99,43 +103,47 @@ total=${#files[@]}
 # loop over logs
 for file_index in "${!files[@]}"; do
   file=${files[$file_index]}
-  running_jobs=$(jobs -rp | wc -l)
-  if [ $running_jobs -ge $JOBS_LIMIT ]; then
-    date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
-    while [ $running_jobs -ge $JOBS_LIMIT ]
-    do
-        sleep 1
-        running_jobs=$(jobs -rp | wc -l)
-    done
-    date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
-  fi
-  # only look at files
-  if [ -f "$file" ]; then
-    # calculate basename and copy files
-    filename=$(basename -- "$file")
-    ext="${filename##*.}"
-    if [ "$ext" == "gz" ]; then
-      {
-      # if file is gz get the name
-      name=${filename%.pfw.gz}
-      if [ ! -f "$file.zindex" ]; then
-        $zindex_exec $file --index-file file:$file.zindex --regex 'id:([0-9]+)' --numeric --unique
-      fi
-      date_echo "Created index for file $file $file_index of $total"
-      } &
-    else
-      {
-      # if file is pfw get the name
-      name=${filename%.pfw}
-      if [ ! -f "$file.gz.zindex" ]; then
-        if [ $compressed == 1 ]; then
-          date_echo "Compressing file $name"
-          gzip $file
-          $zindex_exec $file.gz --index-file file:$file.gz.zindex --regex 'id:([0-9]+)' --numeric --unique
+  filename=$(basename -- "$file")
+  ext="${filename##*.}"
+  if [ "$ext" != "zindex" ]; then
+    running_jobs=$(jobs -rp | wc -l)
+    if [ $running_jobs -ge $JOBS_LIMIT ]; then
+      date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
+      while [ $running_jobs -ge $JOBS_LIMIT ]
+      do
+          sleep 1
+          running_jobs=$(jobs -rp | wc -l)
+      done
+      date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
+    fi
+    # only look at files
+    if [ -f "$file" ]; then
+      # calculate basename and copy files
+      filename=$(basename -- "$file")
+      ext="${filename##*.}"
+      if [ "$ext" == "gz" ]; then
+        {
+        # if file is gz get the name
+        name=${filename%.pfw.gz}
+        if [ ! -f "$file.zindex" ]; then
+          $zindex_exec $file --index-file file:$file.zindex --regex 'id:([0-9]+)' --numeric --unique
         fi
+        date_echo "Created index for file $file $file_index of $total"
+        } &
+      else
+        {
+        # if file is pfw get the name
+        name=${filename%.pfw}
+        if [ ! -f "$file.gz.zindex" ]; then
+          if [ $compressed == 1 ]; then
+            date_echo "Compressing file $name"
+            gzip $file
+            $zindex_exec $file.gz --index-file file:$file.gz.zindex --regex 'id:([0-9]+)' --numeric --unique
+          fi
+        fi
+        date_echo "Created index for file $file.gz $file_index of $total"
+        } &
       fi
-      date_echo "Created index for file $file.gz $file_index of $total"
-      } &
     fi
   fi
 done
