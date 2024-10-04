@@ -6,7 +6,6 @@
 # usage: dftracer_split [-fv] [-n app_name] [-d input_directory] [-o output_directory] [-s chunk_size]
 #   -n app_name             specify app name
 #   -f                      override generated files
-#   -c                      compress input
 #   -s size                 chunk size (in MB)
 #   -v                      enable verbose mode
 #   -h                      display help
@@ -29,7 +28,6 @@ function usage {
     echo "usage: $(basename $0) [-fv] [-n app_name] [-d input_directory] [-o output_directory] [-s chunk_size]"
     echo "  -n app_name             specify app name"
     echo "  -f                      override generated files"
-    echo "  -c                      compress input"
     echo "  -s size                 chunk size (in MB)"
     echo "  -v                      enable verbose mode"
     echo "  -h                      display help"
@@ -113,35 +111,7 @@ fi
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 $SCRIPT_DIR/dftracer_create_index -c -d $LOG_DIR -f
 
-function get_lines_count {
-  local dir=$1
-
-  # if dir empty use current dir
-  if [ -z "$dir" ]; then
-    dir=$PWD
-  fi
-
-  pushd $dir > /dev/null
-
-  lines_count=$(cat <<-EOF | python3
-import zindex_py as zindex
-import glob
-import sqlite3
-
-lines_count = 0
-for file in sorted(glob.glob("*.pfw.gz")):
-  conn = sqlite3.connect(f"{file}.zindex")
-  res = conn.execute("select count(line) as a from LineOffsets where length > 8;")
-  lines_count += res.fetchone()[0]
-print(lines_count)
-EOF)
-
-  popd > /dev/null
-
-  echo $lines_count
-}
-
-# LINES_COUNT=$(get_lines_count $LOG_DIR)
+# LINES_COUNT=$($SCRIPT_DIR/dftracer_event_count -d $LOG_DIR -c)
 # echo "Original lines count $LINES_COUNT"
 
 pushd $LOG_DIR > /dev/null
@@ -258,8 +228,8 @@ rm -f *.pfw.gz
 $SCRIPT_DIR/dftracer_create_index -c -d $dest -f
 rm -f *.pfw
 
-LINES_COUNT=$(get_lines_count $LOG_DIR)
-SPLIT_LINES_COUNT=$(get_lines_count $dest)
+LINES_COUNT=$($SCRIPT_DIR/dftracer_event_count -d $LOG_DIR -c)
+SPLIT_LINES_COUNT=$($SCRIPT_DIR/dftracer_event_count -d $dest -c)
 
 if [ $LINES_COUNT -ne $SPLIT_LINES_COUNT ]; then
   date_echo "Error: Original lines count $LINES_COUNT does not match split lines count $SPLIT_LINES_COUNT"
