@@ -76,8 +76,10 @@ shift "$(($OPTIND -1))"
 
 pfw_total=0
 pfw_gz_total=0
+zindex_total=0
 for file in *.pfw*; do pfw_total=1; break; done
 for file in *.pfw.gz*; do pfw_gz_total=1; break; done
+for file in *.zindex; do zindex_total=1; break; done
 
 printf "============================================\n"
 printf "Arguments:\n"
@@ -109,7 +111,11 @@ else
 fi
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-$SCRIPT_DIR/dftracer_create_index -c -d $LOG_DIR -f
+if [ $zindex_total == 0 ] || [ $override == 1 ]; then
+  $SCRIPT_DIR/dftracer_create_index -c -d $LOG_DIR -f
+else
+  date_echo "Indices are present skipping it."
+fi
 
 # LINES_COUNT=$($SCRIPT_DIR/dftracer_event_count -d $LOG_DIR -c)
 # echo "Original lines count $LINES_COUNT"
