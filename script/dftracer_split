@@ -92,11 +92,11 @@ printf "============================================\n"
 
 mkdir -p $dest
 
-# if [ $pfw_total == 0 ] || [ $pfw_gz_total == 0 ]; then
-#     date_echo "The folder does not contain any pfw or pfw.gz files."
-#     exit 1
-# fi
-#
+if [ $pfw_total == 0 ] || [ $pfw_gz_total == 0 ]; then
+  date_echo "The folder does not contain any pfw or pfw.gz files."
+  exit 1
+fi
+
 python -c "import zindex_py;"
 if [[ $? != 0 ]]; then
     date_echo "failure: $?: zindex not found. Please install zindex with: pip install zindex_py"
@@ -110,20 +110,41 @@ else
   date_echo "Found zindex executable at ${zindex_exec}"
 fi
 
-# if [ "$override" == "1" ]; then
-#   date_echo "Removing existing indices as override is passed."
-#   rm $LOG_DIR/*.zindex
-# fi
-
-EXTRA_CREATE_INDEX_ARGS=""
-if [ "$override" == "1" ]; then
-    EXTRA_CREATE_INDEX_ARGS="-f"
-fi
-
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 $SCRIPT_DIR/dftracer_create_index -c -d $LOG_DIR -f
 
-pushd $LOG_DIR
+function get_lines_count {
+  local dir=$1
+
+  # if dir empty use current dir
+  if [ -z "$dir" ]; then
+    dir=$PWD
+  fi
+
+  pushd $dir > /dev/null
+
+  lines_count=$(cat <<-EOF | python3
+import zindex_py as zindex
+import glob
+import sqlite3
+
+lines_count = 0
+for file in sorted(glob.glob("*.pfw.gz")):
+  conn = sqlite3.connect(f"{file}.zindex")
+  res = conn.execute("select count(line) as a from LineOffsets where length > 8;")
+  lines_count += res.fetchone()[0]
+print(lines_count)
+EOF)
+
+  popd > /dev/null
+
+  echo $lines_count
+}
+
+# LINES_COUNT=$(get_lines_count $LOG_DIR)
+# echo "Original lines count $LINES_COUNT"
+
+pushd $LOG_DIR > /dev/null
 PY_OUT=$(cat <<-EOF | python3 | jq -c '.'
 import zindex_py as zindex
 import glob
@@ -234,8 +255,17 @@ date_echo Splitting done finished
 date_echo Reindexing split files
 pushd $dest > /dev/null
 rm -f *.pfw.gz
-rm -f *.pfw.gz.zindex
-$SCRIPT_DIR/dftracer_create_index -c -d $dest $EXTRA_CREATE_INDEX_ARGS -f
+$SCRIPT_DIR/dftracer_create_index -c -d $dest -f
 rm -f *.pfw
+
+LINES_COUNT=$(get_lines_count $LOG_DIR)
+SPLIT_LINES_COUNT=$(get_lines_count $dest)
+
+if [ $LINES_COUNT -ne $SPLIT_LINES_COUNT ]; then
+  date_echo "Error: Original lines count $LINES_COUNT does not match split lines count $SPLIT_LINES_COUNT"
+  exit 1
+else
+  date_echo "Original lines count $LINES_COUNT matches split lines count $SPLIT_LINES_COUNT"
+fi
 popd
 date_echo Done reindexing split files
