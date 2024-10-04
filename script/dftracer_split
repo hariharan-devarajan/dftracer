@@ -20,7 +20,7 @@ date_echo() {
 
 LOG_DIR=$PWD
 override=0
-chunk_size=1000 # 1GB default
+chunk_size=1024 # 1GB default
 dest=$PWD/split
 verbose=0
 app_name="app"
@@ -225,7 +225,7 @@ for line in $PY_OUT; do
     if [ "$verbose" == "1" ]; then
       date_echo "Processing chunk $i with size $size MB"
     fi
-    chunk_file=$dest/${app_name}_$i.pfw
+    chunk_file=$dest/${app_name}-$i.pfw
     if [ -f $chunk_file ] && [ "$override" == "0" ]; then
       date_echo "Chunk $i already exists. Skipping."
       continue
