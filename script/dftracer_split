@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# The script splits the traces into equal sized chunk optiimzed for analysis
+# The script splits the traces into equal sized chunk optimized for analysis
 # This has the following signature.
 #
 # usage: dftracer_split [-fv] [-n app_name] [-d input_directory] [-o output_directory] [-s chunk_size]
@@ -172,8 +172,11 @@ for file in sorted(glob.glob("*.pfw.gz")):
       accumulated_size += file_size_mb
       CHUNKS.append({"path": file, "size": file_size_mb, "start": start + 1, "end": max_lines + 1})
       file_size_mb = 0
-  if accumulated_size > 0:
-    print(json.dumps({"chunks": CHUNKS, "size": accumulated_size}))
+
+if len(CHUNKS) > 0:
+  print(json.dumps({"chunks": CHUNKS, "size": accumulated_size}))
+  accumulated_size = 0.0
+  CHUNKS = []
 EOF)
 
 i=0
@@ -181,6 +184,9 @@ i=0
 total_chunks=$(wc -l <<< "$PY_OUT")
 total_chunks=$((total_chunks - 1))
 JOBS_LIMIT=$(nproc --all)
+
+# echo $PY_OUT
+# echo $total_chunks
 for line in $PY_OUT; do
   running_jobs=$(jobs -rp | wc -l)
   if [ $running_jobs -ge $JOBS_LIMIT ]; then
