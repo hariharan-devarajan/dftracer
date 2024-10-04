@@ -286,7 +286,6 @@ def io_function(json_object, current_dict, time_approximate,condition_fn):
 def io_columns():
     conf = get_dft_configuration()
     return {
-        'hhash': "uint64[pyarrow]",
         'compute_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'app_io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
@@ -458,10 +457,10 @@ class DFAnalyzer:
                        'tinterval': "string[pyarrow]" if not self.conf.time_approximate else "uint64[pyarrow]", 'trange': "uint64[pyarrow]"}
             columns.update(io_columns())
             columns.update(load_cols)
-            file_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]"}
-            hostname_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]"}
-            string_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]"}
-            other_metadata_columns = { 'name':"string[pyarrow]" ,'value':"string[pyarrow]" }
+            file_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
+            hostname_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
+            string_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
+            other_metadata_columns = { 'name':"string[pyarrow]" ,'value':"string[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
             if "FH" in metadata_cols:
                 file_hash_columns.update(metadata_cols["FH"])
             if "HH" in metadata_cols:
@@ -480,7 +479,7 @@ class DFAnalyzer:
             self.file_hash = self.all_events.query("type == 1")[list(file_hash_columns.keys())].groupby('hash').first().persist()
             self.host_hash = self.all_events.query("type == 2")[list(hostname_hash_columns.keys())].groupby('hash').first().persist()
             self.string_hash = self.all_events.query("type == 3")[list(string_hash_columns.keys())].groupby('hash').first().persist()
-            self.metadata = self.all_events.query("type == 4")[list(other_metadata_columns.keys())].persist() 
+            self.metadata = self.all_events.query("type == 4")[list(other_metadata_columns.keys())].persist()
             self.n_partition = math.ceil(total_size.compute() / (128 * 1024 ** 2))
             logging.debug(f"Number of partitions used are {self.n_partition}")
             self.events = events.repartition(npartitions=self.n_partition).persist()
