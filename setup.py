@@ -209,7 +209,7 @@ setup(
                         "seaborn>=0.13.2",
                         "bokeh>=2.4.2",
                         "pybind11",
-                        "zindex_py==0.0.2",
+                        "zindex_py==0.0.3",
                         "pandas>=2.0.3",
                         "dask>=2023.5.0",
                         "distributed",

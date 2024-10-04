@@ -1,0 +1,233 @@
+#!/bin/bash
+
+# The script creates indices for the dftracer traces
+# This has the following signature.
+#
+# usage: dftracer_create_index [-fcv] [-d input_directory]
+#   -n app_name             specify app name
+#   -f                      override generated files
+#   -c                      compress input
+#   -v                      enable verbose mode
+#   -h                      display help
+#   -d input_directory      specify input directories. should contain .pfw or .pfw.gz files.
+#   -o output_directory     specify output directory
+
+date_echo() {
+    dt=$(date '+%d/%m/%Y %H:%M:%S');
+    echo "$dt  $@"
+}
+
+LOG_DIR=$PWD
+override=0
+chunk_size=1000 # 1GB default
+dest=$PWD/split
+verbose=0
+app_name="app"
+
+function usage {
+    echo "usage: $(basename $0) [-fv] [-n app_name] [-d input_directory] [-o output_directory] [-s chunk_size]"
+    echo "  -n app_name             specify app name"
+    echo "  -f                      override generated files"
+    echo "  -c                      compress input"
+    echo "  -s                      chunk size (in MB)"
+    echo "  -v                      enable verbose mode"
+    echo "  -h                      display help"
+    echo "  -d input_directory      specify input directories. should contain .pfw or .pfw.gz files."
+    echo "  -o output_directory     specify output directory"
+    exit 1
+}
+while getopts ':fvn:d:o:s:h' opt; do
+  case "$opt" in
+    n)
+      app_name="${OPTARG}"
+      ;;
+    d)
+      LOG_DIR="${OPTARG}"
+      ;;
+    s)
+      chunk_size="${OPTARG}"
+      ;;
+    o)
+      dest="${OPTARG}"
+      ;;
+    f)
+      override=1
+      ;;
+    v)
+      verbose=0
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+    :)
+      echo -e "option requires an argument.\n"
+      usage
+      exit 1
+      ;;
+
+    ?)
+      echo -e "Invalid command option.\n"
+      usage
+      exit 1
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+
+pfw_total=0
+pfw_gz_total=0
+for file in *.pfw*; do pfw_total=1; break; done
+for file in *.pfw.gz*; do pfw_gz_total=1; break; done
+
+printf "============================================\n"
+printf "Arguments:\n"
+printf "  App name: %s\n" $app_name
+printf "  Override: %s\n" $override
+printf "  Data dir: %s\n" $LOG_DIR
+printf "  Output dir: %s\n" $dest
+printf "  Chunk size: %s\n" $chunk_size
+printf "============================================\n"
+
+mkdir -p $dest
+
+# if [ $pfw_total == 0 ] || [ $pfw_gz_total == 0 ]; then
+#     date_echo "The folder does not contain any pfw or pfw.gz files."
+#     exit 1
+# fi
+#
+python -c "import zindex_py;"
+if [[ $? != 0 ]]; then
+    date_echo "failure: $?: zindex not found. Please install zindex with: pip install zindex_py"
+    exit 1
+fi
+zindex_exec=$(python3 -c 'import zindex_py;import site; sp=site.getsitepackages()[0]; print(f"{sp}/zindex_py/bin/zindex")')
+if [ ! -f "${zindex_exec}" ]; then
+  date_echo "failure: $?: zindex not found. Please install zindex with: pip install zindex_py"
+  exit 1
+else
+  date_echo "Found zindex executable at ${zindex_exec}"
+fi
+
+# if [ "$override" == "1" ]; then
+#   date_echo "Removing existing indices as override is passed."
+#   rm $LOG_DIR/*.zindex
+# fi
+
+EXTRA_CREATE_INDEX_ARGS=""
+if [ "$override" == "1" ]; then
+    EXTRA_CREATE_INDEX_ARGS="-f"
+fi
+
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+$SCRIPT_DIR/dftracer_create_index -c -d $LOG_DIR $EXTRA_CREATE_INDEX_ARGS
+
+pushd $LOG_DIR > /dev/null
+PY_OUT=$(cat <<-EOF | python3 | jq -c '.'
+import zindex_py as zindex
+import glob
+import os
+import json
+
+CHUNK_SIZE_MB=${chunk_size}
+CHUNKS=[]
+GENERATED_CHUNKS=[]
+
+# print("Splitting the traces into chunks of size", CHUNK_SIZE_MB, "MB")
+
+accumulated_size = 0.0
+chunk = 0
+
+for file in sorted(glob.glob("*.pfw.gz")):
+  max_lines = zindex.get_max_line(input_file=file, index_file=f'{file}.zindex')
+  file_size = zindex.get_total_size(input_file=file, index_file=f'{file}.zindex')
+  file_size_mb = file_size / (1024 * 1024)
+  size_per_line = file_size_mb / max_lines
+  # print(f"{file}: max_lines={max_lines}, file_size={file_size_mb} MB")
+
+  start = 0
+  end = -1
+
+  while file_size_mb > 0:
+    if file_size_mb + accumulated_size > CHUNK_SIZE_MB:
+      # case where the current file is larger than the chunk size
+      # however, we can split it into multiple chunks based on size per line
+
+      diff = CHUNK_SIZE_MB - accumulated_size
+      lines = int(diff / size_per_line)
+
+      if lines > 0:
+        CHUNKS.append({"path": file, "size": diff, "start": start + 1, "end": start + lines + 1})
+        start = end + 1
+        end = start + lines
+        accumulated_size += diff
+        file_size_mb -= diff
+      else:
+        print(json.dumps({"chunks": CHUNKS, "size": accumulated_size}))
+        start = end + 1
+        chunk += 1
+        accumulated_size = 0.0
+        CHUNKS = []
+    else:
+      accumulated_size += file_size_mb
+      CHUNKS.append({"path": file, "size": file_size_mb, "start": start + 1, "end": max_lines + 1})
+      file_size_mb = 0
+EOF)
+
+i=0
+# count number of chunks by newline
+total_chunks=$(wc -l <<< "$PY_OUT")
+total_chunks=$((total_chunks - 1))
+JOBS_LIMIT=$(nproc --all)
+for line in $PY_OUT; do
+  running_jobs=$(jobs -rp | wc -l)
+  if [ $running_jobs -ge $JOBS_LIMIT ]; then
+    date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
+    while [ $running_jobs -ge $JOBS_LIMIT ]
+    do
+        sleep 1
+        running_jobs=$(jobs -rp | wc -l)
+    done
+    date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
+  fi
+
+  {
+    size=$(jq -c '.size' <<< "$line")
+    if [ "$verbose" == "1" ]; then
+      date_echo "Processing chunk $i with size $size MB"
+    fi
+    chunk_file=$dest/${app_name}_$i.pfw
+    if [ -f $chunk_file ] && [ "$override" == "0" ]; then
+      date_echo "Chunk $i already exists. Skipping."
+      continue
+    fi
+    rm -f $chunk_file
+    touch $chunk_file
+    echo '[' > $chunk_file
+    jq -c '.chunks[]' <<< "$line" | while read chunk; do
+      path=$(jq -r '.path' <<< "$chunk")
+      start=$(jq -r '.start' <<< "$chunk")
+      end=$(jq -r '.end' <<< "$chunk")
+      if [ "$verbose" == "1" ]; then
+        echo "Extracting from $path from $start to $end"
+      fi
+      zcat $path | grep -v '^[[]\|^[]]' | sed -n "${start},${end}p" >> $chunk_file
+    done
+    echo ']' >> $chunk_file
+    date_echo "Chunk $i out of $total_chunks done with size $size MB, path = $chunk_file"
+  } &
+
+  i=$((i+1))
+done
+popd > /dev/null
+wait
+date_echo Splitting done finished
+
+date_echo Reindexing split files
+pushd $dest > /dev/null
+rm -f *.pfw.gz
+rm -f *.pfw.gz.zindex
+$SCRIPT_DIR/dftracer_create_index -c -d $dest $EXTRA_CREATE_INDEX_ARGS -f
+rm -f *.pfw
+popd
+date_echo Done reindexing split files

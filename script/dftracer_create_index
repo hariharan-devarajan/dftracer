@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# The script creates indices for the dftracer traces 
+# The script creates indices for the dftracer traces
 # This has the following signature.
 #
 # usage: dftracer_create_index [-fcv] [-d input_directory]
@@ -94,7 +94,8 @@ fi
 
 pushd $LOG_DIR
 JOBS_LIMIT=$(nproc --all)
-files=("$LOG_DIR"/*.pfw*)
+files=("$LOG_DIR"/*.pfw)
+files+=("$LOG_DIR"/*.pfw.gz)
 total=${#files[@]}
 # loop over logs
 for file_index in "${!files[@]}"; do
@@ -103,7 +104,7 @@ for file_index in "${!files[@]}"; do
   if [ $running_jobs -ge $JOBS_LIMIT ]; then
     date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
     while [ $running_jobs -ge $JOBS_LIMIT ]
-    do        
+    do
         sleep 1
         running_jobs=$(jobs -rp | wc -l)
     done
@@ -131,7 +132,7 @@ for file_index in "${!files[@]}"; do
         if [ $compressed == 1 ]; then
           date_echo "Compressing file $name"
           gzip $file
-          $zindex_exec $file.gz --index-file file:$file.gz.zindex --regex 'id:([0-9]+)' --numeric --unique          
+          $zindex_exec $file.gz --index-file file:$file.gz.zindex --regex 'id:([0-9]+)' --numeric --unique
         fi
       fi
       date_echo "Created index for file $file.gz $file_index of $total"
