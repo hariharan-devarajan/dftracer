@@ -170,6 +170,12 @@ def load_objects(line, fn, time_granularity, time_approximate, condition_fn, loa
                 d["name"] = val["name"]
             if "cat" in val:
                 d["cat"] = val["cat"]
+            if "pid" in val:
+                d["pid"] = val["pid"]
+            if "tid" in val:
+                d["tid"] = val["tid"]
+            if "args" in val and "hhash" in val["args"]:
+                d["hhash"] = val["args"]["hhash"]
             if "M" == val["ph"]:
                 if d["name"] == "FH":
                     d["type"] = 1 # 1-> file hash
@@ -186,6 +192,11 @@ def load_objects(line, fn, time_granularity, time_approximate, condition_fn, loa
                     if "args" in val and "name" in val["args"] and "value" in val["args"]:
                         d["name"] = val["args"]["name"]
                         d["hash"] = val["args"]["value"]
+                elif d["name"] == "PR":
+                    d["type"] = 5 # 5-> process metadata
+                    if "args" in val and "name" in val["args"] and "value" in val["args"]:
+                        d["name"] = val["args"]["name"]
+                        d["hash"] = val["args"]["value"]
                 else:
                     d["type"] = 4 # 4-> others
                     if "args" in val and "name" in val["args"] and "value" in val["args"]:
@@ -193,10 +204,6 @@ def load_objects(line, fn, time_granularity, time_approximate, condition_fn, loa
                         d["value"] = str(val["args"]["value"])
             else:
                 d["type"] = 0 # 0->regular event
-                if "pid" in val:
-                    d["pid"] = val["pid"]
-                if "tid" in val:
-                    d["tid"] = val["tid"]
                 if "dur" in val:
                     val["dur"] = int(val["dur"])
                     val["ts"] = int(val["ts"])
@@ -261,8 +268,6 @@ def io_function(json_object, current_dict, time_approximate,condition_fn):
     if "args" in json_object:
         if "fhash" in json_object["args"]:
             d["fhash"] = json_object["args"]["fhash"]
-        if "hhash" in json_object["args"]:
-            d["hhash"] = json_object["args"]["hhash"]
 
         if "POSIX" == json_object["cat"] and "ret" in json_object["args"]:
             size = int(json_object["args"]["ret"])
