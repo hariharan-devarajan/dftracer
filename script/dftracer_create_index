@@ -91,12 +91,14 @@ if [ "$override" == "1" ]; then
   date_echo "Removing existing indices as override is passed."
   files=("$LOG_DIR"/*.zindex)
   for file_index in "${!files[@]}"; do
-  file=${files[$file_index]}
-  rm $file
+    file=${files[$file_index]}
+    if [ -f "$file" ]; then
+      rm $file
+    fi
   done
 fi
 
-pushd $LOG_DIR
+pushd $LOG_DIR > /dev/null
 JOBS_LIMIT=$(nproc --all)
 files=("$LOG_DIR"/*.pfw*)
 total=${#files[@]}
@@ -147,6 +149,6 @@ for file_index in "${!files[@]}"; do
     fi
   fi
 done
-popd
+popd > /dev/null
 wait
 date_echo Creation of index finished
