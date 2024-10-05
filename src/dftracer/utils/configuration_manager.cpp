@@ -43,7 +43,7 @@ bool dftracer::Singleton<
 dftracer::ConfigurationManager::ConfigurationManager()
     : enable(false),
       init_type(PROFILER_INIT_FUNCTION),
-      log_file(./trace),
+      log_file("./trace"),
       data_dirs("all"),
       metadata(false),
       core_affinity(false),
