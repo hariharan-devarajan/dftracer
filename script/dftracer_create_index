@@ -15,6 +15,11 @@ date_echo() {
     echo "$dt  $@"
 }
 
+progress_date_echo() {
+    dt=$(date '+%d/%m/%Y %H:%M:%S')
+    echo -ne "$dt  $@"\\r
+}
+
 LOG_DIR=$PWD
 override=0
 compressed=0
@@ -130,7 +135,7 @@ for file_index in "${!files[@]}"; do
         if [ ! -f "$file.zindex" ]; then
           $zindex_exec $file --index-file file:$file.zindex --regex 'id:([0-9]+)' --numeric --unique
         fi
-        date_echo "Created index for file $file $((file_index+1)) of $total"
+        progress_date_echo "Created index for file $file $((file_index+1)) of $total"
         } &
       else
         {
@@ -143,7 +148,7 @@ for file_index in "${!files[@]}"; do
             $zindex_exec $file.gz --index-file file:$file.gz.zindex --regex 'id:([0-9]+)' --numeric --unique
           fi
         fi
-        date_echo "Created index for file $file.gz $((file_index+1)) of $total"
+        progress_date_echo "Created index for file $file.gz $((file_index+1)) of $total"
         } &
       fi
     fi

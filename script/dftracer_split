@@ -28,6 +28,11 @@ date_echo() {
     echo "$dt  $@"
 }
 
+progress_date_echo() {
+    dt=$(date '+%d/%m/%Y %H:%M:%S')
+    echo -ne "$dt  $@                              "\\r
+}
+
 LOG_DIR=$PWD
 override=0
 chunk_size=1024 # 1GB default
@@ -144,12 +149,16 @@ else
   date_echo "Indices are present skipping it."
 fi
 
-JOBS_LIMIT=$(nproc --all)
+JOBS_LIMIT=1024
 pushd $LOG_DIR > /dev/null
 
 files=("$LOG_DIR"/*.zindex)
 total=${#files[@]}
 declare -A count
+counting_file="counting.bak"
+rm ${counting_file}
+touch ${counting_file}
+exec 3< ${counting_file}
 for file_index in "${!files[@]}"; do
   running_jobs=$(jobs -rp | wc -l)
   if [ $running_jobs -ge $JOBS_LIMIT ]; then
@@ -161,39 +170,36 @@ for file_index in "${!files[@]}"; do
     done
     date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
   fi
-
   file_name=${files[$file_index]}
   filename_without_ext=$(basename $file_name .pfw.gz.zindex)
-  if [ $sqlite_exists -eq 1 ]; then
-    count[$file_index]=$(
-    {
-      IFS='|' read -r size start end <<< $(sqlite3 $file_name "select sum(length), min(line), max(line) as a from LineOffsets where length > 8;")
-      size_mb=$(bc -l <<< "scale=8; $size / (1024 * 1024)")
-      echo "${filename_without_ext},${size_mb},${start},${end}"
-      date_echo Completed collecting size $file_index of $total >&2
-    } &)
-
-  else
-    count[$file_index]=$(
-    {
-      python3 <<-EOF
-import os
-import sqlite3
-
-file="${file_name}"
-conn = sqlite3.connect(file)
-cursor = conn.execute("select sum(length), min(line), max(line) as a from LineOffsets where length > 8;")
-res = cursor.fetchone()
-print(f"${filename_without_ext},{res[0] / (1024 * 1024)},{res[1]},{res[2]}")
-EOF
-} &)
-  fi
+  (
+    IFS='|' read -r size start end <<< $(sqlite3 $file_name "select sum(length), min(line), max(line) as a from LineOffsets where length > 8;")
+    size_mb=$(bc -l <<< "scale=8; $size / (1024 * 1024)")
+    echo "${file_index},${filename_without_ext},${size_mb},${start},${end}" >> ${counting_file}
+    progress_date_echo Completed collecting size $size_mb $file_index of $total
+  ) &
+  
 done
+rm ${counting_file}
 wait
-
-for count_index in "${!count[@]}"; do
-  echo "$count_index ${count[$count_index]}"
+echo ""
+for file_index in "${!files[@]}"; do
+  IFS='|' read -r index filename size start end <<< read <&3
+  count[$index]=$(echo "$filename,$size,$start,$end")
+  progress_date_echo Collected data task $file_index of $total
 done
+echo ""
+
+# for count_index in "${!count[@]}"; do
+#   echo "$count_index ${count[$count_index]}"
+# done
+
+if [ ${#count[@]} -ne ${#files[@]} ]; then
+  date_echo "Didnot collect all files"
+  exit 1
+else
+  date_echo "Finished collecting data from tasks"
+fi
 
 CHUNKS=()
 chunk_index=0
@@ -216,8 +222,10 @@ for i in ${!count[@]}; do
 
       if [ $(bc -l <<< "scale=0; $lines > 0") -eq 1 ]; then
         if [ "${CHUNKS[$chunk_index]}" == "" ]; then
+          progress_date_echo "Adding $file_name,$size_chunk,$start,$((start + lines)) to chunk $chunk_index"
           CHUNKS[$chunk_index]="$file_name,$size_chunk,$start,$((start + lines))"
         else
+          progress_date_echo "Adding $file_name,$size_chunk,$start,$((start + lines)) to chunk $chunk_index"
           CHUNKS[$chunk_index]="${CHUNKS[$chunk_index]};$file_name,$size_chunk,$start,$((start + lines))"
         fi
 
@@ -232,8 +240,10 @@ for i in ${!count[@]}; do
       accumulated_size=$(bc -l <<< "scale=8; $accumulated_size + $size")
       if [ "${CHUNKS[$chunk_index]}" == "" ]; then
         CHUNKS[$chunk_index]="$file_name,$size,$start,$end"
+        progress_date_echo "Adding $file_name,$size_chunk,$start,$((start + lines)) to chunk $chunk_index"
       else
         CHUNKS[$chunk_index]="${CHUNKS[$chunk_index]};$file_name,$size,$start,$end"
+        progress_date_echo "Adding $file_name,$size_chunk,$start,$((start + lines)) to chunk $chunk_index"
       fi
       size=0
     fi
@@ -278,7 +288,7 @@ for i in ${!CHUNKS[@]}; do
       total_size=$(bc -l <<< "scale=2; $total_size + $size")
     done
     echo ']' >> $chunk_file
-    date_echo "Chunk $i out of ${#CHUNKS[@]} done with size $total_size MB, path = $chunk_file"
+    progress_date_echo "Chunk $i out of ${#CHUNKS[@]} done with size $total_size MB, path = $chunk_file"
   } &
 done
 wait
