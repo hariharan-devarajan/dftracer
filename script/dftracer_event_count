@@ -56,19 +56,62 @@ function get_lines_count {
 
   pushd $dir > /dev/null
 
-  lines_count=$(cat <<-EOF | python3
+  # check if sqlite3 exists
+  sqlite_exists=0
+  if command -v sqlite3 &> /dev/null; then
+    # echo "sqlite3 exists"
+    sqlite_exists=1
+  fi
+
+  files=("$dir"/*.zindex)
+  JOBS_LIMIT=$(nproc --all)
+  declare -A lines_counts
+  # for i in $(seq 1 $JOBS_LIMIT); do
+  #   lines_counts+=("0")
+  # done
+  for file_index in "${!files[@]}"; do
+    running_jobs=$(jobs -rp | wc -l)
+    if [ $running_jobs -ge $JOBS_LIMIT ]; then
+      date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
+      while [ $running_jobs -ge $JOBS_LIMIT ]
+      do
+        sleep 1
+        running_jobs=$(jobs -rp | wc -l)
+      done
+      date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
+    fi
+
+    file_name=${files[$file_index]}
+    # echo "Processing $file_name"
+    if [ $sqlite_exists -eq 1 ]; then
+      lines_counts[$file_index]=$(
+      {
+        sqlite3 $file_name "select count(line) as a from LineOffsets where length > 8;"
+      } &)
+    else
+      lines_counts[$file_index]=$(
+      {
+python3 <<-EOF
 import zindex_py as zindex
 import glob
 import sqlite3
 
-lines_count = 0
-for file in sorted(glob.glob("*.pfw.gz")):
-  conn = sqlite3.connect(f"{file}.zindex")
-  res = conn.execute("select count(line) as a from LineOffsets where length > 8;")
-  lines_count += res.fetchone()[0]
+conn = sqlite3.connect("${file_name}")
+res = conn.execute("select count(line) as a from LineOffsets where length > 8;")
+lines_count = res.fetchone()[0]
 print(lines_count)
-EOF)
+EOF
+} &)
+    fi
+  done
+  wait
+
   popd > /dev/null
+
+  lines_count=0
+  for line_count in "${lines_counts[@]}"; do
+    lines_count=$((lines_count + line_count))
+  done
 
   echo $lines_count
 }
