@@ -255,12 +255,12 @@ void dftracer::ChromeWriter::convert_json_metadata(
     if (is_string) {
       written_size = sprintf(
           buffer.data() + current_index,
-          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"name":"%s","value":"%s"}})",
+          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"hhash":%d,"name":"%s","value":"%s"}})",
           is_first_char, index, ph, process_id, thread_id, name, value);
     } else {
       written_size = sprintf(
           buffer.data() + current_index,
-          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"name":"%s","value":%s}})",
+          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"hhash":%d,"name":"%s","value":%s}})",
           is_first_char, index, ph, process_id, thread_id, name, value);
     }
     current_index += written_size;

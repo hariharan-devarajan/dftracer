@@ -170,6 +170,12 @@ def load_objects(line, fn, time_granularity, time_approximate, condition_fn, loa
                 d["name"] = val["name"]
             if "cat" in val:
                 d["cat"] = val["cat"]
+            if "pid" in val:
+                d["pid"] = val["pid"]
+            if "tid" in val:
+                d["tid"] = val["tid"]
+            if "args" in val and "hhash" in val["args"]:
+                d["hhash"] = val["args"]["hhash"]
             if "M" == val["ph"]:
                 if d["name"] == "FH":
                     d["type"] = 1 # 1-> file hash
@@ -186,6 +192,11 @@ def load_objects(line, fn, time_granularity, time_approximate, condition_fn, loa
                     if "args" in val and "name" in val["args"] and "value" in val["args"]:
                         d["name"] = val["args"]["name"]
                         d["hash"] = val["args"]["value"]
+                elif d["name"] == "PR":
+                    d["type"] = 5 # 5-> process metadata
+                    if "args" in val and "name" in val["args"] and "value" in val["args"]:
+                        d["name"] = val["args"]["name"]
+                        d["hash"] = val["args"]["value"]
                 else:
                     d["type"] = 4 # 4-> others
                     if "args" in val and "name" in val["args"] and "value" in val["args"]:
@@ -193,10 +204,6 @@ def load_objects(line, fn, time_granularity, time_approximate, condition_fn, loa
                         d["value"] = str(val["args"]["value"])
             else:
                 d["type"] = 0 # 0->regular event
-                if "pid" in val:
-                    d["pid"] = val["pid"]
-                if "tid" in val:
-                    d["tid"] = val["tid"]
                 if "dur" in val:
                     val["dur"] = int(val["dur"])
                     val["ts"] = int(val["ts"])
@@ -261,8 +268,6 @@ def io_function(json_object, current_dict, time_approximate,condition_fn):
     if "args" in json_object:
         if "fhash" in json_object["args"]:
             d["fhash"] = json_object["args"]["fhash"]
-        if "hhash" in json_object["args"]:
-            d["hhash"] = json_object["args"]["hhash"]
 
         if "POSIX" == json_object["cat"] and "ret" in json_object["args"]:
             size = int(json_object["args"]["ret"])
@@ -281,7 +286,6 @@ def io_function(json_object, current_dict, time_approximate,condition_fn):
 def io_columns():
     conf = get_dft_configuration()
     return {
-        'hhash': "uint64[pyarrow]",
         'compute_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'app_io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
@@ -453,10 +457,10 @@ class DFAnalyzer:
                        'tinterval': "string[pyarrow]" if not self.conf.time_approximate else "uint64[pyarrow]", 'trange': "uint64[pyarrow]"}
             columns.update(io_columns())
             columns.update(load_cols)
-            file_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]"}
-            hostname_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]"}
-            string_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]"}
-            other_metadata_columns = { 'name':"string[pyarrow]" ,'value':"string[pyarrow]" }
+            file_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
+            hostname_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
+            string_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
+            other_metadata_columns = { 'name':"string[pyarrow]" ,'value':"string[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
             if "FH" in metadata_cols:
                 file_hash_columns.update(metadata_cols["FH"])
             if "HH" in metadata_cols:
@@ -475,7 +479,7 @@ class DFAnalyzer:
             self.file_hash = self.all_events.query("type == 1")[list(file_hash_columns.keys())].groupby('hash').first().persist()
             self.host_hash = self.all_events.query("type == 2")[list(hostname_hash_columns.keys())].groupby('hash').first().persist()
             self.string_hash = self.all_events.query("type == 3")[list(string_hash_columns.keys())].groupby('hash').first().persist()
-            self.metadata = self.all_events.query("type == 4")[list(other_metadata_columns.keys())].persist() 
+            self.metadata = self.all_events.query("type == 4")[list(other_metadata_columns.keys())].persist()
             self.n_partition = math.ceil(total_size.compute() / (128 * 1024 ** 2))
             logging.debug(f"Number of partitions used are {self.n_partition}")
             self.events = events.repartition(npartitions=self.n_partition).persist()
