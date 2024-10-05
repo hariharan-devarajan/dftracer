@@ -3,25 +3,24 @@
 # The script will count number of valid events of traces
 # This has the following signature.
 #
-# usage: dftracer_split [-c] [-d input_directory]
+# usage: dftracer_split [-f] [-d input_directory]
 #   -d input_directory      specify input directories. should contain .pfw or .pfw.gz files.
-#   -f                      override generated files
-#   -c                      disable create index (assuming index exists, if not will throw error)
+#   -f                      force index creation
 #   -h                      display help
 
 LOG_DIR=$PWD
 run_create_index=1
 
 function usage {
-    echo "usage: $(basename $0) [-c] [-d input_directory]"
+    echo "usage: $(basename $0) [-f] [-d input_directory]"
     echo "  -h                      display help"
-    echo "  -c                      disable create index (assuming index exists, if not will throw error)"
+    echo "  -f                      force index creation"
     echo "  -d input_directory      specify input directories. should contain .pfw or .pfw.gz files."
     exit 1
 }
-while getopts ':cd:h' opt; do
+while getopts ':fd:h' opt; do
   case "$opt" in
-    c)
+    f)
       run_create_index=0
       ;;
     d)
@@ -116,8 +115,17 @@ EOF
   echo $lines_count
 }
 
+files=("$LOG_DIR"/*.pfw.gz)
+for file in $files; do
+  if [ ! -f "$file.zindex" ]; then
+    run_create_index=1
+    break
+  fi
+done
+
 if [ "$run_create_index" == "1" ]; then
   SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-  $SCRIPT_DIR/dftracer_create_index -c -d $LOG_DIR -f >/dev/null
+  $SCRIPT_DIR/dftracer_create_index -f -d $LOG_DIR -f >/dev/null
 fi
+
 get_lines_count $LOG_DIR

@@ -291,11 +291,11 @@ rm -f *.pfw
 
 LINES_COUNT=$(
   {
-    $SCRIPT_DIR/dftracer_event_count -d $LOG_DIR -c
+    $SCRIPT_DIR/dftracer_event_count -d $LOG_DIR
   } &)
 SPLIT_LINES_COUNT=$(
   {
-    $SCRIPT_DIR/dftracer_event_count -d $dest -c
+    $SCRIPT_DIR/dftracer_event_count -d $dest
   } &)
 wait
 
