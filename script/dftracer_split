@@ -113,7 +113,7 @@ if [[ $? != 0 ]]; then
     date_echo "failure: $?: zindex not found. Please install zindex with: pip install zindex_py"
     exit 1
 fi
-zindex_exec=$(python3 -c 'import zindex_py;import site; sp=site.getsitepackages()[0]; print(f"{sp}/zindex_py/bin/zindex")')
+zindex_exec=$(python -c 'import zindex_py;import site; sp=site.getsitepackages()[0]; print(f"{sp}/zindex_py/bin/zindex")')
 if [ ! -f "${zindex_exec}" ]; then
   date_echo "failure: $?: zindex not found. Please install zindex with: pip install zindex_py"
   exit 1
@@ -121,7 +121,7 @@ else
   date_echo "Found zindex executable at ${zindex_exec}"
 fi
 
-zq_exec=$(python3 -c 'import zindex_py;import site; sp=site.getsitepackages()[0]; print(f"{sp}/zindex_py/bin/zq")')
+zq_exec=$(python -c 'import zindex_py;import site; sp=site.getsitepackages()[0]; print(f"{sp}/zindex_py/bin/zq")')
 if [ ! -f "${zq_exec}" ]; then
   date_echo "failure: $?: zq not found. Please install zindex with: pip install zindex_py (zq is included in zindex_py)"
   exit 1
@@ -148,6 +148,7 @@ JOBS_LIMIT=$(nproc --all)
 pushd $LOG_DIR > /dev/null
 
 files=("$LOG_DIR"/*.zindex)
+total=${#files[@]}
 declare -A count
 for file_index in "${!files[@]}"; do
   running_jobs=$(jobs -rp | wc -l)
@@ -169,6 +170,7 @@ for file_index in "${!files[@]}"; do
       IFS='|' read -r size start end <<< $(sqlite3 $file_name "select sum(length), min(line), max(line) as a from LineOffsets where length > 8;")
       size_mb=$(bc -l <<< "scale=8; $size / (1024 * 1024)")
       echo "${filename_without_ext},${size_mb},${start},${end}"
+      date_echo Completed collecting size $file_index of $total >&2
     } &)
 
   else
@@ -189,9 +191,9 @@ EOF
 done
 wait
 
-# for count_index in "${!count[@]}"; do
-#   echo "$count_index ${count[$count_index]}"
-# done
+for count_index in "${!count[@]}"; do
+  echo "$count_index ${count[$count_index]}"
+done
 
 CHUNKS=()
 chunk_index=0
