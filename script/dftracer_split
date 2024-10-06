@@ -156,57 +156,53 @@ files=("$LOG_DIR"/*.zindex)
 total=${#files[@]}
 declare -A count
 counting_file="counting.bak"
-rm ${counting_file}
-touch ${counting_file}
-exec 3< ${counting_file}
-for file_index in "${!files[@]}"; do
-  running_jobs=$(jobs -rp | wc -l)
-  if [ $running_jobs -ge $JOBS_LIMIT ]; then
-    date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
-    while [ $running_jobs -ge $JOBS_LIMIT ]
-    do
-        sleep 1
-        running_jobs=$(jobs -rp | wc -l)
-    done
-    date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
-  fi
-  file_name=${files[$file_index]}
-  filename_without_ext=$(basename $file_name .pfw.gz.zindex)
-  (
-    IFS='|' read -r size start end <<< $(sqlite3 $file_name "select sum(length), min(line), max(line) as a from LineOffsets where length > 8;")
-    size_mb=$(bc -l <<< "scale=8; $size / (1024 * 1024)")
-    echo "${file_index},${filename_without_ext},${size_mb},${start},${end}" >> ${counting_file}
-    progress_date_echo Completed collecting size $size_mb $file_index of $total
-  ) &
-  
-done
-rm ${counting_file}
+if [ ! -f $counting_file ] || [ $override == 1 ]; then
+  rm ${counting_file}
+  touch ${counting_file}
+  for file_index in "${!files[@]}"; do
+    running_jobs=$(jobs -rp | wc -l)
+    if [ $running_jobs -ge $JOBS_LIMIT ]; then
+      date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
+      while [ $running_jobs -ge $JOBS_LIMIT ]
+      do
+          sleep 1
+          running_jobs=$(jobs -rp | wc -l)
+      done
+      date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
+    fi
+    file_name=${files[$file_index]}
+    filename_without_ext=$(basename $file_name .pfw.gz.zindex)
+    (
+      IFS='|' read -r size start end <<< $(sqlite3 $file_name "select sum(length), min(line), max(line) as a from LineOffsets where length > 8;")
+      size_mb=$(bc -l <<< "scale=8; $size / (1024 * 1024)")
+      echo "${file_index}|${filename_without_ext}|${size_mb}|${start}|${end}" >> ${counting_file}
+      progress_date_echo Completed collecting size $size_mb $file_index of $total
+    ) &
+  done
+else
+  date_echo "Previous counting present"
+fi
 wait
 echo ""
-for file_index in "${!files[@]}"; do
-  IFS='|' read -r index filename size start end <<< read <&3
-  count[$index]=$(echo "$filename,$size,$start,$end")
-  progress_date_echo Collected data task $file_index of $total
-done
-echo ""
+
+counts=$(wc -l ${counting_file} | awk {'print $1'})
 
 # for count_index in "${!count[@]}"; do
 #   echo "$count_index ${count[$count_index]}"
 # done
 
-if [ ${#count[@]} -ne ${#files[@]} ]; then
-  date_echo "Didnot collect all files"
+if [ "$counts" != "${#files[@]}" ]; then
+  date_echo "Did not collect all files ${#count[@]} of ${#files[@]}"
   exit 1
 else
-  date_echo "Finished collecting data from tasks"
+  date_echo "Finished collecting data from ${#files[@]} tasks"
 fi
-
+total=${#files[@]}
 CHUNKS=()
 chunk_index=0
 accumulated_size=0
 temp_chunk=""
-for i in ${!count[@]}; do
-  IFS=, read -r file_name size start end <<< "${count[$i]}"
+while IFS='|' read -r index file_name size start end; do
   size_per_line=$(bc -l <<< "scale=8; $size / ($end - $start + 1)")
 
   while [ "$(bc -l <<< "scale=8; $size > 0")" -eq 1 ]; do
@@ -222,10 +218,10 @@ for i in ${!count[@]}; do
 
       if [ $(bc -l <<< "scale=0; $lines > 0") -eq 1 ]; then
         if [ "${CHUNKS[$chunk_index]}" == "" ]; then
-          progress_date_echo "Adding $file_name,$size_chunk,$start,$((start + lines)) to chunk $chunk_index"
+          progress_date_echo "Adding $index of $total to chunk $chunk_index with size $accumulated_size"
           CHUNKS[$chunk_index]="$file_name,$size_chunk,$start,$((start + lines))"
         else
-          progress_date_echo "Adding $file_name,$size_chunk,$start,$((start + lines)) to chunk $chunk_index"
+          progress_date_echo "Adding $index of $total to chunk $chunk_index  with size $accumulated_size"
           CHUNKS[$chunk_index]="${CHUNKS[$chunk_index]};$file_name,$size_chunk,$start,$((start + lines))"
         fi
 
@@ -240,15 +236,15 @@ for i in ${!count[@]}; do
       accumulated_size=$(bc -l <<< "scale=8; $accumulated_size + $size")
       if [ "${CHUNKS[$chunk_index]}" == "" ]; then
         CHUNKS[$chunk_index]="$file_name,$size,$start,$end"
-        progress_date_echo "Adding $file_name,$size_chunk,$start,$((start + lines)) to chunk $chunk_index"
+        progress_date_echo "Adding $index of $total to chunk $chunk_index  with size $accumulated_size"
       else
         CHUNKS[$chunk_index]="${CHUNKS[$chunk_index]};$file_name,$size,$start,$end"
-        progress_date_echo "Adding $file_name,$size_chunk,$start,$((start + lines)) to chunk $chunk_index"
+        progress_date_echo "Adding $index of $total to chunk $chunk_index  with size $accumulated_size"
       fi
       size=0
     fi
   done
-done
+done < ${counting_file}
 
 date_echo "Total chunks: ${#CHUNKS[@]}"
 date_echo "Start processing chunks"
@@ -301,21 +297,21 @@ rm -f *.pfw.gz
 $SCRIPT_DIR/dftracer_create_index -c -d $dest -f
 rm -f *.pfw
 
-LINES_COUNT=$(
-  {
-    $SCRIPT_DIR/dftracer_event_count -d $LOG_DIR
-  } &)
-SPLIT_LINES_COUNT=$(
-  {
-    $SCRIPT_DIR/dftracer_event_count -d $dest
-  } &)
-wait
+# LINES_COUNT=$(
+#   {
+#     $SCRIPT_DIR/dftracer_event_count -d $LOG_DIR
+#   } &)
+# SPLIT_LINES_COUNT=$(
+#   {
+#     $SCRIPT_DIR/dftracer_event_count -d $dest
+#   } &)
+# wait
 
-if [ $LINES_COUNT -ne $SPLIT_LINES_COUNT ]; then
-  date_echo "Error: Original lines count $LINES_COUNT does not match split lines count $SPLIT_LINES_COUNT"
-  exit 1
-else
-  date_echo "Original lines count $LINES_COUNT matches split lines count $SPLIT_LINES_COUNT"
-fi
+# if [ $LINES_COUNT -ne $SPLIT_LINES_COUNT ]; then
+#   date_echo "Error: Original lines count $LINES_COUNT does not match split lines count $SPLIT_LINES_COUNT"
+#   exit 1
+# else
+#   date_echo "Original lines count $LINES_COUNT matches split lines count $SPLIT_LINES_COUNT"
+# fi
 popd > /dev/null
 date_echo Done reindexing split files

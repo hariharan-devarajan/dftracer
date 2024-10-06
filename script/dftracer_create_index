@@ -156,4 +156,5 @@ for file_index in "${!files[@]}"; do
 done
 popd > /dev/null
 wait
+echo ""
 date_echo Creation of index finished

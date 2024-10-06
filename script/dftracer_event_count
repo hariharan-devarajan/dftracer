@@ -7,7 +7,15 @@
 #   -d input_directory      specify input directories. should contain .pfw or .pfw.gz files.
 #   -f                      force index creation
 #   -h                      display help
+date_echo() {
+    dt=$(date '+%d/%m/%Y %H:%M:%S')
+    echo "$dt  $@"
+}
 
+progress_date_echo() {
+    dt=$(date '+%d/%m/%Y %H:%M:%S')
+    echo -ne "$dt  $@                              "\\r
+}
 LOG_DIR=$PWD
 run_create_index=1
 
@@ -86,6 +94,7 @@ function get_lines_count {
       lines_counts[$file_index]=$(
       {
         sqlite3 $file_name "select count(line) as a from LineOffsets where length > 8;"
+        progress_date_echo "Finished counting $file_index of $total" >&2
       } &)
     else
       lines_counts[$file_index]=$(
