@@ -8,9 +8,10 @@
             "name": "Cmake Debug Target",
             "type": "lldb",
             "request": "launch",
-            "program": "${cmake.testProgram}",
+            "program": "/usr/workspace/haridev/dftracer/build/bin/test_cpp",
             "args": [
-                "${cmake.testArgs}"
+                "/usr/workspace/haridev/dftracer/build/test/data",
+                "1"
             ],
             "cwd": "${workspaceFolder}/build",
             "env": {

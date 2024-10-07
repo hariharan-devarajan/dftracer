@@ -25,24 +25,24 @@ class POSIXDFTracer : public POSIX {
   static bool stop_trace;
   static std::shared_ptr<POSIXDFTracer> instance;
   static const int MAX_FD = 1024;
-  uint16_t tracked_fd[MAX_FD];
+  std::string tracked_fd[MAX_FD];
   std::shared_ptr<DFTLogger> logger;
   bool trace_all_files;
 
-  inline uint16_t is_traced(int fd, const char *func) {
-    if (fd < 0) return 0;
-    uint16_t trace = tracked_fd[fd % MAX_FD];
-    if (trace != 0) {
+  inline std::string is_traced(int fd, const char *func) {
+    if (fd < 0) return std::string();
+    std::string trace = tracked_fd[fd % MAX_FD];
+    if (trace.empty()) {
       DFTRACER_LOG_DEBUG(
           "Calling POSIXDFTracer.is_traced for %s and"
           " fd %d trace %d",
-          func, fd, trace != 0);
+          func, fd, !trace.empty());
     }
     return trace;
   }
 
-  inline uint16_t is_traced(const char *filename, const char *func) {
-    if (stop_trace) return 0;
+  inline std::string is_traced(const char *filename, const char *func) {
+    if (stop_trace) return std::string();
     if (trace_all_files) {
       return logger->hash_and_store(filename, METADATA_NAME_FILE_HASH);
     } else {
@@ -56,7 +56,7 @@ class POSIXDFTracer : public POSIX {
     }
   }
 
-  inline void trace(int fd, uint16_t hash) {
+  inline void trace(int fd, std::string hash) {
     DFTRACER_LOG_DEBUG("Calling POSIXDFTracer.trace for %d and %d", fd, hash);
     if (fd == -1) return;
     tracked_fd[fd % MAX_FD] = hash;
@@ -65,13 +65,13 @@ class POSIXDFTracer : public POSIX {
   inline void remove_trace(int fd) {
     DFTRACER_LOG_DEBUG("Calling POSIXDFTracer.remove_trace for %d", fd);
     if (fd == -1) return;
-    tracked_fd[fd % MAX_FD] = 0;
+    tracked_fd[fd % MAX_FD] = std::string();
   }
 
  public:
   POSIXDFTracer(bool trace_all) : POSIX(), trace_all_files(trace_all) {
     DFTRACER_LOG_DEBUG("POSIX class intercepted", "");
-    for (int i = 0; i < MAX_FD; ++i) tracked_fd[i] = 0;
+    for (int i = 0; i < MAX_FD; ++i) tracked_fd[i] = std::string();
     logger = DFT_LOGGER_INIT();
   }
   void finalize() {

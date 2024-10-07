@@ -22,7 +22,7 @@ template <>
 bool dftracer::Singleton<dftracer::ChromeWriter>::stop_creating_instances =
     false;
 void dftracer::ChromeWriter::initialize(char *filename, bool throw_error,
-                                        uint16_t hostname_hash) {
+                                        const char *hostname_hash) {
   this->hostname_hash = hostname_hash;
   this->throw_error = throw_error;
   this->filename = filename;
@@ -214,9 +214,10 @@ void dftracer::ChromeWriter::convert_json(
       previous_index = current_index;
       auto written_size = sprintf(
           buffer.data() + current_index,
-          R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{"hhash":%d%s}})",
+          R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{"hhash":"%s"%s}})",
           is_first_char, index, event_name, category, process_id, thread_id,
-          start_time, duration, this->hostname_hash, all_stream.str().c_str());
+          start_time, duration, this->hostname_hash.c_str(),
+          all_stream.str().c_str());
       current_index += written_size;
       buffer[current_index] = '\n';
       current_index++;
@@ -255,13 +256,15 @@ void dftracer::ChromeWriter::convert_json_metadata(
     if (is_string) {
       written_size = sprintf(
           buffer.data() + current_index,
-          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"hhash":%d,"name":"%s","value":"%s"}})",
-          is_first_char, index, ph, process_id, thread_id, name, value);
+          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"hhash":"%s","name":"%s","value":"%s"}})",
+          is_first_char, index, ph, process_id, thread_id,
+          this->hostname_hash.c_str(), name, value);
     } else {
       written_size = sprintf(
           buffer.data() + current_index,
-          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"hhash":%d,"name":"%s","value":%s}})",
-          is_first_char, index, ph, process_id, thread_id, name, value);
+          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"hhash":"%s","name":"%s","value":%s}})",
+          is_first_char, index, ph, process_id, thread_id,
+          this->hostname_hash.c_str(), name, value);
     }
     current_index += written_size;
     buffer[current_index] = '\n';
