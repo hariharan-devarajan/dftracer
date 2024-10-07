@@ -190,19 +190,50 @@ counts=$(wc -l ${counting_file} | awk {'print $1'})
 #   echo "$count_index ${count[$count_index]}"
 # done
 
+echo ""
 if [ "$counts" != "${#files[@]}" ]; then
   date_echo "Did not collect all files ${#count[@]} of ${#files[@]}"
   exit 1
 else
   date_echo "Finished collecting data from ${#files[@]} tasks"
 fi
+
+
+chunk_index=1
+file_processed=0
+CHUNKS_LINES=()
+while true; do
+  chunk_file=".chunk-${chunk_index}.bak"
+  if [ -f $chunk_file ]; then
+    files_in_chunk=$(wc -l ".chunk-${chunk_index}.bak" | awk {'print $1'})
+    chunk_index=$((chunk_index + 1))
+    file_processed=$((file_processed + files_in_chunk))
+    CHUNKS_LINES[$chunk_index]=$file_processed
+  else
+    break
+  fi
+done
+existing_chunk_index=$chunk_index
+
 total=${#files[@]}
 CHUNKS=()
-chunk_index=0
 accumulated_size=0
 temp_chunk=""
-scheduled_chunks=-1
+scheduled_chunks=0
+
+
+chunk_index=1
+chunk_index_file=".chunk-${chunk_index}.bak"
+line_number=0
 while IFS='|' read -r index file_name size start end; do
+  line_number=$((line_number + 1))
+  if [ $line_number -lt $file_processed ]; then
+    if [[ $line_number -eq ${CHUNKS_LINES[$chunk_index]} ]]; then
+      chunk_index=$((chunk_index + 1))
+      chunk_index_file=".chunk-${chunk_index}.bak"
+    fi
+    continue
+  fi
   size_per_line=$(bc -l <<< "scale=8; $size / ($end - $start + 1)")
 
   while [ "$(bc -l <<< "scale=8; $size > 0")" -eq 1 ]; do
@@ -217,11 +248,7 @@ while IFS='|' read -r index file_name size start end; do
       fi
 
       if [ $(bc -l <<< "scale=0; $lines > 0") -eq 1 ]; then
-        if [ "${CHUNKS[$chunk_index]}" == "" ]; then
-          CHUNKS[$chunk_index]="$file_name,$size_chunk,$start,$((start + lines))"
-        else
-          CHUNKS[$chunk_index]="${CHUNKS[$chunk_index]};$file_name,$size_chunk,$start,$((start + lines))"
-        fi
+        echo "$file_name|$size_chunk|$start|$((start + lines))" >> ${chunk_index_file}
 
         start=$((start + lines + 1))
         accumulated_size=$(bc -l <<< "scale=8; $accumulated_size + $size_chunk")
@@ -231,7 +258,6 @@ while IFS='|' read -r index file_name size start end; do
         i=$chunk_index
         scheduled_chunks=$chunk_index
         {          
-          chunk=${CHUNKS[$i]}
           if [ "$verbose" == "1" ]; then
             date_echo "Processing chunk $i with size $size MB"
           fi
@@ -239,79 +265,65 @@ while IFS='|' read -r index file_name size start end; do
           rm -f $chunk_file
           touch $chunk_file
           echo '[' > $chunk_file
-          IFS=';' read -ra files <<< "$chunk"
-          total_size=0
-          for file in "${files[@]}"; do
-            file_name=$(echo $file | cut -d, -f1)
-            size=$(echo $file | cut -d, -f2)
-            start=$(echo $file | cut -d, -f3)
-            end=$(echo $file | cut -d, -f4)
+          while IFS='|' read -r file_name size start end; do
             if [ "$verbose" == "1" ]; then
               date_echo "[CHUNK $i] Extracting from $file_name from $start to $end with size $size"
             fi
             $zq_exec ${file_name}.pfw.gz --index-file ${file_name}.pfw.gz.zindex --raw "select a.line from LineOffsets a where a.line >= $start AND a.line <= $end AND a.length > 8;" | grep -v '^[[]\|^[]]' >> $chunk_file
             total_size=$(bc -l <<< "scale=2; $total_size + $size")
-          done
-          echo ']' >> $chunk_file
-          progress_date_echo "Chunk $i out of ${#CHUNKS[@]} done with size $total_size MB, path = $chunk_file"
+          done < ${chunk_index_file}
+          progress_date_echo "Chunk $i out of ${#CHUNKS_LINES[@]} done with size $total_size MB, path = $chunk_file"
         } &
         chunk_index=$((chunk_index + 1))
         accumulated_size=0
+        chunk_index_file=".chunk-${chunk_index}.bak"
       fi
     else
       accumulated_size=$(bc -l <<< "scale=8; $accumulated_size + $size")
-      if [ "${CHUNKS[$chunk_index]}" == "" ]; then
-        CHUNKS[$chunk_index]="$file_name,$size,$start,$end"
-      else
-        CHUNKS[$chunk_index]="${CHUNKS[$chunk_index]};$file_name,$size,$start,$end"
-      fi
+      echo "$file_name|$size|$start|$end" >> ${chunk_index_file}
       size=0
     fi
   done
 done < ${counting_file}
 
-date_echo "Total chunks: ${#CHUNKS[@]}"
+total_chunks=$chunk_index;
+date_echo "Scheduled chunks: $scheduled_chunks"
+date_echo "Total chunks: $total_chunks"
 date_echo "Start processing chunks"
-
-for i in ${!CHUNKS[@]}; do
-  if [ $i -gt $scheduled_chunks ]; then
-    running_jobs=$(jobs -rp | wc -l)
-    if [ $running_jobs -ge $JOBS_LIMIT ]; then
-      # date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
-      while [ $running_jobs -ge $JOBS_LIMIT ]
-      do
-          sleep 1
-          running_jobs=$(jobs -rp | wc -l)
-      done
-      date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
-    fi
-
-    {
-      chunk=${CHUNKS[$i]}
-      if [ "$verbose" == "1" ]; then
-        date_echo "Processing chunk $i with size $size MB"
-      fi
-      chunk_file=$dest/${app_name}-$i.pfw
-      rm -f $chunk_file
-      touch $chunk_file
-      echo '[' > $chunk_file
-      IFS=';' read -ra files <<< "$chunk"
-      total_size=0
-      for file in "${files[@]}"; do
-        file_name=$(echo $file | cut -d, -f1)
-        size=$(echo $file | cut -d, -f2)
-        start=$(echo $file | cut -d, -f3)
-        end=$(echo $file | cut -d, -f4)
-        if [ "$verbose" == "1" ]; then
-          date_echo "[CHUNK $i] Extracting from $file_name from $start to $end with size $size"
-        fi
-        $zq_exec ${file_name}.pfw.gz --index-file ${file_name}.pfw.gz.zindex --raw "select a.line from LineOffsets a where a.line >= $start AND a.line <= $end AND a.length > 8;" | grep -v '^[[]\|^[]]' >> $chunk_file
-        total_size=$(bc -l <<< "scale=2; $total_size + $size")
-      done
-      echo ']' >> $chunk_file
-      progress_date_echo "Chunk $i out of ${#CHUNKS[@]} done with size $total_size MB, path = $chunk_file"
-    } &
+start=$((scheduled_chunks + 1))
+total_size=0
+for i in $(seq $start $total_chunks); do
+  if [ "$verbose" == "1" ]; then
+    date_echo "Processing chunk $i"
   fi
+  running_jobs=$(jobs -rp | wc -l)
+  if [ $running_jobs -ge $JOBS_LIMIT ]; then
+    # date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
+    while [ $running_jobs -ge $JOBS_LIMIT ]
+    do
+        sleep 1
+        running_jobs=$(jobs -rp | wc -l)
+    done
+    date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
+  fi
+  #{
+    if [ "$verbose" == "1" ]; then
+      date_echo "Processing chunk $i with size $size MB"
+    fi
+    chunk_file=$dest/${app_name}-$i.pfw
+    rm -f $chunk_file
+    touch $chunk_file
+    echo '[' > $chunk_file
+    while IFS='|' read -r file_name size start end; do
+      if [ "$verbose" == "1" ]; then  
+        date_echo "[CHUNK $i] Extracting from $file_name from $start to $end with size $size"
+      fi
+      $zq_exec ${file_name}.pfw.gz --index-file ${file_name}.pfw.gz.zindex --raw "select a.line from LineOffsets a where a.line >= $start AND a.line <= $end AND a.length > 8;" | grep -v '^[[]\|^[]]' >> $chunk_file
+      total_size=$(bc -l <<< "scale=2; $total_size + $size")
+    done < ${chunk_index_file}
+    echo ']' >> $chunk_file
+    progress_date_echo "Chunk $i out of ${total_chunks} done with size $total_size MB, path = $chunk_file"
+  #} &
 done
 wait
 
@@ -323,21 +335,22 @@ rm -f *.pfw.gz
 $SCRIPT_DIR/dftracer_create_index -c -d $dest -f
 rm -f *.pfw
 
-# LINES_COUNT=$(
-#   {
-#     $SCRIPT_DIR/dftracer_event_count -d $LOG_DIR
-#   } &)
-# SPLIT_LINES_COUNT=$(
-#   {
-#     $SCRIPT_DIR/dftracer_event_count -d $dest
-#   } &)
-# wait
+LINES_COUNT=$(
+  {
+    $SCRIPT_DIR/dftracer_event_count -d $LOG_DIR
+  } &)
+SPLIT_LINES_COUNT=$(
+  {
+    $SCRIPT_DIR/dftracer_event_count -d $dest
+  } &)
+wait
 
-# if [ $LINES_COUNT -ne $SPLIT_LINES_COUNT ]; then
-#   date_echo "Error: Original lines count $LINES_COUNT does not match split lines count $SPLIT_LINES_COUNT"
-#   exit 1
-# else
-#   date_echo "Original lines count $LINES_COUNT matches split lines count $SPLIT_LINES_COUNT"
-# fi
+if [ $LINES_COUNT -ne $SPLIT_LINES_COUNT ]; then
+  date_echo "Error: Original lines count $LINES_COUNT does not match split lines count $SPLIT_LINES_COUNT"
+  exit 1
+else
+  date_echo "Original lines count $LINES_COUNT matches split lines count $SPLIT_LINES_COUNT"
+fi
 popd > /dev/null
+rm -f .chunk* counting.bak
 date_echo Done reindexing split files
