@@ -36,7 +36,7 @@ class ChromeWriter {
   bool enable_core_affinity;
 
   FILE *fh;
-  uint16_t hostname_hash;
+  std::string hostname_hash;
   static const int MAX_LINE_SIZE = 16 * 1024L;
   size_t write_buffer_size;
 
@@ -67,7 +67,7 @@ class ChromeWriter {
     funlockfile(fh);
     if (written_elements != 1) {  // GCOVR_EXCL_START
       DFTRACER_LOG_ERROR(
-          "unable to log write only %ld of %d trying to write %d with error "
+          "unable to log write only %ld of %d trying to write %ld with error "
           "code "
           "%d",
           written_elements, 1, current_index, errno);
@@ -100,7 +100,7 @@ class ChromeWriter {
     }
   }
   ~ChromeWriter() { DFTRACER_LOG_DEBUG("Destructing ChromeWriter", ""); }
-  void initialize(char *filename, bool throw_error, uint16_t hostname_hash);
+  void initialize(char *filename, bool throw_error, const char *hostname_hash);
 
   void log(int index, ConstEventNameType event_name,
            ConstEventNameType category, TimeResolution start_time,
