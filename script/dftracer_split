@@ -220,14 +220,15 @@ CHUNKS=()
 accumulated_size=0
 temp_chunk=""
 scheduled_chunks=0
-
+CHUNKS_LINES_TOTAL=${#CHUNKS_LINES[@]}
 
 chunk_index=1
 chunk_index_file=".chunk-${chunk_index}.bak"
 line_number=0
+total_size=0
 while IFS='|' read -r index file_name size start end; do
   line_number=$((line_number + 1))
-  if [ $line_number -lt $file_processed ]; then
+  if [ $CHUNKS_LINES_TOTAL -gt 0 ] && [ $line_number -lt $file_processed ]; then
     if [[ $line_number -eq ${CHUNKS_LINES[$chunk_index]} ]]; then
       chunk_index=$((chunk_index + 1))
       chunk_index_file=".chunk-${chunk_index}.bak"
@@ -257,22 +258,16 @@ while IFS='|' read -r index file_name size start end; do
         progress_date_echo "Scheduling $index of $total to chunk $chunk_index with size $accumulated_size"
         i=$chunk_index
         scheduled_chunks=$chunk_index
-        {          
-          if [ "$verbose" == "1" ]; then
-            date_echo "Processing chunk $i with size $size MB"
-          fi
-          chunk_file=$dest/${app_name}-$i.pfw
-          rm -f $chunk_file
-          touch $chunk_file
-          echo '[' > $chunk_file
-          while IFS='|' read -r file_name size start end; do
-            if [ "$verbose" == "1" ]; then
-              date_echo "[CHUNK $i] Extracting from $file_name from $start to $end with size $size"
-            fi
-            $zq_exec ${file_name}.pfw.gz --index-file ${file_name}.pfw.gz.zindex --raw "select a.line from LineOffsets a where a.line >= $start AND a.line <= $end AND a.length > 8;" | grep -v '^[[]\|^[]]' >> $chunk_file
-            total_size=$(bc -l <<< "scale=2; $total_size + $size")
-          done < ${chunk_index_file}
-          progress_date_echo "Chunk $i out of ${#CHUNKS_LINES[@]} done with size $total_size MB, path = $chunk_file"
+        { 
+        chunk_file=$dest/${app_name}-$i.pfw
+        rm -f $chunk_file
+        touch $chunk_file
+        echo '[' > $chunk_file
+        while IFS='|' read -r file_name size start end; do
+          $zq_exec ${file_name}.pfw.gz --index-file ${file_name}.pfw.gz.zindex --raw "select a.line from LineOffsets a where a.line >= $start AND a.line <= $end AND a.length > 8;" >> $chunk_file
+          total_size=$(bc -l <<< "scale=2; $total_size + $size")
+        done < ${chunk_index_file}
+        progress_date_echo "Chunk $i out of ${#CHUNKS_LINES[@]} done with size $total_size MB, path = $chunk_file"
         } &
         chunk_index=$((chunk_index + 1))
         accumulated_size=0
@@ -306,27 +301,21 @@ for i in $(seq $start $total_chunks); do
     done
     date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
   fi
-  #{
-    if [ "$verbose" == "1" ]; then
-      date_echo "Processing chunk $i with size $size MB"
-    fi
+  {
     chunk_file=$dest/${app_name}-$i.pfw
     rm -f $chunk_file
     touch $chunk_file
     echo '[' > $chunk_file
     while IFS='|' read -r file_name size start end; do
-      if [ "$verbose" == "1" ]; then  
-        date_echo "[CHUNK $i] Extracting from $file_name from $start to $end with size $size"
-      fi
       $zq_exec ${file_name}.pfw.gz --index-file ${file_name}.pfw.gz.zindex --raw "select a.line from LineOffsets a where a.line >= $start AND a.line <= $end AND a.length > 8;" | grep -v '^[[]\|^[]]' >> $chunk_file
       total_size=$(bc -l <<< "scale=2; $total_size + $size")
     done < ${chunk_index_file}
     echo ']' >> $chunk_file
     progress_date_echo "Chunk $i out of ${total_chunks} done with size $total_size MB, path = $chunk_file"
-  #} &
+  } &
 done
 wait
-
+echo ""
 date_echo "All chunks processed"
 
 date_echo Reindexing split files
@@ -344,6 +333,7 @@ SPLIT_LINES_COUNT=$(
     $SCRIPT_DIR/dftracer_event_count -d $dest
   } &)
 wait
+rm -f .chunk* counting.bak
 
 if [ $LINES_COUNT -ne $SPLIT_LINES_COUNT ]; then
   date_echo "Error: Original lines count $LINES_COUNT does not match split lines count $SPLIT_LINES_COUNT"
@@ -352,5 +342,4 @@ else
   date_echo "Original lines count $LINES_COUNT matches split lines count $SPLIT_LINES_COUNT"
 fi
 popd > /dev/null
-rm -f .chunk* counting.bak
 date_echo Done reindexing split files
