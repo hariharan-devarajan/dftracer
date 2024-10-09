@@ -62,7 +62,7 @@ class DFTLogger {
     if (enable_core_affinity) {
       hwloc_cpuset_t set = hwloc_bitmap_alloc();
       hwloc_get_cpubind(topology, set, HWLOC_CPUBIND_PROCESS);
-      for (unsigned id = hwloc_bitmap_first(set); id != -1;
+      for (int id = hwloc_bitmap_first(set); id != -1;
            id = hwloc_bitmap_next(set, id)) {
         cores.push_back(id);
       }
@@ -320,10 +320,6 @@ class DFTLogger {
     ThreadID tid = 0;
     if (dftracer_tid) {
       tid = df_gettid();
-    }
-    int local_index;
-    if (!include_metadata) {
-      local_index = index.load();
     }
     handle_mpi(tid);
     if (this->writer != nullptr) {

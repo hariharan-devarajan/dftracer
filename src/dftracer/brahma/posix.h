@@ -47,11 +47,12 @@ class POSIXDFTracer : public POSIX {
       return logger->hash_and_store(filename, METADATA_NAME_FILE_HASH);
     } else {
       const char *tracefile = is_traced_common(filename, func);
-      if (tracefile != nullptr)
+      if (tracefile != nullptr) {
         DFTRACER_LOG_DEBUG(
             "Calling POSIXDFTracer.is_traced with "
             "filename %s for %s trace %d",
             filename, func, tracefile != nullptr);
+      }
       return logger->hash_and_store(tracefile, METADATA_NAME_FILE_HASH);
     }
   }
