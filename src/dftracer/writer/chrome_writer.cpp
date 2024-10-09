@@ -210,7 +210,7 @@ void dftracer::ChromeWriter::convert_json(
       all_stream << "," << meta_stream.str();
     }
     {
-      std::unique_lock<std::shared_mutex> lock(mtx);
+      std::unique_lock lock(mtx);
       previous_index = current_index;
       auto written_size = sprintf(
           buffer.data() + current_index,
@@ -224,7 +224,7 @@ void dftracer::ChromeWriter::convert_json(
     }
   } else {
     {
-      std::unique_lock<std::shared_mutex> lock(mtx);
+      std::unique_lock lock(mtx);
       previous_index = current_index;
       auto written_size = sprintf(
           buffer.data() + current_index,
@@ -250,7 +250,7 @@ void dftracer::ChromeWriter::convert_json_metadata(
   char is_first_char[3] = "  ";
   if (!is_first_write) is_first_char[0] = '\0';
   {
-    std::unique_lock<std::shared_mutex> lock(mtx);
+    std::unique_lock lock(mtx);
     previous_index = current_index;
     auto written_size = 0;
     if (is_string) {
