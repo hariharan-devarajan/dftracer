@@ -113,7 +113,7 @@ The script splits the traces into equal sized chunk optimized for analysis
 
 .. code-block:: bash
 
-    <install-dir>/bin/usage: dftracer_split [-fv] [-n app_name] [-d input_directory] [-o output_directory] [-s chunk_size]
+    <install-dir>/bin/dftracer_split [-fv] [-n app_name] [-d input_directory] [-o output_directory] [-s chunk_size]
 
 Arguments for this script are:
 
@@ -133,10 +133,25 @@ The script will count number of valid events of traces
 
 .. code-block:: bash
 
-    <install-dir>/bin/usage: dftracer_event_count [-f] [-d input_directory]
+    <install-dir>/bin/dftracer_event_count [-f] [-d input_directory]
 
 Arguments for this script are:
 
 1. **-d input_directory** specify input directories. should contain .pfw or .pfw.gz files.
 2. **-f**                 force index creation
+3. **-h** display help
+
+------------------
+Validating DFTracer traces
+------------------
+
+The script validates dftracer traces
+
+.. code-block:: bash
+
+    <install-dir>/bin/dftracer_validate [-v] [-d input_directory]
+
+Arguments for this script are:
+
+1. **-d input_directory** specify input directories. should contain .pfw or .pfw.gz files.
 3. **-h** display help
