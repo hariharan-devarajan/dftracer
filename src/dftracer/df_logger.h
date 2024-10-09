@@ -343,7 +343,7 @@ class DFTLogger {
     return hash_and_store_str(file, name);
   }
 
-  static bool ignore_chars(char c) {
+  bool ignore_chars(char c) {
     switch (c) {
       case '(':
       case ')':
@@ -354,6 +354,12 @@ class DFTLogger {
         return true;
       default:
         return false;
+    }
+  }
+
+  void fix_str(char *str, size_t len) {
+    for (size_t i = 0; i < len && str[i] != '\0'; ++i) {
+      if (ignore_chars(str[i])) str[i] = ' ';
     }
   }
 
@@ -368,8 +374,7 @@ class DFTLogger {
         if (dftracer_tid) {
           tid = df_gettid();
         }
-        hash.erase(std::remove_if(hash.begin(), hash.end(), &ignore_chars),
-                   hash.end());
+        fix_str(file, PATH_MAX);
         int current_index = this->enter_event();
         this->writer->log_metadata(current_index, file, hash.c_str(), name,
                                    this->process_id, tid);
