@@ -343,6 +343,20 @@ class DFTLogger {
     return hash_and_store_str(file, name);
   }
 
+  static bool ignore_chars(char c) {
+    switch (c) {
+      case '(':
+      case ')':
+      case '\\':
+      case '"':
+      case '\'':
+      case '|':
+        return true;
+      default:
+        return false;
+    }
+  }
+
   inline std::string hash_and_store_str(char file[PATH_MAX],
                                         ConstEventNameType name) {
     std::string hash = has_hash(file);
@@ -354,7 +368,8 @@ class DFTLogger {
         if (dftracer_tid) {
           tid = df_gettid();
         }
-        hash.erase(std::remove(hash.begin(), hash.end(), '\"'), hash.end());
+        hash.erase(std::remove_if(hash.begin(), hash.end(), &ignore_chars),
+                   hash.end());
         int current_index = this->enter_event();
         this->writer->log_metadata(current_index, file, hash.c_str(), name,
                                    this->process_id, tid);
