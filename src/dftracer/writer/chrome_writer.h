@@ -24,7 +24,7 @@ namespace dftracer {
 class ChromeWriter {
  private:
   std::unordered_map<char *, std::any> metadata;
-  std::shared_mutex mtx;
+  std::mutex mtx;
 
  protected:
   bool throw_error;
@@ -55,7 +55,7 @@ class ChromeWriter {
 
   bool is_first_write;
   inline size_t write_buffer_op(bool force = false) {
-    std::unique_lock<std::shared_mutex> lock(mtx);
+    std::unique_lock lock(mtx);
     if (current_index == 0 || (!force && current_index < write_buffer_size))
       return 0;
     DFTRACER_LOG_DEBUG("ChromeWriter.write_buffer_op %s",
@@ -94,7 +94,7 @@ class ChromeWriter {
     enable_compression = conf->compression;
     write_buffer_size = conf->write_buffer_size;
     {
-      std::unique_lock<std::shared_mutex> lock(mtx);
+      std::unique_lock lock(mtx);
       buffer = std::vector<char>(write_buffer_size + MAX_LINE_SIZE);
       current_index = 0;
     }
