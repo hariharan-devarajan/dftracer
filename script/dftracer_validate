@@ -79,13 +79,13 @@ for file_index in "${!files[@]}"; do
   if [ "$ext" != "zindex" ]; then
     running_jobs=$(jobs -rp | wc -l)
     if [ $running_jobs -ge $JOBS_LIMIT ]; then
-      date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
+      # date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
       while [ $running_jobs -ge $JOBS_LIMIT ]
       do
           sleep 1
           running_jobs=$(jobs -rp | wc -l)
       done
-      date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
+      # date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
     fi
     # only look at files
     if [ -f "$file" ]; then
