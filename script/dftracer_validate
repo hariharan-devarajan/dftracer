@@ -1,4 +1,4 @@
-#!/bin/bash
+  #!/bin/bash
 
 # The script validates dftracer traces
 # This has the following signature.
@@ -96,22 +96,37 @@ for file_index in "${!files[@]}"; do
         {
         # if file is gz get the name
         name=${filename%.pfw.gz}
-        if jq --slurp -e >/dev/null 2>&1 <<< $(gunzip -c $file | grep -v "\["  | grep -v "\]"  | awk '{$file=$file;print}'); then
-            echo  -ne "";
-          else
-            echo "Failed to parse JSON for $file";
-        fi
+        line_number=0
+        while read -r line
+        do
+          line_number=$((line_number+1))
+          #echo $line
+          if [[ $line != "]" ]] && [[ $line != "[" ]]; then
+            if jq -e -c <<< "$line" >/dev/null 2>&1; then
+                echo  -ne "";
+              else
+                echo "Failed to parse JSON for $name on line $line_number";
+            fi
+          fi
+        done <<< $(gunzip -c $file)
         progress_date_echo "Completed $file_index of $total"
         } &
       else
         {
         # if file is pfw get the name
         name=${filename%.pfw}
-        if jq --slurp -e >/dev/null 2>&1 <<< $(cat $file | grep -v "\["  | grep -v "\]"  | awk '{$file=$file;print}'); then
-            echo  -ne "";
-          else
-            echo "Failed to parse JSON for $file";
-        fi
+        line_number=0
+        while read -r line
+        do
+          line_number=$((line_number+1))
+          if [[ $line != "]" ]] && [[ $line != "[" ]]; then
+            if jq -e -c <<< "$line" >/dev/null 2>&1; then
+                echo  -ne "";
+              else
+                echo "Failed to parse JSON for $name on line $line_number";
+            fi
+          fi
+        done <<< $(cat $file)
         progress_date_echo "Completed $file_index of $total"
         } &
       fi
