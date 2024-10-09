@@ -354,6 +354,7 @@ class DFTLogger {
         if (dftracer_tid) {
           tid = df_gettid();
         }
+        hash.erase(std::remove(hash.begin(), hash.end(), '\"'), hash.end());
         int current_index = this->enter_event();
         this->writer->log_metadata(current_index, file, hash.c_str(), name,
                                    this->process_id, tid);

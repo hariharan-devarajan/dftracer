@@ -101,6 +101,7 @@ for file_index in "${!files[@]}"; do
           else
             echo "Failed to parse JSON for $file";
         fi
+        progress_date_echo "Completed $file_index of $total"
         } &
       else
         {
@@ -111,6 +112,7 @@ for file_index in "${!files[@]}"; do
           else
             echo "Failed to parse JSON for $file";
         fi
+        progress_date_echo "Completed $file_index of $total"
         } &
       fi
     fi
