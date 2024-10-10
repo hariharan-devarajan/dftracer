@@ -21,7 +21,7 @@ project(dftracer LANGUAGES C CXX)
 # Convenience defines
 string(TOUPPER "${PROJECT_NAME}" UPPER_PROJECT_NAME)
 string(TOLOWER "${PROJECT_NAME}" LOWER_PROJECT_NAME)
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-empty-body -Wno-format-extra-args")
 #------------------------------------------------------------------------------
 # Internal Includes for header and libraries
 #------------------------------------------------------------------------------

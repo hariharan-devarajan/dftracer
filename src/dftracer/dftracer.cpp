@@ -8,11 +8,11 @@
 
 DFTracer::DFTracer(ConstEventNameType _name, ConstEventNameType _cat,
                    int event_type)
-    : initialized(true),
+    : event_type(event_type),
+      initialized(true),
       name(_name),
       cat(_cat),
-      metadata(nullptr),
-      event_type(event_type) {
+      metadata(nullptr) {
   DFTRACER_LOG_DEBUG("DFTracer::DFTracer event %s cat %s ", _name, _cat);
   auto dftracer_core = DFTRACER_MAIN_SINGLETON(ProfilerStage::PROFILER_OTHER,
                                                ProfileType::PROFILER_CPP_APP);

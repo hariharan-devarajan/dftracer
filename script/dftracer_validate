@@ -1,4 +1,4 @@
-#!/bin/bash
+  #!/bin/bash
 
 # The script validates dftracer traces
 # This has the following signature.
@@ -67,9 +67,13 @@ if [ $total == 0 ]; then
     exit 1
 fi
 
-pushd $LOG_DIR > /dev/null
 JOBS_LIMIT=$(nproc --all)
-files=("$LOG_DIR"/*.pfw*)
+if [ -d $LOG_DIR ]; then
+  files=("$LOG_DIR"/*.pfw*)
+  pushd $LOG_DIR > /dev/null
+else
+  files=($LOG_DIR)
+fi
 total=${#files[@]}
 # loop over logs
 for file_index in "${!files[@]}"; do
@@ -79,13 +83,13 @@ for file_index in "${!files[@]}"; do
   if [ "$ext" != "zindex" ]; then
     running_jobs=$(jobs -rp | wc -l)
     if [ $running_jobs -ge $JOBS_LIMIT ]; then
-      date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
+      # date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
       while [ $running_jobs -ge $JOBS_LIMIT ]
       do
           sleep 1
           running_jobs=$(jobs -rp | wc -l)
       done
-      date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
+      # date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
     fi
     # only look at files
     if [ -f "$file" ]; then
@@ -94,29 +98,33 @@ for file_index in "${!files[@]}"; do
       ext="${filename##*.}"
       if [ "$ext" == "gz" ]; then
         {
-        # if file is gz get the name
-        name=${filename%.pfw.gz}
-        if jq --slurp -e >/dev/null 2>&1 <<< $(gunzip -c $file | grep -v "\["  | grep -v "\]"  | awk '{$file=$file;print}'); then
+          # if file is gz get the name
+          name=${filename%.pfw.gz}
+          if jq -e -c > /dev/null <<< $(gunzip -c $file | grep -v "\[" | grep -v "\]"); then
             echo  -ne "";
           else
-            echo "Failed to parse JSON for $file";
-        fi
+            echo "Failed to parse JSON for $name on line $line_number";
+          fi
+          progress_date_echo "Completed $file_index of $total"
         } &
       else
         {
-        # if file is pfw get the name
-        name=${filename%.pfw}
-        if jq --slurp -e >/dev/null 2>&1 <<< $(cat $file | grep -v "\["  | grep -v "\]"  | awk '{$file=$file;print}'); then
+          # if file is pfw get the name
+          name=${filename%.pfw}
+          if jq -e -c > /dev/null <<< $(cat $file | grep -v "\[" | grep -v "\]"); then
             echo  -ne "";
           else
-            echo "Failed to parse JSON for $file";
-        fi
+            echo "Failed to parse JSON for $name on line $line_number";
+          fi
+          progress_date_echo "Completed $file_index of $total"
         } &
       fi
     fi
   fi
 done
+if [ -d $LOG_DIR ]; then
 popd > /dev/null
+fi
 wait
 echo ""
 date_echo Validating traces finished
