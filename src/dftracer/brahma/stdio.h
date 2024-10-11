@@ -7,6 +7,8 @@
 
 #include <brahma/brahma.h>
 #include <dftracer/core/logging.h>
+#include <dftracer/core/typedef.h>
+#include <dftracer/core/constants.h>
 #include <dftracer/df_logger.h>
 #include <dftracer/utils/utils.h>
 #include <fcntl.h>
@@ -22,25 +24,25 @@ class STDIODFTracer : public STDIO {
  private:
   static bool stop_trace;
   static std::shared_ptr<STDIODFTracer> instance;
-  std::unordered_map<FILE *, std::string> tracked_fh;
+  std::unordered_map<FILE *, HashType> tracked_fh;
   std::shared_ptr<DFTLogger> logger;
   bool trace_all_files;
 
-  inline std::string is_traced(FILE *fh, const char *func) {
+  inline HashType is_traced(FILE *fh, const char *func) {
     DFTRACER_LOG_DEBUG("Calling STDIODFTracer.is_traced for %s", func);
-    if (stop_trace) return std::string();
-    if (fh == NULL) return std::string();
+    if (stop_trace) return NO_HASH_DEFAULT;
+    if (fh == NULL) return NO_HASH_DEFAULT;
     auto iter = tracked_fh.find(fh);
     if (iter != tracked_fh.end()) {
       return iter->second;
     }
-    return std::string();
+    return NO_HASH_DEFAULT;
   }
 
-  inline std::string is_traced(const char *filename, const char *func) {
+  inline HashType is_traced(const char *filename, const char *func) {
     DFTRACER_LOG_DEBUG("Calling STDIODFTracer.is_traced with filename for %s",
                        func);
-    if (stop_trace) return std::string();
+    if (stop_trace) return NO_HASH_DEFAULT;
     if (trace_all_files)
       return logger->hash_and_store(filename, METADATA_NAME_FILE_HASH);
     else {
@@ -49,7 +51,7 @@ class STDIODFTracer : public STDIO {
     }
   }
 
-  inline void trace(FILE *fh, std::string hash) {
+  inline void trace(FILE *fh, HashType hash) {
     DFTRACER_LOG_DEBUG("Calling STDIODFTracer.trace with hash %d", hash);
     tracked_fh.insert_or_assign(fh, hash);
   }
