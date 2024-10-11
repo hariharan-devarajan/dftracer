@@ -115,6 +115,7 @@ split -l ${LINES} --numeric-suffixes  --additional-suffix=.pfw $d2 ${PREFIX}-
 for file in *.pfw; do
     echo "[" > $file.$$
     cat $file >> $file.$$
+    echo "]" >> $file.$$
     mv $file.$$ $file
 done
 rm $d2

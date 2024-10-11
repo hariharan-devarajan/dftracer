@@ -10,7 +10,8 @@
  */
 #include <dftracer/core/constants.h>
 #include <dftracer/core/typedef.h>
-
+#define DF_DATA_EVENT 0
+#define DF_METADATA_EVENT 1
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,6 +38,7 @@ void finalize();
 __attribute__((unused)) static ConstEventNameType CPP_LOG_CATEGORY = "CPP_APP";
 
 class DFTracer {
+  int event_type;  // 0->event  1->metadata
   bool initialized;
   ConstEventNameType name;
   ConstEventNameType cat;
@@ -44,7 +46,8 @@ class DFTracer {
   std::unordered_map<std::string, std::any> *metadata;
 
  public:
-  DFTracer(ConstEventNameType _name, ConstEventNameType _cat);
+  DFTracer(ConstEventNameType _name, ConstEventNameType _cat,
+           int event_type = DF_DATA_EVENT);
 
   void update(const char *key, int value);
 
@@ -61,13 +64,18 @@ class DFTracer {
   initialize_no_bind(log_file, data_dirs, process_id);
 #define DFTRACER_CPP_FINI() finalize()
 #define DFTRACER_CPP_FUNCTION() \
-  DFTracer profiler_dft_fn = DFTracer((char *)__FUNCTION__, CPP_LOG_CATEGORY);
+  DFTracer profiler_dft_fn =    \
+      DFTracer((char *)__FUNCTION__, CPP_LOG_CATEGORY, DF_DATA_EVENT);
+
+#define DFTRACER_CPP_METADATA(name, key, value) \
+  { DFTracer profiler_##name = DFTracer(key, value, DF_METADATA_EVENT); }
 
 #define DFTRACER_CPP_REGION(name) \
-  DFTracer profiler_##name = DFTracer(#name, CPP_LOG_CATEGORY);
+  DFTracer profiler_##name = DFTracer(#name, CPP_LOG_CATEGORY, DF_DATA_EVENT);
 
 #define DFTRACER_CPP_REGION_START(name) \
-  DFTracer *profiler_##name = new DFTracer(#name, CPP_LOG_CATEGORY);
+  DFTracer *profiler_##name =           \
+      new DFTracer(#name, CPP_LOG_CATEGORY, DF_DATA_EVENT);
 
 #define DFTRACER_CPP_REGION_END(name) delete profiler_##name
 
@@ -89,7 +97,7 @@ struct DFTracerData {
 
 __attribute__((unused)) static ConstEventNameType C_LOG_CATEGORY = "C_APP";
 struct DFTracerData *initialize_region(ConstEventNameType name,
-                                       ConstEventNameType cat);
+                                       ConstEventNameType cat, int event_type);
 void finalize_region(struct DFTracerData *data);
 void update_metadata_int(struct DFTracerData *data, const char *key, int value);
 void update_metadata_string(struct DFTracerData *data, const char *key,
@@ -102,14 +110,23 @@ void update_metadata_string(struct DFTracerData *data, const char *key,
 #define DFTRACER_C_FINI() finalize()
 
 #define DFTRACER_C_FUNCTION_START() \
-  struct DFTracerData *data_fn = initialize_region(__func__, C_LOG_CATEGORY);
+  struct DFTracerData *data_fn =    \
+      initialize_region(__func__, C_LOG_CATEGORY, DF_DATA_EVENT);
 
 #define DFTRACER_C_FUNCTION_END() finalize_region(data_fn);
 
 #define DFTRACER_C_REGION_START(name) \
-  struct DFTracerData *data_##name = initialize_region(#name, C_LOG_CATEGORY);
+  struct DFTracerData *data_##name =  \
+      initialize_region(#name, C_LOG_CATEGORY, DF_DATA_EVENT);
 
 #define DFTRACER_C_REGION_END(name) finalize_region(data_##name);
+
+#define DFTRACER_C_METADATA(name, key, val)             \
+  {                                                     \
+    struct DFTracerData *data_##name =                  \
+        initialize_region(key, val, DF_METADATA_EVENT); \
+    finalize_region(data_##name);                       \
+  }
 
 #define DFTRACER_C_FUNCTION_UPDATE_INT(key, val) \
   update_metadata_int(data_fn, key, val);

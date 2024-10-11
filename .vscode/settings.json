@@ -3,8 +3,9 @@
         "-DDFTRACER_INSTALL_DEPENDENCIES=OFF",
         "-DCMAKE_INSTALL_PREFIX=/usr/workspace/haridev/dlio-profiler/install",
         "-DDFTRACER_ENABLE_TESTS=ON",
-        "-DENABLE_PAPER_TESTS=ON",
-        "-DDFTRACER_ENABLE_DLIO_BENCHMARK_TESTS=ON"
+        "-DENABLE_PAPER_TESTS=OFF",
+        "-DDFTRACER_ENABLE_DLIO_BENCHMARK_TESTS=OFF",
+        "-DDFTRACER_DISABLE_HWLOC=OFF"
     ],
     "cmake.configureEnvironment": {
         "DARSHAN_PRELOAD_LIB": "/usr/WS2/haridev/spack/opt/spack/linux-rhel8-zen2/gcc-10.3.1/darshan-runtime-3.4.4-vckxthkq2hzzxnwmk4owtzcnfmjwl23s/lib/libdarshan.so",
@@ -94,5 +95,6 @@
         "ranges": "cpp",
         "filesystem": "cpp",
         "*.in": "cpp"
-    }
+    },
+    "editor.formatOnSave": true
 }

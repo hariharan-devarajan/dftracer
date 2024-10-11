@@ -8,12 +8,12 @@ if [[ "$num_posix_lines" -lt "$expected_lines" ]]; then
   rm -r $1 2> /dev/null
   exit 1
 else
-  if jq --slurp -e >/dev/null 2>&1 <<< `cat $1 | grep -v "\["   | awk '{$1=$1;print}'`; then
+  if jq --slurp -e >/dev/null 2>&1 <<< `cat $1 | grep -v "\["  | grep -v "\]"  | awk '{$1=$1;print}'`; then
     echo "Parsed JSON successfully and got something other than false/null";
   else
     echo "Failed to parse JSON, or got false/null";
-    jq --slurp -e <<< `cat $1 | grep -v "\["   | awk '{$1=$1;print}'`
-    cat $1 | grep -v "\["   | awk '{$1=$1;print}'
+    jq --slurp -e <<< `cat $1 | grep -v "\[" | grep -v "\]"  | awk '{$1=$1;print}'`
+    cat $1 | grep -v "\[" | grep -v "\]"  | awk '{$1=$1;print}'
     exit 1
   fi
 fi

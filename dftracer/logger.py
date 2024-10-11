@@ -100,6 +100,11 @@ class dftracer:
                 string_args = {}
             self.logger.log_event(name=name, cat=cat, start_time=start_time, duration=duration, string_args=string_args)
 
+    def log_metadata_event(self, key, value):
+        if DFTRACER_ENABLE and self.logger:
+            logging.debug(f"logger.log_metadata_event {key} {value}")
+            self.logger.log_metadata_event(key=key, value=value)
+
     def finalize(self):
         if DFTRACER_ENABLE and self.logger:
             logging.debug(f"logger.finalize")
@@ -115,8 +120,9 @@ def get_default_args(func):
 
 class dft_fn(object):
 
-    def __init__(self, cat, name=None, epoch=None, step=None, image_idx=None, image_size=None):
-        if DFTRACER_ENABLE:
+    def __init__(self, cat, name=None, epoch=None, step=None, image_idx=None, image_size=None, enable=True):
+        self._enable = enable
+        if DFTRACER_ENABLE and self._enable:
             if not name:
                 name = inspect.stack()[1].function
             self._name = name
@@ -129,13 +135,13 @@ class dft_fn(object):
             self.reset()
 
     def __enter__(self):
-        if DFTRACER_ENABLE:
+        if DFTRACER_ENABLE and self._enable:
             self._t1 = dftracer.get_instance().get_time()
             dftracer.get_instance().enter_event()
         return self
 
     def update(self, epoch=None, step=None, image_idx=None, image_size=None, args={}):
-        if DFTRACER_ENABLE:
+        if DFTRACER_ENABLE and self._enable:
             if epoch is not None: self._arguments["epoch"] = str(epoch)
             if step is not None: self._arguments["step"] = str(step)
             if image_idx is not None: self._arguments["image_idx"] = str(image_idx)
@@ -145,7 +151,7 @@ class dft_fn(object):
         return self
 
     def flush(self):
-        if DFTRACER_ENABLE:
+        if DFTRACER_ENABLE and self._enable:
             self._t2 = dftracer.get_instance().get_time()            
             if len(self._arguments) > 0:
                 dftracer.get_instance().log_event(name=self._name, cat=self._cat, start_time=self._t1,
@@ -159,7 +165,7 @@ class dft_fn(object):
         return self
 
     def reset(self):
-        if DFTRACER_ENABLE:
+        if DFTRACER_ENABLE and self._enable:
             self._t1 = dftracer.get_instance().get_time()
             dftracer.get_instance().enter_event()
             self._t2 = self._t1
@@ -167,18 +173,18 @@ class dft_fn(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if DFTRACER_ENABLE:
+        if DFTRACER_ENABLE and self._enable:
             if not self._flush:
                 self.flush()
 
     def log(self, func):
-        if DFTRACER_ENABLE:
+        if DFTRACER_ENABLE and self._enable:
             arg_names = inspect.getfullargspec(func)[0]
             self._arguments = {}
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if DFTRACER_ENABLE:
+            if DFTRACER_ENABLE and self._enable:
                 if len(arg_names) > 0:
                     if "self" == arg_names[0]:
                         if hasattr(args[0], "epoch"):
@@ -206,7 +212,7 @@ class dft_fn(object):
                 start = dftracer.get_instance().get_time()
                 dftracer.get_instance().enter_event()
             x = func(*args, **kwargs)
-            if DFTRACER_ENABLE:
+            if DFTRACER_ENABLE and self._enable:
                 end = dftracer.get_instance().get_time()
                 if len(self._arguments) > 0:
                     dftracer.get_instance().log_event(name=func.__qualname__, cat=self._cat, start_time=start,
@@ -220,8 +226,12 @@ class dft_fn(object):
 
         return wrapper
 
+    def log_metadata(self, key, value):
+        if DFTRACER_ENABLE and self._enable:
+            dftracer.get_instance().log_metadata_event(key=key, value=value)
+            
     def iter(self, func, iter_name="step"):
-        if DFTRACER_ENABLE:
+        if DFTRACER_ENABLE and self._enable:
             iter_val = 1
             name = f"{self._name}.iter"
             kernal_name = f"{self._name}.yield"
@@ -229,11 +239,11 @@ class dft_fn(object):
             self._arguments = {}
             
         for v in func:
-            if DFTRACER_ENABLE:
+            if DFTRACER_ENABLE and self._enable:
                 end = dftracer.get_instance().get_time()
                 t0 = dftracer.get_instance().get_time()
             yield v
-            if DFTRACER_ENABLE:
+            if DFTRACER_ENABLE and self._enable:
                 t1 = dftracer.get_instance().get_time()
                 self._arguments[iter_name] = str(iter_val)
                 if len(self._arguments) > 0:
@@ -261,13 +271,13 @@ class dft_fn(object):
                 start = dftracer.get_instance().get_time()
 
     def log_init(self, init):
-        if DFTRACER_ENABLE:
+        if DFTRACER_ENABLE and self._enable:
             arg_names = inspect.getfullargspec(init)[0]
             self._arguments = {}
 
         @wraps(init)
         def new_init(*args, **kwargs):
-            if DFTRACER_ENABLE:
+            if DFTRACER_ENABLE and self._enable:
                 arg_values = dict(zip(arg_names[1:], args))
                 arg_values.update(kwargs)
                 arg_values.update(get_default_args(init))
@@ -283,7 +293,7 @@ class dft_fn(object):
                 start = dftracer.get_instance().get_time()
                 dftracer.get_instance().enter_event()
             init(*args, **kwargs)
-            if DFTRACER_ENABLE:
+            if DFTRACER_ENABLE and self._enable:
                 end = dftracer.get_instance().get_time()
 
                 if len(self._arguments) > 0:
@@ -300,11 +310,11 @@ class dft_fn(object):
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if DFTRACER_ENABLE:
+            if DFTRACER_ENABLE and self._enable:
                 start = dftracer.get_instance().get_time()
                 dftracer.get_instance().enter_event()
             x = func(*args, **kwargs)
-            if DFTRACER_ENABLE:
+            if DFTRACER_ENABLE and self._enable:
                 end = dftracer.get_instance().get_time()
                 if len(self._arguments) > 0:
                     dftracer.get_instance().log_event(name=func.__qualname__, cat=self._cat, start_time=start,

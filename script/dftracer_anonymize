@@ -1,0 +1,144 @@
+#!/bin/bash
+
+# The removes system and file information from the trace and only maintain consistent hashes.
+# This has the following signature.
+#
+# usage: dftracer_anonymize [-fcv] [-d input_directory] [-o output_directory]
+#   -f                      override output directory
+#   -c                      compress outputs
+#   -v                      enable verbose mode
+#   -h                      display help
+#   -d input_directory      specify input directories. should contain .pfw or .pfw.gz files.
+#   -o output_directory     specify output directory.
+
+LOG_DIR=$PWD
+OUTPUT_DIR=$PWD/output
+override=0
+compressed=0
+
+PPWD=$PWD
+
+function usage {
+    echo "usage: $(basename $0) [-fcv] [-d input_directory] [-o output_directory]"
+    echo "  -f                      override output directory"
+    echo "  -c                      compress output file"
+    echo "  -v                      enable verbose mode"
+    echo "  -h                      display help"
+    echo "  -d input_directory      specify input directories. should contain .pfw or .pfw.gz files."
+    echo "  -o output_directory     specify output directory."
+    exit 1
+}
+while getopts ':cvfd:o:h' opt; do
+  case "$opt" in
+    d)
+      LOG_DIR="${OPTARG}"
+      ;;
+    o)
+      OUTPUT_DIR="${OPTARG}"
+      ;;
+    f)
+      override=1
+      ;;
+    v)
+      set -x
+      ;;
+    c)
+      compressed=1
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+
+    :)
+      echo -e "option requires an argument.\n"
+      usage
+      exit 1
+      ;;
+
+    ?)
+      echo -e "Invalid command option.\n"
+      usage
+      exit 1
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+
+mkdir -p ${OUTPUT_DIR}
+
+if [ -n "$( ls -A "${OUTPUT_DIR}" )" ] && [ $override -eq 0 ]; then
+  echo "The directory is not empty. Please pass a clean directory or pass -f flag."
+  exit 0
+fi
+
+echo "Setting up output directory"
+rm -rf ${OUTPUT_DIR}
+mkdir -p ${OUTPUT_DIR}
+
+total=0
+for file in *.pfw*; do total=1; break; done
+if [ $total == 0 ]; then
+    echo "The folder does not contain any pfw or pfw.gz files."
+    exit 0
+fi
+
+files=("$LOG_DIR"/*.pfw*)
+total=${#files[@]}
+JOBS_LIMIT=64
+# loop over logs
+for file_index in "${!files[@]}"; do
+  file=${files[$file_index]}
+  running_jobs=$(jobs -rp | wc -l)
+  if [ $running_jobs -ge $JOBS_LIMIT ]; then
+    date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
+    while [ $running_jobs -ge $JOBS_LIMIT ]
+    do        
+        sleep 1
+        running_jobs=$(jobs -rp | wc -l)
+    done
+    date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
+  fi
+  {
+  # only look at files
+  if [ -f "$file" ]; then
+    # calculate basename and copy files
+    filename=$(basename -- "$file")
+    ext="${filename##*.}"
+    echo "Extension is $ext"
+    cp $LOG_DIR/$filename $OUTPUT_DIR/.tmp.$filename
+    if [ "$ext" == "gz" ]; then
+      # if file is gz get the name
+      name=${file_index%.pfw.gz}
+      echo "extracted name $name"
+      # replace non utf characters
+      gunzip -c $OUTPUT_DIR/.tmp.$filename | sed -e "s/${USER}/USER/g" > $OUTPUT_DIR/$name.pfw
+      # compress
+      if [ $compressed == 1 ]; then
+        gzip $OUTPUT_DIR/$name.pfw
+        echo "Processed $OUTPUT_DIR/$name.pfw.gz"
+      else
+        echo "Processed $OUTPUT_DIR/$name.pfw"
+      fi
+    else
+      # if file is pfw get the name
+      name=${file_index%.pfw}
+      echo "extracted name $name"
+      # replace non utf characters
+      cat $OUTPUT_DIR/.tmp.$filename | sed -e "s/${USER}/USER/g" > $OUTPUT_DIR/$name.pfw
+      if [ $compressed == 1 ]; then
+        gzip $OUTPUT_DIR/$name.pfw
+        echo "Processed $OUTPUT_DIR/$name.pfw.gz"
+      else
+        echo "Processed $OUTPUT_DIR/$name.pfw"
+      fi
+    fi
+    # remove temp file
+    rm $OUTPUT_DIR/.tmp.$filename
+  fi
+  } &
+done
+
+wait
+
+date_echo Finished anonymization of traces.

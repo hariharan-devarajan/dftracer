@@ -43,8 +43,8 @@ bool dftracer::Singleton<
 dftracer::ConfigurationManager::ConfigurationManager()
     : enable(false),
       init_type(PROFILER_INIT_FUNCTION),
-      log_file(),
-      data_dirs(),
+      log_file("./trace"),
+      data_dirs("all"),
       metadata(false),
       core_affinity(false),
       gotcha_priority(1),
@@ -218,6 +218,13 @@ dftracer::ConfigurationManager::ConfigurationManager()
       metadata = true;
     }
     DFTRACER_LOG_DEBUG("ENV ConfigurationManager.metadata %d", this->metadata);
+
+    const char *env_core = getenv(DFTRACER_SET_CORE_AFFINITY);
+    if (env_core != nullptr && strcmp(env_core, "1") == 0) {
+      core_affinity = true;
+    }
+    DFTRACER_LOG_DEBUG("ENV ConfigurationManager.core_affinity %d",
+                       this->core_affinity);
 
     const char *env_gotcha_priority = getenv(DFTRACER_GOTCHA_PRIORITY);
     if (env_gotcha_priority != nullptr) {

@@ -17,7 +17,7 @@ FILE *brahma::STDIODFTracer::fopen64(const char *path, const char *mode) {
   DFT_LOGGER_UPDATE(mode);
   FILE *ret = __real_fopen64(path, mode);
   DFT_LOGGER_END();
-  if (trace) this->trace(ret, path);
+  if (trace) this->trace(ret, fhash);
   return ret;
 }
 
@@ -27,7 +27,7 @@ FILE *brahma::STDIODFTracer::fopen(const char *path, const char *mode) {
   DFT_LOGGER_UPDATE(mode);
   FILE *ret = __real_fopen(path, mode);
   DFT_LOGGER_END();
-  if (trace) this->trace(ret, path);
+  if (trace) this->trace(ret, fhash);
   return ret;
 }
 

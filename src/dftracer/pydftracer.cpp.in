@@ -41,6 +41,17 @@ void log_event(std::string name, std::string cat, TimeResolution start_time,
     DFTRACER_LOG_DEBUG("py.log_event dftracer not initialized", "");
 }
 
+void log_metadata_event(std::string key, std::string value) {
+  DFTRACER_LOG_DEBUG("py.log_metadata_event", "");
+  auto dftracer_inst =
+      dftracer::Singleton<dftracer::DFTracerCore>::get_instance(
+          ProfilerStage::PROFILER_OTHER, ProfileType::PROFILER_PY_APP);
+  if (dftracer_inst != nullptr)
+    dftracer_inst->log_metadata(key.c_str(), value.c_str());
+  else
+    DFTRACER_LOG_DEBUG("py.log_metadata_event dftracer not initialized", "");
+}
+
 void enter_event() {
   DFTRACER_LOG_DEBUG("py.enter_event", "");
   auto dftracer_inst =

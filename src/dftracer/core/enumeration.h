@@ -22,10 +22,7 @@ enum ProfileInitType : uint8_t {
   PROFILER_INIT_LD_PRELOAD = 1,
   PROFILER_INIT_FUNCTION = 2
 };
-enum EventType : uint8_t {
-  COMPLETE_EVENT = 0,
-  METADATA_EVENT = 1,
-};
+
 inline void convert(const std::string &s, ProfileInitType &type) {
   if (s == "PRELOAD") {
     type = ProfileInitType::PROFILER_INIT_LD_PRELOAD;
@@ -47,4 +44,12 @@ inline void convert(const std::string &s, cpplogger::LoggerType &type) {
     type = cpplogger::LoggerType::LOG_ERROR;
   }
 }
+
+#define METADATA_NAME_PROCESS "PR"
+#define METADATA_NAME_PROCESS_NAME "process_name"
+#define METADATA_NAME_THREAD_NAME "thread_name"
+#define METADATA_NAME_FILE_HASH "FH"
+#define METADATA_NAME_HOSTNAME_HASH "HH"
+#define METADATA_NAME_STRING_HASH "SH"
+#define CUSTOM_METADATA "CM"
 #endif  // DFTRACER_ENUMERATION_H

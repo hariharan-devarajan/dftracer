@@ -160,32 +160,86 @@ def load_indexed_gzip_files(filename, start, end):
 
 def load_objects(line, fn, time_granularity, time_approximate, condition_fn, load_data):
     d = {}
-    if line is not None and line !="" and len(line) > 0 and "[" != line[0] and line != "\n" :
+    if line is not None and line !="" and len(line) > 0 and "[" != line[0] and "]" != line[0] and line != "\n" :
         val = {}
         try:
             unicode_line = ''.join([i if ord(i) < 128 else '#' for i in line])
             val = json.loads(unicode_line, strict=False)
             logging.debug(f"Loading dict {val}")
-            if "name" in val and "cat" in val:
+            if "name" in val:
                 d["name"] = val["name"]
+            if "cat" in val:
                 d["cat"] = val["cat"]
+            if "pid" in val:
                 d["pid"] = val["pid"]
+            if "tid" in val:
                 d["tid"] = val["tid"]
-                val["dur"] = int(val["dur"])
-                val["ts"] = int(val["ts"])
-                d["ts"] = val["ts"]
-                d["dur"] = val["dur"]
-                d["te"] = d["ts"] + d["dur"]
-                if not time_approximate:
-                    d["tinterval"] = I.to_string(I.closed(val["ts"] , val["ts"] + val["dur"]))
-                d["trange"] = int(((val["ts"] + val["dur"])/2.0) / time_granularity)
+            if "args" in val and "hhash" in val["args"]:
+                if type(val["args"]["hhash"]) is str:
+                    d["hhash"] = int(val["args"]["hhash"],16)
+                else: 
+                    d["hhash"] = val["args"]["hhash"]
+            if "M" == val["ph"]:
+                if d["name"] == "FH":
+                    d["type"] = 1 # 1-> file hash
+                    if "args" in val and "name" in val["args"] and "value" in val["args"]:
+                        d["name"] = val["args"]["name"]
+                        if type(val["args"]["value"]) is str:
+                            d["hash"] = int(val["args"]["value"],16)
+                        else: 
+                            d["hash"] = val["args"]["value"]
+                elif d["name"] == "HH":
+                    d["type"] = 2 # 2-> hostname hash
+                    if "args" in val and "name" in val["args"] and "value" in val["args"]:
+                        d["name"] = val["args"]["name"]
+                        if type(val["args"]["value"]) is str:
+                            d["hash"] = int(val["args"]["value"],16)
+                        else: 
+                            d["hash"] = val["args"]["value"]
+                elif d["name"] == "SH":
+                    d["type"] = 3 # 3-> string hash
+                    if "args" in val and "name" in val["args"] and "value" in val["args"]:
+                        d["name"] = val["args"]["name"]
+                        if type(val["args"]["value"]) is str:
+                            d["hash"] = int(val["args"]["value"],16)
+                        else: 
+                            d["hash"] = val["args"]["value"]
+                elif d["name"] == "PR":
+                    d["type"] = 5 # 5-> process metadata
+                    if "args" in val and "name" in val["args"] and "value" in val["args"]:
+                        d["name"] = val["args"]["name"]
+                        d["hash"] = val["args"]["value"]
+                else:
+                    d["type"] = 4 # 4-> others
+                    if "args" in val and "name" in val["args"] and "value" in val["args"]:
+                        d["name"] = val["args"]["name"]
+                        d["value"] = str(val["args"]["value"])
+            else:
+                d["type"] = 0 # 0->regular event
+                if "dur" in val:
+                    val["dur"] = int(val["dur"])
+                    val["ts"] = int(val["ts"])
+                    d["ts"] = val["ts"]
+                    d["dur"] = val["dur"]
+                    d["te"] = d["ts"] + d["dur"]
+                    if not time_approximate:
+                        d["tinterval"] = I.to_string(I.closed(val["ts"] , val["ts"] + val["dur"]))
+                    d["trange"] = int(((val["ts"] + val["dur"])/2.0) / time_granularity)
                 d.update(io_function(val, d, time_approximate,condition_fn))
-                if fn:
-                    d.update(fn(val, d, time_approximate,condition_fn, load_data))
-                logging.debug(f"built an dictionary for line {d}")
+            if fn:
+                user_d = fn(val, d, time_approximate,condition_fn, load_data)
+                if type(user_d) is list:
+                    for user_dict in user_d[1:]:
+                        yield user_dict
+                    d.update(user_d[0])
+                else:
+                    d.update(user_d)
+            logging.debug(f"built an dictionary for line {d}")
+            yield d
         except ValueError as error:
             logging.error(f"Processing {line} failed with {error}")
-    return d
+    return {}
+  
 def io_function(json_object, current_dict, time_approximate,condition_fn):
     d = {}
     d["phase"] = 0
@@ -224,42 +278,33 @@ def io_function(json_object, current_dict, time_approximate,condition_fn):
             d["total_time"] = I.to_string(I.empty())
             d["io_time"] = I.to_string(I.empty())
     if "args" in json_object:
-        if "fname" in json_object["args"]:
-            d["filename"] = json_object["args"]["fname"]
-        if "hostname" in json_object["args"]:
-            d["hostname"] = json_object["args"]["hostname"]
-
+        if "fhash" in json_object["args"]:
+            if type(json_object["args"]["fhash"]) is str:
+                d["fhash"] = int(json_object["args"]["fhash"],16)
+            else: 
+                d["fhash"] = json_object["args"]["fhash"]
         if "POSIX" == json_object["cat"] and "ret" in json_object["args"]:
-            if json_object["name"] == "write":
-                d["size"] = int(json_object["args"]["ret"])
-            elif json_object["name"] in ["read", "pread"]:
-                d["size"] = int(json_object["args"]["ret"])
-            elif json_object["name"] == "fwrite":
-                d["size"] = 1
-                if "ret" in json_object["args"]:
-                    d["size"] *= int(json_object["args"]["ret"]) 
-                if "size" in json_object["args"]:
-                    d["size"] *= int(json_object["args"]["size"])
-            elif json_object["name"] == "fread":               
-                d["size"] = 1
-                if "ret" in json_object["args"]:
-                    d["size"] *= int(json_object["args"]["ret"]) 
-                if "size" in json_object["args"]:
-                    d["size"] *= int(json_object["args"]["size"])
+            size = int(json_object["args"]["ret"])
+            if size > 0:
+                if "write" in json_object["name"]:
+                    d["size"] = size
+                elif "read" in json_object["name"] and "readdir" not in json_object["name"]:
+                    d["size"] = size
         else:
             if "image_size" in json_object["args"]:
-                d["size"] = int(json_object["args"]["image_size"])
+                size = int(json_object["args"]["image_size"])
+                if size > 0:
+                    d["size"] = size
     return d
 
 def io_columns():
     conf = get_dft_configuration()
     return {
-        'hostname': "string[pyarrow]",
         'compute_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'app_io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'total_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
-        'filename': "string[pyarrow]",
+        'fhash': "uint64[pyarrow]",
         'phase': "uint16[pyarrow]",
         'size': "uint64[pyarrow]"
     }
@@ -353,7 +398,7 @@ def human_format_time(num):
 
 class DFAnalyzer:
 
-    def __init__(self, file_pattern, load_fn=None, load_cols={}, load_data = {}):
+    def __init__(self, file_pattern, load_fn=None, load_cols={}, load_data = {}, metadata_cols = {}):
 
         self.conf = get_dft_configuration()
         if self.conf.dask_scheduler:
@@ -405,14 +450,14 @@ class DFAnalyzer:
                                     time_granularity=self.conf.time_granularity,
                                     time_approximate=self.conf.time_approximate,
                                     condition_fn=self.conf.conditions,
-                                    load_data=load_data).filter(lambda x: "name" in x)
+                                    load_data=load_data).flatten().filter(lambda x: "name" in x)
         main_bag = None
         if len(pfw_pattern) > 0:
             pfw_bag = dask.bag.read_text(pfw_pattern).map(load_objects, fn=load_fn,
                                                           time_granularity=self.conf.time_granularity,
                                                           time_approximate=self.conf.time_approximate,
                                                           condition_fn=self.conf.conditions,
-                                                          load_data=load_data).filter(lambda x: "name" in x)
+                                                          load_data=load_data).flatten().filter(lambda x: "name" in x)
         if len(pfw_gz_pattern) > 0 and len(pfw_pattern) > 0:
             main_bag = dask.bag.concat([pfw_bag, gz_bag])
         elif len(pfw_gz_pattern) > 0:
@@ -420,13 +465,35 @@ class DFAnalyzer:
         elif len(pfw_pattern) > 0:
             main_bag = pfw_bag
         if main_bag:
-            columns = {'name': "string[pyarrow]", 'cat': "string[pyarrow]",
+            columns = {'name': "string[pyarrow]", 'cat': "string[pyarrow]",'type': "uint8[pyarrow]", 
                        'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]",
                        'ts': "uint64[pyarrow]", 'te': "uint64[pyarrow]", 'dur': "uint64[pyarrow]",
                        'tinterval': "string[pyarrow]" if not self.conf.time_approximate else "uint64[pyarrow]", 'trange': "uint64[pyarrow]"}
             columns.update(io_columns())
             columns.update(load_cols)
-            events = main_bag.to_dataframe(meta=columns)
+            file_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
+            hostname_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
+            string_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
+            other_metadata_columns = { 'name':"string[pyarrow]" ,'value':"string[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
+            if "FH" in metadata_cols:
+                file_hash_columns.update(metadata_cols["FH"])
+            if "HH" in metadata_cols:
+                hostname_hash_columns.update(metadata_cols["HH"])
+            if "SH" in metadata_cols:
+                string_hash_columns.update(metadata_cols["SH"])
+            if "M" in metadata_cols:
+                other_metadata_columns.update(metadata_cols["M"])
+            columns.update(file_hash_columns)
+            columns.update(hostname_hash_columns)
+            columns.update(string_hash_columns)
+            columns.update(other_metadata_columns)
+            
+            self.all_events = main_bag.to_dataframe(meta=columns)
+            events = self.all_events.query("type == 0")
+            self.file_hash = self.all_events.query("type == 1")[list(file_hash_columns.keys())].groupby('hash').first().persist()
+            self.host_hash = self.all_events.query("type == 2")[list(hostname_hash_columns.keys())].groupby('hash').first().persist()
+            self.string_hash = self.all_events.query("type == 3")[list(string_hash_columns.keys())].groupby('hash').first().persist()
+            self.metadata = self.all_events.query("type == 4")[list(other_metadata_columns.keys())].persist()
             self.n_partition = math.ceil(total_size.compute() / (128 * 1024 ** 2))
             logging.debug(f"Number of partitions used are {self.n_partition}")
             self.events = events.repartition(npartitions=self.n_partition).persist()
@@ -436,7 +503,7 @@ class DFAnalyzer:
             self.events['trange'] = (self.events['ts'] // self.conf.time_granularity).astype('uint16[pyarrow]')
             self.events = self.events.persist()
      
-            _ = wait(self.events)
+            _ = wait([self.file_hash, self.host_hash, self.string_hash, self.metadata, self.events])
         else:
             logging.error(f"Unable to load Traces")
             exit(1)
@@ -544,7 +611,7 @@ class DFAnalyzer:
 
     def _check_hosts_time_skew(self):
         # check if there is time skew across nodes
-        hosts_ts_df = self.events.groupby('hostname').agg({'ts': 'min'}).compute()
+        hosts_ts_df = self.events.groupby('hhash').agg({'ts': 'min'}).compute()
         # filter the hosts if time skew exceeds 30 seconds
         max_time_skew = 30e6
         if np.std(hosts_ts_df['ts']) > max_time_skew:
@@ -556,8 +623,8 @@ class DFAnalyzer:
         total_time, total_io_time, total_compute_time, total_app_io_time, \
         only_io, only_compute, only_app_io, only_app_compute = self._calculate_time() #(0, 0, 0, 0, 0, 0, 0, 0, 0)
         hosts_used, filenames_accessed, num_procs, compute_tid, posix_tid, io_by_operations = dask.compute(
-            self.events["hostname"].unique(),
-            self.events["filename"].unique(),
+            self.host_hash["name"].unique(),
+            self.file_hash["name"].unique(),
             self.events["pid"].unique(),
             self.events.query("phase == 1")["tid"].unique(),
             self.events.query("phase == 2")["tid"].unique(),

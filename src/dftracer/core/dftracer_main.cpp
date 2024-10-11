@@ -89,6 +89,17 @@ void dftracer::DFTracerCore::log(
   }
 }
 
+void dftracer::DFTracerCore::log_metadata(ConstEventNameType key,
+                                          ConstEventNameType value) {
+  DFTRACER_LOG_DEBUG("DFTracerCore::log", "");
+  if (this->is_initialized && conf->enable) {
+    if (logger != nullptr) {
+      logger->log_metadata(key, value);
+    } else {
+      DFTRACER_LOG_ERROR("DFTracerCore::log logger not initialized", "");
+    }
+  }
+}
 bool dftracer::DFTracerCore::finalize() {
   DFTRACER_LOG_DEBUG("DFTracerCore::finalize", "");
   if (this->is_initialized && conf->enable) {
@@ -160,7 +171,8 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
           if (exec_cmd[index] == '\0') {
             if (!has_extracted) {
               strcpy(exec_name, basename(exec_cmd + last_index));
-              if (exec_name[0] != '-' && strstr(exec_name, "python") == NULL) {
+              if (exec_name[0] != '-' && strstr(exec_name, "python") == NULL &&
+                  strstr(exec_name, "env") == NULL) {
                 has_extracted = true;
                 DFTRACER_LOG_INFO("Extracted process_name %s", exec_name);
               }
