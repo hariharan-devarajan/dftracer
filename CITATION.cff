@@ -1,6 +1,5 @@
 cff-version: 1.2.0
 message: Please cite this software using the metadata from 'preferred-citation'.
-
 title: DFTracer: An Analysis-Friendly Data Flow Tracer for AI-Driven Workflows
 abstract: A multi-level dataflow tracer designed for capturing I/O calls from AI-driven workflows.
 license: MIT
@@ -81,7 +80,6 @@ preferred-citation:
       given-names: Kathryn
       orcid: https://orcid.org/0000-0002-1366-1655
   book: "SC24: International Conference for High Performance Computing, Networking, Storage and Analysis"
-  publisher: IEEE
   address: Atlanta, GA
-  month: November
+  month: 11
   year: 2024
