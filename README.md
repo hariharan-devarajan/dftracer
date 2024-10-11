@@ -1,46 +1,59 @@
-[![DFTracer Build and Test](https://github.com/hariharan-devarajan/dftracer/actions/workflows/ci.yml/badge.svg)](https://github.com/hariharan-devarajan/dftracer/actions/workflows/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/github/hariharan-devarajan/dftracer/badge.svg?branch=feature/apis)](https://coveralls.io/github/hariharan-devarajan/dftracer?branch=dev)
+# DFTracer
+
+[![Build and Test](https://github.com/hariharan-devarajan/dftracer/actions/workflows/ci.yml/badge.svg)](https://github.com/hariharan-devarajan/dftracer/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/dftracer/badge/?version=latest)](https://dftracer.readthedocs.io/en/latest/?badge=latest)
+[![Coverage Status](https://coveralls.io/repos/github/hariharan-devarajan/dftracer/badge.svg?branch=feature/apis)](https://coveralls.io/github/hariharan-devarajan/dftracer?branch=dev)
+![PyPI - Version](https://img.shields.io/pypi/v/pydftracer?label=PyPI)
+![PyPI - Wheel](https://img.shields.io/pypi/wheel/pydftracer?label=Wheel)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pydftracer?label=Python)
+![PyPI - License](https://img.shields.io/pypi/l/pydftracer?label=License)
 
-# DFTracer v1.0.4
-A multi-level profiler for capturing application functions and low-level system I/O calls from deep learning workloads.
+## Overview
 
-Requirements for profiler
-1. Python > 3.7
-2. pybind11
+DFTracer is a tracing tool designed to capture both application-code and I/O-call level events from workflows. It provides a unified tracing interface, optimized trace format, and compression mechanism to enable efficient distributed analysis for large-scale AI-driven workloads.
 
-Requirements for analyzer
+## Prerequisites
+
+Requirements for DFTracer
+
+1. Python>=3.7
+1. pybind11
+
+Requirements for DFAnalyzer
+
 1. bokeh>=2.4.2
-2. pybind11
-3. [zindex_py](https://github.com/hariharan-devarajan/zindex.git)
-4. pandas>=2.0.3
-5. dask>=2023.5.0
-6. distributed
-7. numpy>=1.24.3
-8. pyarrow>=12.0.1
-9. rich>=13.6.0
-10. python-intervals>=1.10.0.post1
-11. matplotlib>=3.7.3
+1. dask>=2023.5.0
+1. distributed
+1. matplotlib>=3.7.3
+1. numpy>=1.24.3
+1. pandas>=2.0.3
+1. pyarrow>=12.0.1
+1. pybind11
+1. python-intervals>=1.10.0.post1
+1. rich>=13.6.0
+1. [zindex_py](https://github.com/hariharan-devarajan/zindex.git)
 
 ## Installation
 
-Users can easily install DFTracer using pip. This is the way most Python packages are installed.
-This method would work for both native Python environments and Conda environments.
+Users can easily install DFTracer using `pip`, the standard tool for installing Python packages. 
+This method works for both native Python and Conda environments.
 
 ### From PyPI
 
 ```bash
 pip install pydftracer
+pip install pydftracer[dfanalyzer]
 ```
 
 ### From Github
 
 ```bash
-DFT_VERSION=develop
-pip install git+https://github.com/hariharan-devarajan/dftracer.git@${DFT_VERSION}
+DFTRACER_VERSION=develop
+pip install git+https://github.com/hariharan-devarajan/dftracer.git@${DFTRACER_VERSION}
+pip install git+https://github.com/hariharan-devarajan/dftracer.git@${DFTRACER_VERSION}#egg=pydftracer[dfanalyzer]
 ```
 
-### From source
+### From Source
 
 ```bash
 git clone git@github.com:hariharan-devarajan/dftracer.git
@@ -51,7 +64,7 @@ git checkout tags/<Release> -b <Release>
 pip install .
 ```
 
-For more build instructions check [here](https://dftracer.readthedocs.io/en/latest/build.html).
+For detailed build instructions, click [here](https://dftracer.readthedocs.io/en/latest/build.html).
 
 ## Usage
 
@@ -80,7 +93,6 @@ def posix_calls(val):
 
 # NPZ calls internally calls POSIX calls.
 def npz_calls(index):
-    # print(f"{cwd}/data/demofile2.npz")
     path = f"{cwd}/data/demofile{index}.npz"
     if os.path.exists(path):
         os.remove(path)
@@ -104,31 +116,39 @@ By default the DFTracer mode is set to `FUNCTION`.
 Example of running this configurations are:
 
 ```bash
-# The process id, app_name and .pfw will be appended by the profiler for each app and process.
-# The name of the final log file is ~/log_file-<APP_NAME>-<PID>.pfw
+# The process id, app_name and .pfw will be appended by DFTracer for each app and process.
+# The name of the final log file will be ~/log_file-<APP_NAME>-<PID>.pfw
 DFTRACER_LOG_FILE=~/log_file
-# Colon separated paths for including for profiler
+# Colon separated paths to include in the tracing
 DFTRACER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset:$PWD/data
-# Enable profiler
+# Enable DFTracer
 DFTRACER_ENABLE=1
 ```
 
-For more example check [Examples](https://dftracer.readthedocs.io/en/latest/examples.html).
+For more examples, click [here](https://dftracer.readthedocs.io/en/latest/examples.html).
+
+## Documentation
+
+* Building DFTracer: [https://dftracer.readthedocs.io/en/latest/build.html](https://dftracer.readthedocs.io/en/latest/build.html)
+* Integrating DFTracer: [https://dftracer.readthedocs.io/en/latest/examples.html](https://dftracer.readthedocs.io/en/latest/examples.html)
+* Visualizing DFTracer Traces: [https://dftracer.readthedocs.io/en/latest/perfetto.html](https://dftracer.readthedocs.io/en/latest/perfetto.html)
+* Building DFAnalyzer: [https://dftracer.readthedocs.io/en/latest/dfanalyzer_build.html](https://dftracer.readthedocs.io/en/latest/dfanalyzer_build.html)
 
 ## Citation and Reference
-The original SC'24 paper describes the design and implementation of DFTracer code. Please cite this paper and the code if you use DFTracer for your research. 
+
+The original SC'24 paper describes the design and implementation of the DFTracer code. Please cite this paper and the code if you use DFTracer in your research. 
 
 ```
 @inproceedings{devarajan_dftracer_2024,
-	address = {Atlanta, GA},
-	title = {{DFTracer}: {An} {Analysis}-{Friendly} {Data} {Flow} {Tracer} for {AI}-{Driven} {Workflows}},
-	shorttitle = {{DFTracer}},
-	urldate = {2024-07-31},
-	booktitle = {{SC24}: {International} {Conference} for {High} {Performance} {Computing}, {Networking}, {Storage} and {Analysis}},
-	publisher = {IEEE},
-	author = {Devarajan, Hariharan and Pottier, Loic and Velusamy, Kaushik and Zheng, Huihuo and Yildirim, Izzet and Kogiou, Olga and Yu, Weikuan and Kougkas, Anthony and Sun, Xian-He and Yeom, Jae Seung and Mohror, Kathryn},
-	month = nov,
-	year = {2024},
+    address = {Atlanta, GA},
+    title = {{DFTracer}: {An} {Analysis}-{Friendly} {Data} {Flow} {Tracer} for {AI}-{Driven} {Workflows}},
+    shorttitle = {{DFTracer}},
+    urldate = {2024-07-31},
+    booktitle = {{SC24}: {International} {Conference} for {High} {Performance} {Computing}, {Networking}, {Storage} and {Analysis}},
+    publisher = {IEEE},
+    author = {Devarajan, Hariharan and Pottier, Loic and Velusamy, Kaushik and Zheng, Huihuo and Yildirim, Izzet and Kogiou, Olga and Yu, Weikuan and Kougkas, Anthony and Sun, Xian-He and Yeom, Jae Seung and Mohror, Kathryn},
+    month = nov,
+    year = {2024},
 }
 
 @misc{devarajan_dftracer_code_2024,
@@ -147,8 +167,3 @@ The original SC'24 paper describes the design and implementation of DFTracer cod
 ## Acknowledgments
 
 This work was performed under the auspices of the U.S. Department of Energy by Lawrence Livermore National Laboratory under Contract DE-AC52-07NA27344; and under the auspices of the National Cancer Institute (NCI) by Frederick National Laboratory for Cancer Research (FNLCR) under Contract 75N91019D00024. This research used resources of the Argonne Leadership Computing Facility, a U.S. Department of Energy (DOE) Office of Science user facility at Argonne National Laboratory and is based on research supported by the U.S. DOE Office of Science-Advanced Scientific Computing Research Program, under Contract No. DE-AC02-06CH11357. Office of Advanced Scientific Computing Research under the DOE Early Career Research Program. Also, This material is based upon work partially supported by LLNL LDRD 23-ERD-045 and 24-SI-005. LLNL-CONF-857447.
-
-
-## License
-
-MIT License [LICENSE](./LICENSE)
