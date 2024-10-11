@@ -185,6 +185,11 @@ void dftracer::ChromeWriter::convert_json(
                     << "\":" << std::any_cast<uint16_t>(item.second) << "";
         if (i < meta_size - 1) meta_stream << ",";
 
+      } else if (item.second.type() == typeid(HashType)) {
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<HashType>(item.second) << "";
+        if (i < meta_size - 1) meta_stream << ",";
+
       } else if (item.second.type() == typeid(long)) {
         meta_stream << "\"" << item.first
                     << "\":" << std::any_cast<long>(item.second) << "";
