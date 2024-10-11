@@ -2,7 +2,6 @@
 
 [![Build and Test](https://github.com/hariharan-devarajan/dftracer/actions/workflows/ci.yml/badge.svg)](https://github.com/hariharan-devarajan/dftracer/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/dftracer/badge/?version=latest)](https://dftracer.readthedocs.io/en/latest/?badge=latest)
-[![Coverage Status](https://coveralls.io/repos/github/hariharan-devarajan/dftracer/badge.svg?branch=feature/apis)](https://coveralls.io/github/hariharan-devarajan/dftracer?branch=dev)
 ![PyPI - Version](https://img.shields.io/pypi/v/pydftracer?label=PyPI)
 ![PyPI - Wheel](https://img.shields.io/pypi/wheel/pydftracer?label=Wheel)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pydftracer?label=Python)
