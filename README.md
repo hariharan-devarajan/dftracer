@@ -30,6 +30,7 @@ Requirements for DFAnalyzer
 1. pybind11
 1. python-intervals>=1.10.0.post1
 1. rich>=13.6.0
+1. seaborn>=0.13.2
 1. [zindex_py](https://github.com/hariharan-devarajan/zindex.git)
 
 ## Installation
