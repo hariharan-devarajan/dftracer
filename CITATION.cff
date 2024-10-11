@@ -1,0 +1,89 @@
+cff-version: 1.2.0
+message: If you use this software, please cite the software and the paper.
+title: "DFTracer: An Analysis-Friendly Data Flow Tracer for AI-Driven Workflows"
+abstract: A multi-level dataflow tracer designed for capturing I/O calls from AI-driven workflows.
+license: MIT
+url: https://github.com/hariharan-devarajan/dftracer
+repository-code: https://github.com/hariharan-devarajan/dftracer
+contact:
+  - name: Hariharan Devarajan
+    email: mani.hariharan@gmail.com
+authors:
+  - family-names: Devarajan
+    given-names: Hariharan
+    orcid: https://orcid.org/0000-0001-5625-3494
+  - family-names: Pottier
+    given-names: Loic
+    orcid: https://orcid.org/0000-0002-7681-3521
+  - family-names: Velusamy
+    given-names: Kaushik
+    orcid: https://orcid.org/0000-0003-4902-8760
+  - family-names: Zheng
+    given-names: Huihuo
+    orcid: https://orcid.org/0000-0001-9008-9552
+  - family-names: Yildirim
+    given-names: Izzet
+    orcid: https://orcid.org/0000-0003-3513-0764
+  - family-names: Kogiou
+    given-names: Olga
+    orcid: https://orcid.org/0009-0009-6043-4437
+  - family-names: Yu
+    given-names: Weikuan
+    orcid: https://orcid.org/0000-0002-8754-0311
+  - family-names: Kougkas
+    given-names: Anthony
+    orcid: https://orcid.org/0000-0003-3943-663X
+  - family-names: Sun
+    given-names: Xian-He
+    orcid: https://orcid.org/0000-0002-1093-0792
+  - family-names: Yeom
+    given-names: Jae Seung
+    orcid: https://orcid.org/0000-0001-5464-6040
+  - family-names: Mohror
+    given-names: Kathryn
+    orcid: https://orcid.org/0000-0002-1366-1655
+preferred-citation:
+  type: conference-paper
+  title: "DFTracer: An Analysis-Friendly Data Flow Tracer for AI-Driven Workflows"
+  year: 2024
+  authors:
+    - family-names: Devarajan
+      given-names: Hariharan
+      orcid: https://orcid.org/0000-0001-5625-3494
+    - family-names: Pottier
+      given-names: Loic
+      orcid: https://orcid.org/0000-0002-7681-3521
+    - family-names: Velusamy
+      given-names: Kaushik
+      orcid: https://orcid.org/0000-0003-4902-8760
+    - family-names: Zheng
+      given-names: Huihuo
+      orcid: https://orcid.org/0000-0001-9008-9552
+    - family-names: Yildirim
+      given-names: Izzet
+      orcid: https://orcid.org/0000-0003-3513-0764
+    - family-names: Kogiou
+      given-names: Olga
+      orcid: https://orcid.org/0009-0009-6043-4437
+    - family-names: Yu
+      given-names: Weikuan
+      orcid: https://orcid.org/0000-0002-8754-0311
+    - family-names: Kougkas
+      given-names: Anthony
+      orcid: https://orcid.org/0000-0003-3943-663X
+    - family-names: Sun
+      given-names: Xian-He
+      orcid: https://orcid.org/0000-0002-1093-0792
+    - family-names: Yeom
+      given-names: Jae Seung
+      orcid: https://orcid.org/0000-0001-5464-6040
+    - family-names: Mohror
+      given-names: Kathryn
+      orcid: https://orcid.org/0000-0002-1366-1655
+  conference:
+    name: "SC24: International Conference for High Performance Computing, Networking, Storage and Analysis"
+    city: Atlanta
+    region: GA
+    country: USA
+    date-start: 2024-11-17
+    date-end: 2024-11-22
