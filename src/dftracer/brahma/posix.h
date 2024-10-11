@@ -26,7 +26,7 @@ class POSIXDFTracer : public POSIX {
  private:
   static bool stop_trace;
   static std::shared_ptr<POSIXDFTracer> instance;
-  static const int MAX_FD = 1024 * 1024;
+  static const int MAX_FD = 1024;
   HashType tracked_fd[MAX_FD];
   std::shared_ptr<DFTLogger> logger;
   bool trace_all_files;

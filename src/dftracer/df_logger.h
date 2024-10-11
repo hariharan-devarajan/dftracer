@@ -109,10 +109,9 @@ class DFTLogger {
   inline HashType get_hash(char *name) {
     uint8_t result[HASH_OUTPUT];
     md5String(name, result);
-    std::string hash_str;
-    hash_str.reserve(HASH_OUTPUT + 1);
+    char hash_str[HASH_OUTPUT + 1];
     for (int i = 0; i < HASH_OUTPUT; ++i) {
-      sprintf(hash_str.data() + i, "%02x", result[i]);
+      sprintf(hash_str + i, "%02x", result[i]);
     }
     hash_str[HASH_OUTPUT] = '\0';
     HashType hash = std::stoull(hash_str, nullptr, 16);
@@ -425,19 +424,19 @@ class DFTLogger {
     DFT_LOGGER_UPDATE(value##_hash);                                  \
   }
 
-#define DFT_LOGGER_START(entity)                                    \
-  DFTRACER_LOG_DEBUG("Calling function %s", __FUNCTION__);          \
-  HashType fhash = is_traced(entity, __FUNCTION__);                 \
-  bool trace = fhash != NO_HASH_DEFAULT;                            \
-  TimeResolution start_time = 0;                                    \
-  std::unordered_map<std::string, std::any> *metadata = nullptr;    \
-  if (trace) {                                                      \
-    if (this->logger->include_metadata) {                           \
-      metadata = new std::unordered_map<std::string, std::any>();   \
-      DFT_LOGGER_UPDATE(fhash);                                     \
-    }                                                               \
-    this->logger->enter_event();                                    \
-    start_time = this->logger->get_time();                          \
+#define DFT_LOGGER_START(entity)                                  \
+  DFTRACER_LOG_DEBUG("Calling function %s", __FUNCTION__);        \
+  HashType fhash = is_traced(entity, __FUNCTION__);               \
+  bool trace = fhash != NO_HASH_DEFAULT;                          \
+  TimeResolution start_time = 0;                                  \
+  std::unordered_map<std::string, std::any> *metadata = nullptr;  \
+  if (trace) {                                                    \
+    if (this->logger->include_metadata) {                         \
+      metadata = new std::unordered_map<std::string, std::any>(); \
+      DFT_LOGGER_UPDATE(fhash);                                   \
+    }                                                             \
+    this->logger->enter_event();                                  \
+    start_time = this->logger->get_time();                        \
   }
 #define DFT_LOGGER_START_ALWAYS()                                 \
   DFTRACER_LOG_DEBUG("Calling function %s", __FUNCTION__);        \
