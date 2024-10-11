@@ -6,7 +6,9 @@
 #define DFTRACER_POSIX_H
 
 #include <brahma/brahma.h>
+#include <dftracer/core/constants.h>
 #include <dftracer/core/logging.h>
+#include <dftracer/core/typedef.h>
 #include <dftracer/df_logger.h>
 #include <dftracer/utils/md5.h>
 #include <dftracer/utils/utils.h>
@@ -25,24 +27,24 @@ class POSIXDFTracer : public POSIX {
   static bool stop_trace;
   static std::shared_ptr<POSIXDFTracer> instance;
   static const int MAX_FD = 1024;
-  std::string tracked_fd[MAX_FD];
+  HashType tracked_fd[MAX_FD];
   std::shared_ptr<DFTLogger> logger;
   bool trace_all_files;
 
-  inline std::string is_traced(int fd, const char *func) {
-    if (fd < 0) return std::string();
-    std::string trace = tracked_fd[fd % MAX_FD];
-    if (trace.empty()) {
+  inline HashType is_traced(int fd, const char *func) {
+    if (fd < 0) return NO_HASH_DEFAULT;
+    HashType trace = tracked_fd[fd % MAX_FD];
+    if (trace == NO_HASH_DEFAULT) {
       DFTRACER_LOG_DEBUG(
           "Calling POSIXDFTracer.is_traced for %s and"
           " fd %d trace %d",
-          func, fd, !trace.empty());
+          func, fd, trace != NO_HASH_DEFAULT);
     }
     return trace;
   }
 
-  inline std::string is_traced(const char *filename, const char *func) {
-    if (stop_trace) return std::string();
+  inline HashType is_traced(const char *filename, const char *func) {
+    if (stop_trace) return NO_HASH_DEFAULT;
     if (trace_all_files) {
       return logger->hash_and_store(filename, METADATA_NAME_FILE_HASH);
     } else {
@@ -57,7 +59,7 @@ class POSIXDFTracer : public POSIX {
     }
   }
 
-  inline void trace(int fd, std::string hash) {
+  inline void trace(int fd, HashType hash) {
     DFTRACER_LOG_DEBUG("Calling POSIXDFTracer.trace for %d and %d", fd, hash);
     if (fd == -1) return;
     tracked_fd[fd % MAX_FD] = hash;
@@ -66,13 +68,13 @@ class POSIXDFTracer : public POSIX {
   inline void remove_trace(int fd) {
     DFTRACER_LOG_DEBUG("Calling POSIXDFTracer.remove_trace for %d", fd);
     if (fd == -1) return;
-    tracked_fd[fd % MAX_FD] = std::string();
+    tracked_fd[fd % MAX_FD] = NO_HASH_DEFAULT;
   }
 
  public:
   POSIXDFTracer(bool trace_all) : POSIX(), trace_all_files(trace_all) {
     DFTRACER_LOG_DEBUG("POSIX class intercepted", "");
-    for (int i = 0; i < MAX_FD; ++i) tracked_fd[i] = std::string();
+    for (int i = 0; i < MAX_FD; ++i) tracked_fd[i] = NO_HASH_DEFAULT;
     logger = DFT_LOGGER_INIT();
   }
   void finalize() {
