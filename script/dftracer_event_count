@@ -1,0 +1,140 @@
+#!/bin/bash
+
+# The script will count number of valid events of traces
+# This has the following signature.
+#
+# usage: dftracer_split [-f] [-d input_directory]
+#   -d input_directory      specify input directories. should contain .pfw or .pfw.gz files.
+#   -f                      force index creation
+#   -h                      display help
+date_echo() {
+    dt=$(date '+%d/%m/%Y %H:%M:%S')
+    echo "$dt  $@"
+}
+
+progress_date_echo() {
+    dt=$(date '+%d/%m/%Y %H:%M:%S')
+    echo -ne "$dt  $@                              "\\r
+}
+LOG_DIR=$PWD
+run_create_index=1
+
+function usage {
+    echo "usage: $(basename $0) [-f] [-d input_directory]"
+    echo "  -h                      display help"
+    echo "  -f                      force index creation"
+    echo "  -d input_directory      specify input directories. should contain .pfw or .pfw.gz files."
+    exit 1
+}
+while getopts ':fd:h' opt; do
+  case "$opt" in
+    f)
+      run_create_index=0
+      ;;
+    d)
+      LOG_DIR="${OPTARG}"
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+    :)
+      echo -e "option requires an argument.\n"
+      usage
+      exit 1
+      ;;
+
+    ?)
+      echo -e "Invalid command option.\n"
+      usage
+      exit 1
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+
+function get_lines_count {
+  local dir=$1
+
+  # if dir empty use current dir
+  if [ -z "$dir" ]; then
+    dir=$PWD
+  fi
+
+  pushd $dir > /dev/null
+
+  # check if sqlite3 exists
+  sqlite_exists=0
+  if command -v sqlite3 &> /dev/null; then
+    # echo "sqlite3 exists"
+    sqlite_exists=1
+  fi
+
+  files=("$dir"/*.zindex)
+  JOBS_LIMIT=$(nproc --all)
+  declare -A lines_counts
+  # for i in $(seq 1 $JOBS_LIMIT); do
+  #   lines_counts+=("0")
+  # done
+  for file_index in "${!files[@]}"; do
+    running_jobs=$(jobs -rp | wc -l)
+    if [ $running_jobs -ge $JOBS_LIMIT ]; then
+      date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
+      while [ $running_jobs -ge $JOBS_LIMIT ]
+      do
+        sleep 1
+        running_jobs=$(jobs -rp | wc -l)
+      done
+      date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
+    fi
+
+    file_name=${files[$file_index]}
+    # echo "Processing $file_name"
+    if [ $sqlite_exists -eq 1 ]; then
+      lines_counts[$file_index]=$(
+      {
+        sqlite3 $file_name "select count(line) as a from LineOffsets where length > 8;"
+        progress_date_echo "Finished counting $file_index of $total" >&2
+      } &)
+    else
+      lines_counts[$file_index]=$(
+      {
+python3 <<-EOF
+import zindex_py as zindex
+import glob
+import sqlite3
+
+conn = sqlite3.connect("${file_name}")
+res = conn.execute("select count(line) as a from LineOffsets where length > 8;")
+lines_count = res.fetchone()[0]
+print(lines_count)
+EOF
+} &)
+    fi
+  done
+  wait
+
+  popd > /dev/null
+
+  lines_count=0
+  for line_count in "${lines_counts[@]}"; do
+    lines_count=$((lines_count + line_count))
+  done
+
+  echo $lines_count
+}
+
+files=("$LOG_DIR"/*.pfw.gz)
+for file in $files; do
+  if [ ! -f "$file.zindex" ]; then
+    run_create_index=1
+    break
+  fi
+done
+
+if [ "$run_create_index" == "1" ]; then
+  SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+  $SCRIPT_DIR/dftracer_create_index -f -d $LOG_DIR -f >/dev/null
+fi
+
+get_lines_count $LOG_DIR

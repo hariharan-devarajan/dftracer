@@ -1,0 +1,130 @@
+  #!/bin/bash
+
+# The script validates dftracer traces
+# This has the following signature.
+#
+# usage: dftracer_validate [-v] [-d input_directory]
+#   -v                      enable verbose mode
+#   -h                      display help
+#   -d input_directory      specify input directories. should contain .pfw or .pfw.gz files.
+
+date_echo() {
+    dt=$(date '+%d/%m/%Y %H:%M:%S');
+    echo "$dt  $@"
+}
+
+progress_date_echo() {
+    dt=$(date '+%d/%m/%Y %H:%M:%S')
+    echo -ne "$dt  $@"\\r
+}
+
+LOG_DIR=$PWD
+
+PPWD=$PWD
+
+function usage {
+    echo "usage: $(basename $0) [-cv] [-d input_directory]"
+    echo "  -v                      enable verbose mode"
+    echo "  -h                      display help"
+    echo "  -d input_directory      specify input directories. should contain .pfw or .pfw.gz files."
+    exit 1
+}
+while getopts ':cvfd:h' opt; do
+  case "$opt" in
+    d)
+      LOG_DIR="${OPTARG}"
+      ;;
+    v)
+      set -x
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+
+    :)
+      echo -e "option requires an argument.\n"
+      usage
+      exit 1
+      ;;
+
+    ?)
+      echo -e "Invalid command option.\n"
+      usage
+      exit 1
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+total=0
+for file in *.pfw*; do total=1; break; done
+
+# pfw_count=$(ls -1 $LOG_DIR/*.pfw 2> /dev/null | wc -l)
+# gz_count=$(ls -1 $LOG_DIR/*.gz 2> /dev/null | wc -l)
+# total=$((pfw_count + gz_count))
+if [ $total == 0 ]; then
+    date_echo "The folder does not contain any pfw or pfw.gz files."
+    exit 1
+fi
+
+JOBS_LIMIT=$(nproc --all)
+if [ -d $LOG_DIR ]; then
+  files=("$LOG_DIR"/*.pfw*)
+  pushd $LOG_DIR > /dev/null
+else
+  files=($LOG_DIR)
+fi
+total=${#files[@]}
+# loop over logs
+for file_index in "${!files[@]}"; do
+  file=${files[$file_index]}
+  filename=$(basename -- "$file")
+  ext="${filename##*.}"
+  if [ "$ext" != "zindex" ]; then
+    running_jobs=$(jobs -rp | wc -l)
+    if [ $running_jobs -ge $JOBS_LIMIT ]; then
+      # date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
+      while [ $running_jobs -ge $JOBS_LIMIT ]
+      do
+          sleep 1
+          running_jobs=$(jobs -rp | wc -l)
+      done
+      # date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
+    fi
+    # only look at files
+    if [ -f "$file" ]; then
+      # calculate basename and copy files
+      filename=$(basename -- "$file")
+      ext="${filename##*.}"
+      if [ "$ext" == "gz" ]; then
+        {
+          # if file is gz get the name
+          name=${filename%.pfw.gz}
+          if jq -e -c > /dev/null <<< $(gunzip -c $file | grep -v "\[" | grep -v "\]"); then
+            echo  -ne "";
+          else
+            echo "Failed to parse JSON for $name on line $line_number";
+          fi
+          progress_date_echo "Completed $file_index of $total"
+        } &
+      else
+        {
+          # if file is pfw get the name
+          name=${filename%.pfw}
+          if jq -e -c > /dev/null <<< $(cat $file | grep -v "\[" | grep -v "\]"); then
+            echo  -ne "";
+          else
+            echo "Failed to parse JSON for $name on line $line_number";
+          fi
+          progress_date_echo "Completed $file_index of $total"
+        } &
+      fi
+    fi
+  fi
+done
+if [ -d $LOG_DIR ]; then
+popd > /dev/null
+fi
+wait
+echo ""
+date_echo Validating traces finished

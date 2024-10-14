@@ -158,7 +158,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="pydftracer",
-    version="1.0.5",
+    version="1.0.6",
     description="I/O profiler for deep learning python apps. Specifically for dlio_benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -184,7 +184,7 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3 :: Only",
     ],
-    install_requires=["pybind11"],
+    install_requires=["pybind11", "zindex_py==0.0.4"],
     requires=["pybind11","setuptools"],
     keywords="profiler, deep learning, I/O, benchmark, NPZ, pytorch benchmark, tensorflow benchmark",
     project_urls={  # Optional
@@ -196,7 +196,10 @@ setup(
              'script/dftracer_merge',
              'script/dftracer_sanitize',
              'script/dftracer_anonymize',
-             'script/dftracer_create_index',],
+             'script/dftracer_split',
+             'script/dftracer_create_index',
+             'script/dftracer_event_count',
+             'script/dftracer_validate', ],
     package_dir={"dftracer": "dftracer", 
                  "dftracer_dbg": "dftracer_dbg",
                  "dfanalyzer": "dfanalyzer"},
@@ -209,7 +212,6 @@ setup(
                         "seaborn>=0.13.2",
                         "bokeh>=2.4.2",
                         "pybind11",
-                        "zindex_py==0.0.2",
                         "pandas>=2.0.3",
                         "dask>=2023.5.0",
                         "distributed",

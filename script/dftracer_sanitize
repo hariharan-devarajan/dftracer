@@ -98,8 +98,10 @@ for file in "$LOG_DIR"/*.pfw*; do
       # if file is gz get the name
       name=${filename%.pfw.gz}
       echo "extracted name $name"
+      echo "[" > $OUTPUT_DIR/$name.pfw
       # replace non utf characters
-      gunzip -c $OUTPUT_DIR/.tmp.$filename | LANG=C sed 's/[\d128-\d255]//g' > $OUTPUT_DIR/$name.pfw
+      gunzip -c $OUTPUT_DIR/.tmp.$filename | LC_ALL=C sed 's/[^[:print:]\r\t]//g' | jq -R -c "fromjson?" >> $OUTPUT_DIR/$name.pfw
+      echo "]" >> $OUTPUT_DIR/$name.pfw
       # compress
       if [ $compressed == 1 ]; then
         gzip $OUTPUT_DIR/$name.pfw
@@ -111,8 +113,10 @@ for file in "$LOG_DIR"/*.pfw*; do
       # if file is pfw get the name
       name=${filename%.pfw}
       echo "extracted name $name"
-      # replace non utf characters
-      LANG=C sed 's/[\d128-\d255]//g' $OUTPUT_DIR/.tmp.$filename > $OUTPUT_DIR/$name.pfw
+      # replace non utf characters and valid json lines
+      echo "[" > $OUTPUT_DIR/$name.pfw
+      LC_ALL=C sed 's/[^[:print:]\r\t]//g' $OUTPUT_DIR/.tmp.$filename | jq -R -c "fromjson?" >> $OUTPUT_DIR/$name.pfw
+      echo "]" >> $OUTPUT_DIR/$name.pfw
       if [ $compressed == 1 ]; then
         gzip $OUTPUT_DIR/$name.pfw
         echo "Processed $OUTPUT_DIR/$name.pfw.gz"

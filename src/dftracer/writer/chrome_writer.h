@@ -24,7 +24,7 @@ namespace dftracer {
 class ChromeWriter {
  private:
   std::unordered_map<char *, std::any> metadata;
-  std::shared_mutex mtx;
+  std::mutex mtx;
 
  protected:
   bool throw_error;
@@ -36,7 +36,7 @@ class ChromeWriter {
   bool enable_core_affinity;
 
   FILE *fh;
-  uint16_t hostname_hash;
+  HashType hostname_hash;
   static const int MAX_LINE_SIZE = 16 * 1024L;
   size_t write_buffer_size;
 
@@ -55,7 +55,7 @@ class ChromeWriter {
 
   bool is_first_write;
   inline size_t write_buffer_op(bool force = false) {
-    std::unique_lock<std::shared_mutex> lock(mtx);
+    std::unique_lock lock(mtx);
     if (current_index == 0 || (!force && current_index < write_buffer_size))
       return 0;
     DFTRACER_LOG_DEBUG("ChromeWriter.write_buffer_op %s",
@@ -67,7 +67,7 @@ class ChromeWriter {
     funlockfile(fh);
     if (written_elements != 1) {  // GCOVR_EXCL_START
       DFTRACER_LOG_ERROR(
-          "unable to log write only %ld of %d trying to write %d with error "
+          "unable to log write only %ld of %d trying to write %ld with error "
           "code "
           "%d",
           written_elements, 1, current_index, errno);
@@ -94,13 +94,13 @@ class ChromeWriter {
     enable_compression = conf->compression;
     write_buffer_size = conf->write_buffer_size;
     {
-      std::unique_lock<std::shared_mutex> lock(mtx);
+      std::unique_lock lock(mtx);
       buffer = std::vector<char>(write_buffer_size + MAX_LINE_SIZE);
       current_index = 0;
     }
   }
   ~ChromeWriter() { DFTRACER_LOG_DEBUG("Destructing ChromeWriter", ""); }
-  void initialize(char *filename, bool throw_error, uint16_t hostname_hash);
+  void initialize(char *filename, bool throw_error, HashType hostname_hash);
 
   void log(int index, ConstEventNameType event_name,
            ConstEventNameType category, TimeResolution start_time,

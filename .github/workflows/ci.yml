@@ -1,8 +1,8 @@
-name: DFTracer Build and Test
+name: Build and Test
 
 on:
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   push:
 jobs:
   build-and-test:

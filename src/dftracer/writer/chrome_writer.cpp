@@ -22,7 +22,7 @@ template <>
 bool dftracer::Singleton<dftracer::ChromeWriter>::stop_creating_instances =
     false;
 void dftracer::ChromeWriter::initialize(char *filename, bool throw_error,
-                                        uint16_t hostname_hash) {
+                                        HashType hostname_hash) {
   this->hostname_hash = hostname_hash;
   this->throw_error = throw_error;
   this->filename = filename;
@@ -185,6 +185,11 @@ void dftracer::ChromeWriter::convert_json(
                     << "\":" << std::any_cast<uint16_t>(item.second) << "";
         if (i < meta_size - 1) meta_stream << ",";
 
+      } else if (item.second.type() == typeid(HashType)) {
+        meta_stream << "\"" << item.first
+                    << "\":" << std::any_cast<HashType>(item.second) << "";
+        if (i < meta_size - 1) meta_stream << ",";
+
       } else if (item.second.type() == typeid(long)) {
         meta_stream << "\"" << item.first
                     << "\":" << std::any_cast<long>(item.second) << "";
@@ -210,11 +215,11 @@ void dftracer::ChromeWriter::convert_json(
       all_stream << "," << meta_stream.str();
     }
     {
-      std::unique_lock<std::shared_mutex> lock(mtx);
+      std::unique_lock lock(mtx);
       previous_index = current_index;
       auto written_size = sprintf(
           buffer.data() + current_index,
-          R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{"hhash":%d%s}})",
+          R"(%s{"id":%d,"name":"%s","cat":"%s","pid":%lu,"tid":%lu,"ts":%llu,"dur":%llu,"ph":"X","args":{"hhash":%llu%s}})",
           is_first_char, index, event_name, category, process_id, thread_id,
           start_time, duration, this->hostname_hash, all_stream.str().c_str());
       current_index += written_size;
@@ -223,7 +228,7 @@ void dftracer::ChromeWriter::convert_json(
     }
   } else {
     {
-      std::unique_lock<std::shared_mutex> lock(mtx);
+      std::unique_lock lock(mtx);
       previous_index = current_index;
       auto written_size = sprintf(
           buffer.data() + current_index,
@@ -249,19 +254,21 @@ void dftracer::ChromeWriter::convert_json_metadata(
   char is_first_char[3] = "  ";
   if (!is_first_write) is_first_char[0] = '\0';
   {
-    std::unique_lock<std::shared_mutex> lock(mtx);
+    std::unique_lock lock(mtx);
     previous_index = current_index;
     auto written_size = 0;
     if (is_string) {
       written_size = sprintf(
           buffer.data() + current_index,
-          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"name":"%s","value":"%s"}})",
-          is_first_char, index, ph, process_id, thread_id, name, value);
+          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"hhash":%llu,"name":"%s","value":"%s"}})",
+          is_first_char, index, ph, process_id, thread_id, this->hostname_hash,
+          name, value);
     } else {
       written_size = sprintf(
           buffer.data() + current_index,
-          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"name":"%s","value":%s}})",
-          is_first_char, index, ph, process_id, thread_id, name, value);
+          R"(%s{"id":%d,"name":"%s","cat":"dftracer","pid":%lu,"tid":%lu,"ph":"M","args":{"hhash":%llu,"name":"%s","value":%s}})",
+          is_first_char, index, ph, process_id, thread_id, this->hostname_hash,
+          name, value);
     }
     current_index += written_size;
     buffer[current_index] = '\n';

@@ -14,15 +14,14 @@ set(DFTRACER_PACKAGE_VERSION_MINOR "${DFTRACER_VERSION_PATCH}")
 set(DFTRACER_PACKAGE_STRING "${DFTRACER_PACKAGE_NAME} ${DFTRACER_PACKAGE_VERSION}")
 set(DFTRACER_PACKAGE_TARNAME "${DFTRACER_PACKAGE}")
 
-set(DFTRACER_VERSION "(1, 0, 5)")
+set(DFTRACER_VERSION "(1, 0, 6)")
 
 project(dftracer LANGUAGES C CXX)
-
 
 # Convenience defines
 string(TOUPPER "${PROJECT_NAME}" UPPER_PROJECT_NAME)
 string(TOLOWER "${PROJECT_NAME}" LOWER_PROJECT_NAME)
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-empty-body -Wno-format-extra-args")
 #------------------------------------------------------------------------------
 # Internal Includes for header and libraries
 #------------------------------------------------------------------------------
@@ -85,7 +84,6 @@ if (NOT DFTRACER_EXPORTED_TARGETS)
     set(DFTRACER_EXPORTED_TARGETS "dftracer-targets")
 endif ()
 
-
 include(dftracer-utils)
 #------------------------------------------------------------------------------
 # Build options
@@ -108,13 +106,13 @@ endif (DFTRACER_USE_CLANG_LIBCXX)
 
 # Options
 option (DFTRACER_DISABLE_HWLOC "Disable HWLOC" On)
-if (NOT DFTRACER_DISABLE_HWLOC) 
+if (NOT DFTRACER_DISABLE_HWLOC)
     set(DFTRACER_HWLOC_ENABLE 1)
 endif()
 
 # Options
 option (DFTRACER_ENABLE_FTRACING "Enable Function Tracing" OFF)
-if (DFTRACER_ENABLE_FTRACING) 
+if (DFTRACER_ENABLE_FTRACING)
     set(DFTRACER_FTRACING_ENABLE 1)
     set(DFTRACER_FUNCTION_FLAGS "-g" "-finstrument-functions" "-Wl,-E" "-fvisibility=default")
 else()
@@ -122,13 +120,12 @@ else()
 endif()
 
 option (DFTRACER_ENABLE_MPI "Enable MPI" OFF)
-if (DFTRACER_ENABLE_MPI) 
+if (DFTRACER_ENABLE_MPI)
     set(DFTRACER_MPI_ENABLE 1)
 endif()
 option (DFTRACER_BUILD_PYTHON_BINDINGS "Build python bindings." ON)
 set(DFTRACER_PYTHON_EXE "python3" CACHE STRING "Python executable to use for building.")
 set(DFTRACER_PYTHON_SITE $ENV{DFTRACER_PYTHON_SITE} CACHE STRING "Python site packages to use for building.")
-
 
 if (DFTRACER_BUILD_PYTHON_BINDINGS)
     if (DFTRACER_PYTHON_SITE)
@@ -192,7 +189,7 @@ endif ()
 # Dependencies
 #------------------------------------------------------------------------------
 
-if (DFTRACER_INSTALL_DEPENDENCIES) 
+if (DFTRACER_INSTALL_DEPENDENCIES)
     message(STATUS "[${PROJECT_NAME}] downloading dependencies. Please run make for downloading depedencies and then do reconfigure without dependency flag.")
     message(STATUS "[${PROJECT_NAME}] Installing depedencies at ${CMAKE_INSTALL_PREFIX}")
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dependency)
@@ -233,7 +230,7 @@ if (DFTRACER_BUILD_PYTHON_BINDINGS)
     #add_subdirectory(dependency/py11bind)
 endif()
 
-if (DFTRACER_ENABLE_MPI) 
+if (DFTRACER_ENABLE_MPI)
   find_package(MPI COMPONENTS CXX REQUIRED)
   if (MPI_FOUND)
       message(STATUS "[DFTRACER] found mpi.h at ${MPI_CXX_INCLUDE_DIRS}")
@@ -254,9 +251,6 @@ if (NOT DFTRACER_DISABLE_HWLOC)
         message(FATAL_ERROR "-- [DFTRACER] hwloc is needed for ${PROJECT_NAME} build with -DDFTRACER_DISABLE_HWLOC-ON option.")
     endif ()
 endif()
-
-
-
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -416,7 +410,6 @@ if (DFTRACER_BUILD_PYTHON_BINDINGS)
                 . ${CMAKE_BINARY_DIR}/symlink.sh
                 \")")
 
-    
     install(TARGETS py${PROJECT_NAME}_dbg
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
             PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -467,6 +460,30 @@ install(
         bin
 )
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_split ${EXECUTABLE_OUTPUT_PATH}/dftracer_split COPYONLY)
+install(
+        FILES
+        ${EXECUTABLE_OUTPUT_PATH}/dftracer_split
+        DESTINATION
+        bin
+)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_event_count ${EXECUTABLE_OUTPUT_PATH}/dftracer_event_count COPYONLY)
+install(
+        FILES
+        ${EXECUTABLE_OUTPUT_PATH}/dftracer_event_count
+        DESTINATION
+        bin
+)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/script/dftracer_validate ${EXECUTABLE_OUTPUT_PATH}/dftracer_validate COPYONLY)
+install(
+        FILES
+        ${EXECUTABLE_OUTPUT_PATH}/dftracer_validate
+        DESTINATION
+        bin
+)
+
 #cmake_policy(SET CMP0079 NEW) # In case that we need more control over the target building order
 
 if(DFTRACER_ENABLE_TESTS)
@@ -492,7 +509,7 @@ include(CMakePackageConfigHelpers)
 configure_package_config_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/configure_files/${PROJECT_NAME}-config.cmake.build.in
         "${CMAKE_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-        INSTALL_DESTINATION  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}-config.cmake 
+        INSTALL_DESTINATION  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/cmake/${PROJECT_NAME}/${PROJECT_NAME}-config.cmake
         PATH_VARS CMAKE_BINARY_DIR
 )
 
@@ -528,7 +545,6 @@ export(EXPORT ${DFTRACER_EXPORTED_TARGETS}
 configure_file("${CMAKE_SOURCE_DIR}/cmake/configure_files/dftracer_config.hpp.in"
                "${CMAKE_INCLUDE_OUTPUT_DIRECTORY}/dftracer/dftracer_config.hpp" @ONLY)
 
-
 ################################################################
 # Install DFTRACER
 ################################################################
@@ -560,7 +576,6 @@ install(FILES
         "${PROJECT_SOURCE_DIR}/README.md"
         DESTINATION
         ${DFTRACER_INSTALL_DOCDIR})
-
 
 ###############################################################################
 #                      Print out configuration summary
@@ -635,7 +650,6 @@ string(APPEND _str
 # Output to stdout
 execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${_str}")
 set(_str)
-
 
 ###############################################################################
 # Write a basic modulefile

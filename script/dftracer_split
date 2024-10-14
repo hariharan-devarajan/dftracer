@@ -1,0 +1,345 @@
+#!/bin/bash
+
+# The script splits the traces into equal sized chunk optimized for analysis
+# This has the following signature.
+#
+# usage: dftracer_split [-fv] [-n app_name] [-d input_directory] [-o output_directory] [-s chunk_size]
+#   -n app_name             specify app name
+#   -f                      override generated files
+#   -s size                 chunk size (in MB)
+#   -v                      enable verbose mode
+#   -h                      display help
+#   -d input_directory      specify input directories. should contain .pfw or .pfw.gz files.
+#   -o output_directory     specify output directory
+
+# PARALLEL populate metadata using count (bash parallel + sqlite query)
+#   - check whether we have sqlite3
+#   - if not using python
+#   - put result as map of filename tuple[filename, size, min, max]
+# SERIAL   iterate to create chunks mapping (bash serial)
+#   - put result as array of array of tuple[filename, start, end]
+#     - the idea is that we can have multiple file data in different chunks
+# PARALLEL extract chunks (bash parallel + zq)
+#   - for every chunk serially run zq
+#     - get data for start and end
+
+date_echo() {
+    dt=$(date '+%d/%m/%Y %H:%M:%S')
+    echo "$dt  $@"
+}
+
+progress_date_echo() {
+    dt=$(date '+%d/%m/%Y %H:%M:%S')
+    echo -ne "$dt  $@                              "\\r
+}
+
+LOG_DIR=$PWD
+override=0
+chunk_size=1024 # 1GB default
+dest=$PWD/split
+verbose=0
+app_name="app"
+
+function usage {
+    echo "usage: $(basename $0) [-fv] [-n app_name] [-d input_directory] [-o output_directory] [-s chunk_size]"
+    echo "  -n app_name             specify app name"
+    echo "  -f                      override generated files"
+    echo "  -s size                 chunk size (in MB)"
+    echo "  -v                      enable verbose mode"
+    echo "  -h                      display help"
+    echo "  -d input_directory      specify input directories. should contain .pfw or .pfw.gz files."
+    echo "  -o output_directory     specify output directory"
+    exit 1
+}
+while getopts ':fvn:d:o:s:h' opt; do
+  case "$opt" in
+    n)
+      app_name="${OPTARG}"
+      ;;
+    d)
+      LOG_DIR="${OPTARG}"
+      ;;
+    s)
+      chunk_size="${OPTARG}"
+      ;;
+    o)
+      dest="${OPTARG}"
+      ;;
+    f)
+      override=1
+      ;;
+    v)
+      verbose=0
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+    :)
+      echo -e "option requires an argument.\n"
+      usage
+      exit 1
+      ;;
+
+    ?)
+      echo -e "Invalid command option.\n"
+      usage
+      exit 1
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+
+pfw_total=0
+pfw_gz_total=0
+zindex_total=0
+for file in *.pfw*; do pfw_total=1; break; done
+for file in *.pfw.gz*; do pfw_gz_total=1; break; done
+for file in *.zindex; do zindex_total=1; break; done
+
+printf "============================================\n"
+printf "Arguments:\n"
+printf "  App name: %s\n" $app_name
+printf "  Override: %s\n" $override
+printf "  Data dir: %s\n" $LOG_DIR
+printf "  Output dir: %s\n" $dest
+printf "  Chunk size: %s\n" $chunk_size
+printf "============================================\n"
+
+mkdir -p $dest
+
+if [ $pfw_total == 0 ] || [ $pfw_gz_total == 0 ]; then
+  date_echo "The folder does not contain any pfw or pfw.gz files."
+  exit 1
+fi
+
+python -c "import zindex_py;"
+if [[ $? != 0 ]]; then
+    date_echo "failure: $?: zindex not found. Please install zindex with: pip install zindex_py"
+    exit 1
+fi
+zindex_exec=$(python -c 'import zindex_py;import site; sp=site.getsitepackages()[0]; print(f"{sp}/zindex_py/bin/zindex")')
+if [ ! -f "${zindex_exec}" ]; then
+  date_echo "failure: $?: zindex not found. Please install zindex with: pip install zindex_py"
+  exit 1
+else
+  date_echo "Found zindex executable at ${zindex_exec}"
+fi
+
+zq_exec=$(python -c 'import zindex_py;import site; sp=site.getsitepackages()[0]; print(f"{sp}/zindex_py/bin/zq")')
+if [ ! -f "${zq_exec}" ]; then
+  date_echo "failure: $?: zq not found. Please install zindex with: pip install zindex_py (zq is included in zindex_py)"
+  exit 1
+else
+  date_echo "Found zq executable at ${zq_exec}"
+fi
+
+sqlite_exists=0
+if command -v sqlite3 &> /dev/null; then
+  date_echo "sqlite3 exists"
+  sqlite_exists=1
+else
+  date_echo "sqlite3 does not exist, will use python for querying"
+fi
+
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+if [ $zindex_total == 0 ] || [ $override == 1 ]; then
+  $SCRIPT_DIR/dftracer_create_index -c -d $LOG_DIR -f
+else
+  date_echo "Indices are present skipping it."
+fi
+
+JOBS_LIMIT=1024
+pushd $LOG_DIR > /dev/null
+
+files=("$LOG_DIR"/*.zindex)
+total=${#files[@]}
+declare -A count
+counting_file="counting.bak"
+if [ ! -f $counting_file ] || [ $override == 1 ]; then
+  rm ${counting_file}
+  touch ${counting_file}
+  for file_index in "${!files[@]}"; do
+    running_jobs=$(jobs -rp | wc -l)
+    if [ $running_jobs -ge $JOBS_LIMIT ]; then
+      date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
+      while [ $running_jobs -ge $JOBS_LIMIT ]
+      do
+          sleep 1
+          running_jobs=$(jobs -rp | wc -l)
+      done
+      date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
+    fi
+    file_name=${files[$file_index]}
+    filename_without_ext=$(basename $file_name .pfw.gz.zindex)
+    (
+      IFS='|' read -r size start end <<< $(sqlite3 $file_name "select sum(length), min(line), max(line) as a from LineOffsets where length > 8;")
+      size_mb=$(bc -l <<< "scale=8; $size / (1024 * 1024)")
+      echo "${file_index}|${filename_without_ext}|${size_mb}|${start}|${end}" >> ${counting_file}
+      progress_date_echo Completed collecting size $size_mb $file_index of $total
+    ) &
+  done
+else
+  date_echo "Previous counting present"
+fi
+wait
+
+counts=$(wc -l ${counting_file} | awk {'print $1'})
+
+# for count_index in "${!count[@]}"; do
+#   echo "$count_index ${count[$count_index]}"
+# done
+
+echo ""
+if [ "$counts" != "${#files[@]}" ]; then
+  date_echo "Did not collect all files ${#count[@]} of ${#files[@]}"
+  exit 1
+else
+  date_echo "Finished collecting data from ${#files[@]} tasks"
+fi
+
+
+chunk_index=1
+file_processed=0
+CHUNKS_LINES=()
+while true; do
+  chunk_file=".chunk-${chunk_index}.bak"
+  if [ -f $chunk_file ]; then
+    files_in_chunk=$(wc -l ".chunk-${chunk_index}.bak" | awk {'print $1'})
+    chunk_index=$((chunk_index + 1))
+    file_processed=$((file_processed + files_in_chunk))
+    CHUNKS_LINES[$chunk_index]=$file_processed
+  else
+    break
+  fi
+done
+existing_chunk_index=$chunk_index
+
+total=${#files[@]}
+CHUNKS=()
+accumulated_size=0
+temp_chunk=""
+scheduled_chunks=0
+CHUNKS_LINES_TOTAL=${#CHUNKS_LINES[@]}
+
+chunk_index=1
+chunk_index_file=".chunk-${chunk_index}.bak"
+line_number=0
+total_size=0
+while IFS='|' read -r index file_name size start end; do
+  line_number=$((line_number + 1))
+  if [ $CHUNKS_LINES_TOTAL -gt 0 ] && [ $line_number -lt $file_processed ]; then
+    if [[ $line_number -eq ${CHUNKS_LINES[$chunk_index]} ]]; then
+      chunk_index=$((chunk_index + 1))
+      chunk_index_file=".chunk-${chunk_index}.bak"
+    fi
+    continue
+  fi
+  size_per_line=$(bc -l <<< "scale=8; $size / ($end - $start + 1)")
+
+  while [ "$(bc -l <<< "scale=8; $size > 0")" -eq 1 ]; do
+    if [ "$(bc -l <<< "scale=8; $size + $accumulated_size > $chunk_size")" -eq 1 ]; then
+
+      diff=$(bc -l <<< "scale=8; $chunk_size - $accumulated_size")
+      lines=$(bc -l <<< "scale=0; ($diff / $size_per_line) / 1")
+      size_chunk=$(bc -l <<< "scale=8; $lines * $size_per_line")
+
+      if [ $start -gt $end ]; then
+        break
+      fi
+
+      if [ $(bc -l <<< "scale=0; $lines > 0") -eq 1 ]; then
+        echo "$file_name|$size_chunk|$start|$((start + lines))" >> ${chunk_index_file}
+
+        start=$((start + lines + 1))
+        accumulated_size=$(bc -l <<< "scale=8; $accumulated_size + $size_chunk")
+        size=$(bc -l <<< "scale=8; $size - $size_chunk")
+      else
+        progress_date_echo "Scheduling $index of $total to chunk $chunk_index with size $accumulated_size"
+        i=$chunk_index
+        scheduled_chunks=$chunk_index
+        { 
+        chunk_file=$dest/${app_name}-$i.pfw
+        rm -f $chunk_file
+        touch $chunk_file
+        echo '[' > $chunk_file
+        while IFS='|' read -r file_name size start end; do
+          $zq_exec ${file_name}.pfw.gz --index-file ${file_name}.pfw.gz.zindex --raw "select a.line from LineOffsets a where a.line >= $start AND a.line <= $end AND a.length > 8;" >> $chunk_file
+          total_size=$(bc -l <<< "scale=2; $total_size + $size")
+        done < ${chunk_index_file}
+        progress_date_echo "Chunk $i out of ${#CHUNKS_LINES[@]} done with size $total_size MB, path = $chunk_file"
+        } &
+        chunk_index=$((chunk_index + 1))
+        accumulated_size=0
+        chunk_index_file=".chunk-${chunk_index}.bak"
+      fi
+    else
+      accumulated_size=$(bc -l <<< "scale=8; $accumulated_size + $size")
+      echo "$file_name|$size|$start|$end" >> ${chunk_index_file}
+      size=0
+    fi
+  done
+done < ${counting_file}
+
+total_chunks=$chunk_index;
+date_echo "Scheduled chunks: $scheduled_chunks"
+date_echo "Total chunks: $total_chunks"
+date_echo "Start processing chunks"
+start=$((scheduled_chunks + 1))
+total_size=0
+for i in $(seq $start $total_chunks); do
+  if [ "$verbose" == "1" ]; then
+    date_echo "Processing chunk $i"
+  fi
+  running_jobs=$(jobs -rp | wc -l)
+  if [ $running_jobs -ge $JOBS_LIMIT ]; then
+    # date_echo "waiting for Running $running_jobs jobs to be less than $JOBS_LIMIT"
+    while [ $running_jobs -ge $JOBS_LIMIT ]
+    do
+        sleep 1
+        running_jobs=$(jobs -rp | wc -l)
+    done
+    date_echo "Running $running_jobs jobs are now less than $JOBS_LIMIT"
+  fi
+  {
+    chunk_file=$dest/${app_name}-$i.pfw
+    rm -f $chunk_file
+    touch $chunk_file
+    echo '[' > $chunk_file
+    while IFS='|' read -r file_name size start end; do
+      $zq_exec ${file_name}.pfw.gz --index-file ${file_name}.pfw.gz.zindex --raw "select a.line from LineOffsets a where a.line >= $start AND a.line <= $end AND a.length > 8;" | grep -v '^[[]\|^[]]' >> $chunk_file
+      total_size=$(bc -l <<< "scale=2; $total_size + $size")
+    done < ${chunk_index_file}
+    echo ']' >> $chunk_file
+    progress_date_echo "Chunk $i out of ${total_chunks} done with size $total_size MB, path = $chunk_file"
+  } &
+done
+wait
+echo ""
+date_echo "All chunks processed"
+
+date_echo Reindexing split files
+pushd $dest > /dev/null
+rm -f *.pfw.gz
+$SCRIPT_DIR/dftracer_create_index -c -d $dest -f
+rm -f *.pfw
+
+LINES_COUNT=$(
+  {
+    $SCRIPT_DIR/dftracer_event_count -d $LOG_DIR
+  } &)
+SPLIT_LINES_COUNT=$(
+  {
+    $SCRIPT_DIR/dftracer_event_count -d $dest
+  } &)
+wait
+rm -f .chunk* counting.bak
+
+if [ $LINES_COUNT -ne $SPLIT_LINES_COUNT ]; then
+  date_echo "Error: Original lines count $LINES_COUNT does not match split lines count $SPLIT_LINES_COUNT"
+  exit 1
+else
+  date_echo "Original lines count $LINES_COUNT matches split lines count $SPLIT_LINES_COUNT"
+fi
+popd > /dev/null
+date_echo Done reindexing split files
