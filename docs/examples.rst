@@ -70,6 +70,12 @@ Example of running this configurations are:
     # Enable profiler
     DFTRACER_ENABLE=1
 
+.. warning::
+
+    Note: DFTRACER_DATA_DIR uses a prefix tree. If both ``/local/scratch`` and
+    ``/local/scratch/data`` are in the list, the order matters—
+    the last one will override the first. As a result, the first path won’t be traced.
+    To avoid this, only use ``/local/scratch``.
 
 LD_PRELOAD Example:
 **************************
@@ -108,7 +114,6 @@ Example of running this configurations are:
     export DFTRACER_INIT=PRELOAD
     # Enable profiler
     export DFTRACER_ENABLE=1
-
 
 Hybrid Example:
 **************************
@@ -247,7 +252,6 @@ Example of running this configurations are:
     # Enable profiler
     DFTRACER_ENABLE=1
 
-
 LD_PRELOAD Example:
 **************************
 
@@ -285,7 +289,6 @@ Example of running this configurations are:
     export DFTRACER_INIT=PRELOAD
     # Enable profiler
     export DFTRACER_ENABLE=1
-
 
 Hybrid Example:
 **************************
@@ -356,8 +359,6 @@ Example of running this configurations are:
     # Enable profiler
     DFTRACER_ENABLE=1
 
-
-
 ----------------
 Python Example
 ----------------
@@ -407,7 +408,6 @@ Application Level Example:
             pool.map(posix_calls, ((2, True),))
         log_inst.finalize()
 
-
     if __name__ == "__main__":
         main()
 
@@ -425,7 +425,6 @@ Example of running this configurations are:
     DFTRACER_DATA_DIR=/dev/shm/:/p/gpfs1/$USER/dataset:$PWD/data
     # Enable profiler
     DFTRACER_ENABLE=1
-
 
 LD_PRELOAD Example:
 *******************
@@ -480,7 +479,6 @@ Example of running this configurations are:
     # Enable profiler
     export DFTRACER_ENABLE=1
 
-
 .. _python-hybrid-mode:
 
 Hybrid Example:
@@ -528,7 +526,6 @@ Hybrid Example:
             pool.map(posix_calls, ((2, True),))
         log_inst.finalize()
 
-
     if __name__ == "__main__":
         main()
 
@@ -550,7 +547,6 @@ Example of running this configurations are:
     # Enable profiler
     DFTRACER_ENABLE=1
 
-
 ----------------------------------------------------------------
 Resnet50 with pytorch and torchvision example from ALCF Polaris:
 ----------------------------------------------------------------
@@ -559,15 +555,15 @@ Create a separate conda environment for the application and install dftracer
 
 .. code-block:: bash
    :linenos:
-  
+
      #!/bin/bash +x
      set -e
      set -x
      export MODULEPATH=/soft/modulefiles/conda/:$MODULEPATH
      module load 2023-10-04  # This is the latest conda module on Polaris
-   
-     export ML_ENV=$PWD/PolarisAT/conda-envs/ml_workload_latest_conda_2 # Please change the following path accordingly 
-   
+
+     export ML_ENV=$PWD/PolarisAT/conda-envs/ml_workload_latest_conda_2 # Please change the following path accordingly
+
      if [[ -e $ML_ENV ]]; then
          conda activate $ML_ENV
      else
@@ -575,13 +571,13 @@ Create a separate conda environment for the application and install dftracer
          conda activate $ML_ENV
          yes | MPICC="cc -shared -target-accel=nvidia80" pip install --force-reinstall --no-cache-dir --no-binary=mpi4py mpi4py
          yes | pip install --no-cache-dir git+https://github.com/hariharan-devarajan/dftracer.git
-         pip uninstall -y torch horovod 
+         pip uninstall -y torch horovod
          yes | pip install --no-cache-dir horovod
-         #INSTALL OTHER MISSING FILES    
+         #INSTALL OTHER MISSING FILES
      fi
 
-Since, torchvision.datasets.ImageFolder spawns separate python processes to help the parallel data loading in torch, we will be using the `HYBRID MODE` of the DFTracer (e.g., see 
-:ref:`Python Hybrid mode <python-hybrid-mode>`), so that the application can use both APP and PRELOAD Mode to log I/O from all dynamically spawned processes and function profiling from application. 
+Since, torchvision.datasets.ImageFolder spawns separate python processes to help the parallel data loading in torch, we will be using the `HYBRID MODE` of the DFTracer (e.g., see
+:ref:`Python Hybrid mode <python-hybrid-mode>`), so that the application can use both APP and PRELOAD Mode to log I/O from all dynamically spawned processes and function profiling from application.
 
 The following dftracer code is added to profile the application at the function level.
 Note: dftracer python level log file location is provided inside the python code in the dftracer.initialize_log() function and the POSIX or STDIO calls level log file location is provided in the job scirpt environment variable `DFTRACER_LOG_FILE`
@@ -615,27 +611,26 @@ Note: dftracer python level log file location is provided inside the python code
      # At the end of main function
      log_inst.finalize()
 
-Job submition script 
+Job submition script
 
 .. code-block:: bash
    :linenos:
-  
+
      export MODULEPATH=/soft/modulefiles/conda/:$MODULEPATH
      module load 2023-10-04
      conda activate./dlio_ml_workloads/PolarisAT/conda-envs/ml_workload_latest_conda
-   
+
      export LD_LIBRARY_PATH=$env_path/lib/:$LD_LIBRARY_PATH
      export DFTRACER_LOG_LEVEL=ERROR
      export DFTRACER_ENABLE=1
      export DFTRACER_INC_METADATA=1
      export DFTRACER_INIT=PRELOAD
-     export DFTRACER_DATA_DIR=./resnet_original_data #Path to the orignal resnet 50 dataset 
+     export DFTRACER_DATA_DIR=./resnet_original_data #Path to the orignal resnet 50 dataset
      export DFTRACER_LOG_FILE=./dft_fn_posix_level.pfw
-   
-     LD_PRELOAD=./dlio_ml_workloads/PolarisAT/conda-envs/ml_workload_latest_conda/lib/python*/site-packages/dftracer/lib/libdftracer_preload.so aprun -n 4 -N 4 python resnet_hvd_dlio.py --batch-size 64 --epochs 1 > dft_fn 2>&1
-   
-     cat *.pfw > combined_logs.pfw # To combine to a single pfw file. 
 
+     LD_PRELOAD=./dlio_ml_workloads/PolarisAT/conda-envs/ml_workload_latest_conda/lib/python*/site-packages/dftracer/lib/libdftracer_preload.so aprun -n 4 -N 4 python resnet_hvd_dlio.py --batch-size 64 --epochs 1 > dft_fn 2>&1
+
+     cat *.pfw > combined_logs.pfw # To combine to a single pfw file.
 
 -----------------------
 Integrated Applications
@@ -657,5 +652,3 @@ Here, we can see that we can get application level calls (e.g., ``train`` and ``
 .. image:: images/tracing/trace.png
   :width: 400
   :alt: Unet3D applications
-  
- 
