@@ -72,7 +72,7 @@ Example of running this configurations are:
 
 .. warning::
 
-    Note: DFTRACER_DATA_DIR acts as a prefix. If both ``/local/scratch`` and
+    Note: DFTRACER_DATA_DIR uses a prefix tree. If both ``/local/scratch`` and
     ``/local/scratch/data`` are in the list, the order matters—
     the last one will override the first. As a result, the first path won’t be traced.
     To avoid this, only use ``/local/scratch``.

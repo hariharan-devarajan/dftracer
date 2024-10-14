@@ -63,7 +63,7 @@ ENV Variables supported
    DFTRACER_LOG_FILE                STRING  PATH To log file. In this case process id and app name is appended to file.
    DFTRACER_DATA_DIR                STRING  Colon separated paths that will be traced for I/O accesses by profiler.
                                             For tracing all directories use the string "all" (not recommended).
-                                            Note: DFTRACER_DATA_DIR acts as a prefix. If both ``/local/scratch`` and
+                                            Note: DFTRACER_DATA_DIR uses a prefix tree. If both ``/local/scratch`` and
                                             ``/local/scratch/data`` are in the list, the order matters—
                                             the last one will override the first. As a result, the first path won’t be traced.
                                             To avoid this, only use ``/local/scratch``.
