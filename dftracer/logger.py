@@ -230,11 +230,11 @@ class dft_fn(object):
         if DFTRACER_ENABLE and self._enable:
             dftracer.get_instance().log_metadata_event(key=key, value=value)
             
-    def iter(self, func, iter_name="step"):
+    def iter(self, func, name="loop", iter_name="step"):
         if DFTRACER_ENABLE and self._enable:
             iter_val = 1
-            name = f"{self._name}.iter"
-            kernal_name = f"{self._name}.yield"
+            _name = f"{name}.iter"
+            kernal_name = f"{name}.yield"
             start = dftracer.get_instance().get_time()
             self._arguments = {}
             
@@ -248,7 +248,7 @@ class dft_fn(object):
                 self._arguments[iter_name] = str(iter_val)
                 if len(self._arguments) > 0:
                     dftracer.get_instance().enter_event()
-                    dftracer.get_instance().log_event(name=name, cat=self._cat, start_time=start,
+                    dftracer.get_instance().log_event(name=_name, cat=self._cat, start_time=start,
                                                          duration=end - start,
                                                          string_args=self._arguments)
                     dftracer.get_instance().exit_event()
@@ -259,7 +259,7 @@ class dft_fn(object):
                     dftracer.get_instance().exit_event()
                 else:
                     dftracer.get_instance().enter_event()
-                    dftracer.get_instance().log_event(name=name, cat=self._cat, start_time=start,
+                    dftracer.get_instance().log_event(name=_name, cat=self._cat, start_time=start,
                                                          duration=end - start)
                     dftracer.get_instance().exit_event()
                     dftracer.get_instance().enter_event()
