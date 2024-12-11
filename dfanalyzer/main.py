@@ -304,7 +304,7 @@ def io_columns():
         'io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'app_io_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
         'total_time': "string[pyarrow]" if not conf.time_approximate else "uint64[pyarrow]",
-        'fhash': "uint64[pyarrow]",
+        'fhash': "string[pyarrow]",
         'phase': "uint16[pyarrow]",
         'size': "uint64[pyarrow]"
     }
@@ -466,15 +466,15 @@ class DFAnalyzer:
             main_bag = pfw_bag
         if main_bag:
             columns = {'name': "string[pyarrow]", 'cat': "string[pyarrow]",'type': "uint8[pyarrow]", 
-                       'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]",
+                       'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "string[pyarrow]",
                        'ts': "uint64[pyarrow]", 'te': "uint64[pyarrow]", 'dur': "uint64[pyarrow]",
                        'tinterval': "string[pyarrow]" if not self.conf.time_approximate else "uint64[pyarrow]", 'trange': "uint64[pyarrow]"}
             columns.update(io_columns())
             columns.update(load_cols)
-            file_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
-            hostname_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
-            string_hash_columns = {'name': "string[pyarrow]", 'hash':"uint64[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
-            other_metadata_columns = { 'name':"string[pyarrow]" ,'value':"string[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "uint64[pyarrow]"}
+            file_hash_columns = {'name': "string[pyarrow]", 'hash':"string[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "string[pyarrow]"}
+            hostname_hash_columns = {'name': "string[pyarrow]", 'hash':"string[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "string[pyarrow]"}
+            string_hash_columns = {'name': "string[pyarrow]", 'hash':"string[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "string[pyarrow]"}
+            other_metadata_columns = { 'name':"string[pyarrow]" ,'value':"string[pyarrow]",'pid': "uint64[pyarrow]", 'tid': "uint64[pyarrow]", 'hhash': "string[pyarrow]"}
             if "FH" in metadata_cols:
                 file_hash_columns.update(metadata_cols["FH"])
             if "HH" in metadata_cols:
