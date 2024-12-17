@@ -54,6 +54,7 @@ size_t brahma::STDIODFTracer::fread(void *ptr, size_t size, size_t count,
 
 size_t brahma::STDIODFTracer::fwrite(const void *ptr, size_t size, size_t count,
                                      FILE *fp) {
+  auto handle = fwrite_brahma_handle;
   BRAHMA_MAP_OR_FAIL(fwrite);
   DFT_LOGGER_START(fp);
   DFT_LOGGER_UPDATE(size);

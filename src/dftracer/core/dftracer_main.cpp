@@ -112,13 +112,14 @@ bool dftracer::DFTracerCore::finalize() {
     }
     if (bind && conf->io) {
       DFTRACER_LOG_INFO("Release I/O bindings", "");
-      brahma_free_bindings();
       auto posix_instance = brahma::POSIXDFTracer::get_instance();
       if (posix_instance != nullptr) {
+        posix_instance->unbind();
         posix_instance->finalize();
       }
       auto stdio_instance = brahma::STDIODFTracer::get_instance();
       if (stdio_instance != nullptr) {
+        stdio_instance->unbind();
         stdio_instance->finalize();
       }
 #ifdef DFTRACER_FTRACING_ENABLE
@@ -238,7 +239,7 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
           } else {
             DFTRACER_LOG_DEBUG("Ignoring data_dirs as tracing all files", "");
           }
-          brahma_gotcha_wrap("dftracer", conf->gotcha_priority);
+
           if (!conf->trace_all_files) {
             auto paths = split(this->data_dirs, DFTRACER_DATA_DIR_DELIMITER);
             for (const auto &path : paths) {
@@ -247,10 +248,16 @@ void dftracer::DFTracerCore::initialize(bool _bind, const char *_log_file,
             }
           }
           if (conf->posix) {
-            brahma::POSIXDFTracer::get_instance(conf->trace_all_files);
+            auto posix =
+                brahma::POSIXDFTracer::get_instance(conf->trace_all_files);
+            posix->bind<brahma::POSIXDFTracer>("dftracer",
+                                               conf->gotcha_priority);
           }
           if (conf->stdio) {
-            brahma::STDIODFTracer::get_instance(conf->trace_all_files);
+            auto stdio =
+                brahma::STDIODFTracer::get_instance(conf->trace_all_files);
+            stdio->bind<brahma::STDIODFTracer>("dftracer",
+                                               conf->gotcha_priority);
           }
         }
 #ifdef DFTRACER_FTRACING_ENABLE
